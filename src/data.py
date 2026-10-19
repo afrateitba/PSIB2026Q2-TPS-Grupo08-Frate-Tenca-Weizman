@@ -8,6 +8,8 @@ Archivos por registro:
     <rec>.qrs          QRS automáticos (sqrs125), sin auditar: contienen errores
     <rec>r.dat / .hea  respiración real (solo RESP_RECORDS)
 Las etiquetas del set x también están en test-dataset-annos.txt.
+additional-information.txt tiene, por registro, minutos, AI/HI/AHI, edad, sexo,
+altura y peso.
 """
 from __future__ import annotations
 
@@ -16,6 +18,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import requests
 import wfdb
 
@@ -125,3 +128,28 @@ def parse_test_annotations(text: str) -> dict[str, np.ndarray]:
             buf.append("".join(c for c in s.split()[-1] if c in "AN"))
     _flush()
     return out
+
+
+def load_record_info(raw_dir: Path = RAW_DIR) -> pd.DataFrame:
+    """Tabla de additional-information.txt, una fila por registro."""
+    return parse_record_info((raw_dir / "additional-information.txt").read_text())
+
+
+def parse_record_info(text: str) -> pd.DataFrame:
+    """Parsea la tabla de additional-information.txt.
+
+    Los conteos de minutos de esta tabla dan un minuto más que las anotaciones
+    (.apn y test-dataset-annos.txt) en a01 y en los 35 registros x. Para contar
+    minutos se usan las anotaciones; de esta tabla se toman AI/HI/AHI y el perfil
+    del sujeto (edad, sexo, altura, peso).
+    """
+    cols = ["record", "length_min", "normal_min", "apnea_min", "hours_apnea",
+            "AI", "HI", "AHI", "age", "sex", "height_cm", "weight_kg"]
+    rows = [line.split()[:len(cols)] for line in text.splitlines()
+            if re.match(r"[abcx]\d{2}\s", line)]
+    df = pd.DataFrame(rows, columns=cols)
+    ints = ["length_min", "normal_min", "apnea_min", "hours_apnea",
+            "age", "height_cm", "weight_kg"]
+    df[ints] = df[ints].astype(int)
+    df[["AI", "HI", "AHI"]] = df[["AI", "HI", "AHI"]].astype(float)
+    return df

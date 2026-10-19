@@ -11,8 +11,11 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from .config import ALL_RECORDS, EXCLUDED, RAW_DIR, RESP_RECORDS, SEED, TEST_FRAC
-from .data import load_apnea_labels
+from .config import (ALL_RECORDS, EXCLUDED, RAW_DIR, RESP_RECORDS, SEED,
+                     SUBJECT_ALIASES, TEST_FRAC)
+from .data import load_apnea_labels, load_record_info
+
+PROFILE = ["age", "sex", "height_cm", "weight_kg"]
 
 
 def category_from_labels(labels: np.ndarray) -> str:
@@ -29,8 +32,30 @@ def category_from_labels(labels: np.ndarray) -> str:
     return "C" if m < 5 else "B"
 
 
+def assign_subjects(info: pd.DataFrame,
+                    aliases: dict = SUBJECT_ALIASES) -> pd.Series:
+    """Sujeto de cada registro ('S01', 'S02', ...), indexado por registro.
+
+    PhysioNet no dice qué registros son del mismo sujeto. Se infiere así:
+    1. Mismo perfil exacto (edad, sexo, altura, peso) -> mismo sujeto. Que
+       coincidan los cuatro valores por azar es muy improbable, y varios de
+       estos grupos tienen además el mismo AI/HI.
+    2. Cada registro de `aliases` toma el perfil de su destino (c06 -> c05).
+    Ante la duda conviene agrupar: juntar de más solo cuesta balance en la
+    partición; separar a una misma persona filtra información al test.
+    Los sujetos se numeran por orden de su primer registro.
+    """
+    key = info.set_index("record")[PROFILE].astype(str).agg(" ".join, axis=1)
+    for rec, target in aliases.items():
+        key[rec] = key[target]
+    first = key.index.to_series().groupby(key).min().sort_values()
+    ids = {k: f"S{i:02d}" for i, k in enumerate(first.index, 1)}
+    return key.map(ids).rename("subject")
+
+
 def record_table(raw_dir=RAW_DIR) -> pd.DataFrame:
-    """Una fila por registro incluido, con categoría y minutos de apnea."""
+    """Una fila por registro incluido, con categoría, minutos de apnea y sujeto."""
+    subjects = assign_subjects(load_record_info(raw_dir))
     rows = []
     for rec in ALL_RECORDS:
         if rec in EXCLUDED:
@@ -39,6 +64,7 @@ def record_table(raw_dir=RAW_DIR) -> pd.DataFrame:
         by_rule = category_from_labels(lab)
         rows.append({
             "record": rec,
+            "subject": subjects[rec],
             # Set de aprendizaje: la categoría viene en el nombre (a/b/c).
             "category": rec[0].upper() if rec[0] in "abc" else by_rule,
             "rule_category": by_rule,

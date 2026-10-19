@@ -30,6 +30,11 @@ EXCLUDED = {
            "2013). Se conserva c06 para no contar dos veces al mismo sujeto.",
 }
 
+# Registros que se asignan al sujeto de otro, aunque su perfil (edad, sexo,
+# altura, peso) difiera. c06 y c05 son la misma grabación, pero la tabla les da
+# perfiles distintos (171 cm/65 kg y 169 cm/57 kg); el de c05 coincide con x33.
+SUBJECT_ALIASES = {"c06": "c05"}
+
 # --- Partición -----------------------------------------------------------
 SEED = 2026
 TEST_FRAC = 0.30
