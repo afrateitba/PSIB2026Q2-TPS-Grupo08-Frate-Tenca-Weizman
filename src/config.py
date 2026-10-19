@@ -38,6 +38,8 @@ SUBJECT_ALIASES = {"c06": "c05"}
 # --- Partición -----------------------------------------------------------
 SEED = 2026
 TEST_FRAC = 0.30
+# Diferencia máxima entre la fracción de minutos de apnea de test y la de dev.
+MAX_APNEA_DIFF = 0.02
 
 # --- Bandas espectrales (Hz) ---------------------------------------------
 BANDS = {
