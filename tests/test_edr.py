@@ -105,3 +105,7 @@ def test_weighted_coherence():
     assert weighted_coherence(other, resp, 2.0, 64) < 0.4
     w = validate_edr(np.concatenate([same, same]), np.concatenate([resp, resp]), 2.0)
     assert len(w) == 4 and (w > 0.9).all()          # 480 s a 2 Hz en ventanas de 120 s
+    con_nan = np.concatenate([resp, resp])
+    con_nan[300] = np.nan                           # cae en la segunda ventana
+    w = validate_edr(np.concatenate([same, same]), con_nan, 2.0)
+    assert np.isnan(w[1]) and np.isfinite(w[[0, 2, 3]]).all()

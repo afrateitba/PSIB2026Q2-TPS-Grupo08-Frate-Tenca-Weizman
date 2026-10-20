@@ -103,9 +103,15 @@ def validate_edr(edr_u: np.ndarray, resp_u: np.ndarray, fs: float,
 
     Las dos series tienen que estar muestreadas en la misma grilla uniforme.
     El peso es el espectro de la respiración, así que la banda la define la
-    propia señal medida (solo RESP_RECORDS).
+    propia señal medida (solo RESP_RECORDS). Una ventana con alguna muestra
+    no finita (la respiración tiene muestras inválidas) da NaN: se descarta en
+    lugar de rellenarla.
     """
     n, nseg = int(win_s * fs), int(seg_s * fs)
     m = min(len(edr_u), len(resp_u)) // n
-    return np.array([weighted_coherence(edr_u[i * n:(i + 1) * n], resp_u[i * n:(i + 1) * n],
-                                        fs, nseg, fmin) for i in range(m)])
+    out = np.full(m, np.nan)
+    for i in range(m):
+        a, b = edr_u[i * n:(i + 1) * n], resp_u[i * n:(i + 1) * n]
+        if np.isfinite(a).all() and np.isfinite(b).all():
+            out[i] = weighted_coherence(a, b, fs, nseg, fmin)
+    return out
