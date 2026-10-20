@@ -8,6 +8,18 @@ Bloque: Latidos (Integrante 1).
 import numpy as np
 
 
+def rr_in_range(t_r: np.ndarray, lo: float = 0.3, hi: float = 2.0) -> np.ndarray:
+    """Latidos cuyo RR con el anterior y con el siguiente está entre `lo` y `hi` s.
+
+    El primer y el último latido quedan inválidos porque les falta un vecino.
+    """
+    rr = np.diff(t_r)
+    ok = (rr >= lo) & (rr <= hi)
+    valid = np.zeros(len(t_r), dtype=bool)
+    valid[1:-1] = ok[:-1] & ok[1:]
+    return valid
+
+
 def clean_rr(t_r: np.ndarray, rr: np.ndarray):
     """(rr_limpio, máscara de corregidos)."""
     raise NotImplementedError
