@@ -92,17 +92,21 @@ def _spearman(a: np.ndarray, b: np.ndarray) -> float:
 
 
 def agreement_compare(table: pd.DataFrame, labels: np.ndarray, records: np.ndarray,
-                      subjects: np.ndarray, n_boot: int = 500, seed: int = 2026) -> pd.DataFrame:
+                      subjects: np.ndarray, n_boot: int = 500, seed: int = 2026,
+                      reference: pd.Series | None = None) -> pd.DataFrame:
     """Acierto por registro de cada columna, con bootstrap por sujeto.
 
     Para cada candidata: umbral de Youden con todos sus minutos, fracción de
-    minutos de apnea estimada y real por registro, y la correlación de
-    Spearman entre las dos. Devuelve el Spearman, su IC y si empata con el mejor.
+    minutos de apnea estimada por registro, y la correlación de Spearman con
+    la fracción real (o con `reference`, un valor por registro, por ejemplo
+    el AHI). Devuelve el Spearman, su IC, la diferencia con el mejor y su IC,
+    y si empata con el mejor.
     """
     from .thresholds import roc_youden
     rec_list = list(pd.unique(records))
     rec_subj = pd.Series(subjects, index=records).groupby(level=0).first().loc[rec_list].to_numpy()
-    real = pd.Series(labels, index=records).groupby(level=0).mean().loc[rec_list].to_numpy()
+    real = (pd.Series(labels, index=records).groupby(level=0).mean() if reference is None
+            else reference).loc[rec_list].to_numpy(float)
     subj_list = list(pd.unique(rec_subj))
     by_subj = [np.flatnonzero(rec_subj == s) for s in subj_list]
     rng = np.random.default_rng(seed)
