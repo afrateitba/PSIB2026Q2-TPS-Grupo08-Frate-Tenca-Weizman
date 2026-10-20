@@ -1,0 +1,18 @@
+# Datos crudos y resultados (se regeneran)
+data/raw/
+results/*
+!results/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
