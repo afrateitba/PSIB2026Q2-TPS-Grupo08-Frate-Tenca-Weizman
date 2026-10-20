@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from src.features.coupling import downsample, resample_uniform, weighted_coherence
-from src.features.edr import (beat_matrix, edr_amplitude, edr_area, edr_pca,
+from src.features.edr import (beat_matrix, edr_amplitude, edr_area, edr_baseline, edr_pca,
                               edr_peak_to_peak, edr_series, qrs_reference, validate_edr)
 from src.preprocessing.filters import apply_zero_phase, design_bandpass
 from src.qrs.pan_tompkins import refine_peaks_parabolic
@@ -63,6 +63,14 @@ def test_edr_methods_recover_modulation(sign):
     for v in (edr_amplitude(beats, sign), edr_peak_to_peak(beats),
               edr_area(beats, sign, FS), edr_pca(beats)):
         assert np.corrcoef(v, amps)[0, 1] > 0.98     # el área suma ruido de las 13 muestras
+
+
+def test_edr_baseline_follows_drift():
+    ecg, _, centers, _ = _synthetic_ecg(mod=0.0)
+    drift = 0.3 * np.sin(2 * np.pi * 0.25 * np.arange(len(ecg)) / FS)
+    v, ok = edr_baseline(ecg + drift, centers, FS)
+    assert ok.all()
+    assert np.corrcoef(v, drift[centers - 7])[0, 1] > 0.99   # mitad del segmento PR
 
 
 def test_beat_matrix_drops_beats_at_edges():

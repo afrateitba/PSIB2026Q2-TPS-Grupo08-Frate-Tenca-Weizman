@@ -77,6 +77,11 @@ def test_compute_edr_follows_modulation():
     t, v = compute_edr(ecg, centers - 3, FS)
     assert np.all(np.diff(t) > 0)
     assert np.corrcoef(v, amps[np.isin(centers, np.rint(t * FS).astype(int))])[0, 1] > 0.98
+    drift = 0.3 * np.sin(2 * np.pi * 0.25 * k / FS)          # deriva respiratoria
+    t, v = compute_edr(ecg + drift, centers - 3, FS, method="baseline")
+    assert np.corrcoef(v, drift[np.rint(t * FS).astype(int) - 7])[0, 1] > 0.98
+    with pytest.raises(ValueError):
+        compute_edr(ecg, centers, FS, method="otro")
 
 
 def test_paired_subject_test():

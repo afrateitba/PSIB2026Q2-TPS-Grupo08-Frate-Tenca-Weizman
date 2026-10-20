@@ -11,6 +11,7 @@ respiración real de los 8 registros que la tienen:
 - edr_peak_to_peak: máximo menos mínimo del QRS.
 - edr_area:         área con signo del QRS.
 - edr_pca:          puntaje en la primera componente principal de los latidos.
+- edr_baseline:     línea de base del ECG crudo en cada latido (deriva).
 
 La polaridad del QRS cambia entre registros (electrodos invertidos en algunas
 noches), así que se mide en cada registro con qrs_reference() y no se supone.
@@ -92,6 +93,20 @@ def edr_pca(beats: np.ndarray) -> np.ndarray:
     return score
 
 
+def edr_baseline(ecg: np.ndarray, centers: np.ndarray, fs: float,
+                 interval: tuple = (-0.10, -0.05)) -> tuple[np.ndarray, np.ndarray]:
+    """(valores, ok): línea de base del ECG crudo en cada latido.
+
+    Mediana del segmento PR (`interval` en s relativo al centro del QRS). Es el
+    EDR por deriva de línea de base: no mira la forma del QRS y solo tiene
+    sentido sobre la señal sin pasabanda, porque el filtro elimina la deriva.
+    """
+    b0, b1 = int(round(interval[0] * fs)), int(round(interval[1] * fs))
+    ok = (centers + b0 >= 0) & (centers + b1 < len(ecg))
+    c = centers[ok]
+    return np.median(ecg[c[:, None] + np.arange(b0, b1 + 1)], axis=1), ok
+
+
 def edr_series(t_beats: np.ndarray, values: np.ndarray,
                valid: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """(t, edr) con solo los latidos válidos y valores finitos."""
@@ -99,18 +114,34 @@ def edr_series(t_beats: np.ndarray, values: np.ndarray,
     return t_beats[keep], values[keep]
 
 
-def compute_edr(ecg: np.ndarray, qrs: np.ndarray, fs: float) -> tuple[np.ndarray, np.ndarray]:
-    """(t, edr): el EDR elegido en E1 (notebooks/02_E1_edr.ipynb).
+EDR_METHODS = ("area", "baseline")
 
-    Área con signo del QRS (±60 ms del centro, polaridad del registro) sobre el
-    ECG con pasabanda 0,5-40 Hz de orden 2, solo latidos con RR de 0,3 a 2 s.
+
+def compute_edr(ecg: np.ndarray, qrs: np.ndarray, fs: float,
+                method: str = "area") -> tuple[np.ndarray, np.ndarray]:
+    """(t, edr) con uno de los dos métodos que E1 no pudo separar.
+
+    E1 (notebooks/02_E1_edr.ipynb) dejó empatadas dos variantes; las dos pasan
+    a E3, que elige con la detección de apnea:
+    - "area": área con signo del QRS (±60 ms del centro, polaridad del
+      registro) sobre el ECG con pasabanda 0,5-40 Hz de orden 2.
+    - "baseline": mediana del segmento PR (-100 a -50 ms) del ECG crudo.
+    En los dos casos solo se usan latidos con RR de 0,3 a 2 s.
     """
-    x = apply_zero_phase(ecg, design_bandpass(fs, 0.5, 40, 2))
-    off, sign = qrs_reference(x, qrs, fs)
-    centers = qrs + off
+    if method == "area":
+        x = apply_zero_phase(ecg, design_bandpass(fs, 0.5, 40, 2))
+        off, sign = qrs_reference(x, qrs, fs)
+        centers = qrs + off
+        beats, ok = beat_matrix(x, centers, fs, 0.06)
+        values = edr_area(beats, sign, fs)
+    elif method == "baseline":
+        off, _ = qrs_reference(ecg, qrs, fs)
+        centers = qrs + off
+        values, ok = edr_baseline(ecg, centers, fs, (-0.10, -0.05))
+    else:
+        raise ValueError(f"método de EDR desconocido: {method} (opciones: {EDR_METHODS})")
     valid = rr_in_range(centers / fs)
-    beats, ok = beat_matrix(x, centers, fs, 0.06)
-    return edr_series(centers[ok] / fs, edr_area(beats, sign, fs), valid[ok])
+    return edr_series(centers[ok] / fs, values, valid[ok])
 
 
 def validate_edr(edr_u: np.ndarray, resp_u: np.ndarray, fs: float,
