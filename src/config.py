@@ -46,8 +46,8 @@ MAX_APNEA_DIFF = 0.02
 
 # --- Filtro del ECG ------------------------------------------------------
 # Pasabanda Butterworth (corte bajo Hz, corte alto Hz, orden), aplicado ida y
-# vuelta. Es el que se usó en E1 a E3b; se revisa en la etapa 4.2.
-ECG_FILTER = (0.5, 40.0, 2)
+# vuelta. Justificado en notebooks/07_filtro.ipynb.
+ECG_FILTER = (0.5, 45.0, 3)
 
 # --- Bandas espectrales (Hz) ---------------------------------------------
 BANDS = {
