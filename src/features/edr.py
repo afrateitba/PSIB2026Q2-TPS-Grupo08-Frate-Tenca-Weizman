@@ -18,7 +18,9 @@ noches), así que se mide en cada registro con qrs_reference() y no se supone.
 import numpy as np
 
 from ..features.coupling import weighted_coherence
+from ..preprocessing.filters import apply_zero_phase, design_bandpass
 from ..qrs.pan_tompkins import refine_peaks_parabolic
+from ..qrs.rr_clean import rr_in_range
 
 
 def qrs_reference(ecg: np.ndarray, qrs: np.ndarray, fs: float,
@@ -95,6 +97,20 @@ def edr_series(t_beats: np.ndarray, values: np.ndarray,
     """(t, edr) con solo los latidos válidos y valores finitos."""
     keep = valid & np.isfinite(values)
     return t_beats[keep], values[keep]
+
+
+def compute_edr(ecg: np.ndarray, qrs: np.ndarray, fs: float) -> tuple[np.ndarray, np.ndarray]:
+    """(t, edr): el EDR elegido en E1 (notebooks/02_E1_edr.ipynb).
+
+    Área con signo del QRS (±60 ms del centro, polaridad del registro) sobre el
+    ECG con pasabanda 0,5-40 Hz de orden 2, solo latidos con RR de 0,3 a 2 s.
+    """
+    x = apply_zero_phase(ecg, design_bandpass(fs, 0.5, 40, 2))
+    off, sign = qrs_reference(x, qrs, fs)
+    centers = qrs + off
+    valid = rr_in_range(centers / fs)
+    beats, ok = beat_matrix(x, centers, fs, 0.06)
+    return edr_series(centers[ok] / fs, edr_area(beats, sign, fs), valid[ok])
 
 
 def validate_edr(edr_u: np.ndarray, resp_u: np.ndarray, fs: float,

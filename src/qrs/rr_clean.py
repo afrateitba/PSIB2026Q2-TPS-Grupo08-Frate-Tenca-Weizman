@@ -6,6 +6,7 @@ Bloque: Latidos (Integrante 1).
 - Inválidos y ectópicos se interpolan; un minuto con > 20 % corregido se excluye.
 """
 import numpy as np
+import pandas as pd
 
 
 def rr_in_range(t_r: np.ndarray, lo: float = 0.3, hi: float = 2.0) -> np.ndarray:
@@ -20,11 +21,30 @@ def rr_in_range(t_r: np.ndarray, lo: float = 0.3, hi: float = 2.0) -> np.ndarray
     return valid
 
 
-def clean_rr(t_r: np.ndarray, rr: np.ndarray):
-    """(rr_limpio, máscara de corregidos)."""
-    raise NotImplementedError
+def clean_rr(t_r: np.ndarray, lo: float = 0.3, hi: float = 2.0, ectopic: float = 0.2,
+             k: int = 11) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """(t, rr_limpio, corregidos) a partir de los tiempos de los latidos.
+
+    Cada RR se ubica en el tiempo del latido que lo cierra. Se corrige un RR si
+    está fuera de [lo, hi] s o si se aparta más de `ectopic` de la mediana de
+    los `k` RR vecinos válidos (un ectópico deja un RR corto y otro largo).
+    Los corregidos se reemplazan por interpolación lineal de los válidos.
+    """
+    rr = np.diff(t_r)
+    t = t_r[1:]
+    bad = (rr < lo) | (rr > hi)
+    med = (pd.Series(np.where(bad, np.nan, rr))
+           .rolling(k, center=True, min_periods=1).median().to_numpy())
+    corrected = bad | (np.abs(rr / med - 1) > ectopic)
+    rr_c = rr.copy()
+    rr_c[corrected] = np.interp(t[corrected], t[~corrected], rr[~corrected])
+    return t, rr_c, corrected
 
 
-def minute_quality(t_r: np.ndarray, corrected: np.ndarray, n_minutes: int) -> np.ndarray:
-    """Fracción de latidos corregidos por minuto (para excluir minutos malos)."""
-    raise NotImplementedError
+def minute_quality(t: np.ndarray, corrected: np.ndarray, n_minutes: int) -> np.ndarray:
+    """Fracción de RR corregidos en cada minuto (NaN si el minuto no tiene latidos)."""
+    m = (t // 60).astype(int)
+    keep = m < n_minutes
+    total = np.bincount(m[keep], minlength=n_minutes)
+    bad = np.bincount(m[keep], weights=corrected[keep].astype(float), minlength=n_minutes)
+    return np.divide(bad, total, out=np.full(n_minutes, np.nan), where=total > 0)

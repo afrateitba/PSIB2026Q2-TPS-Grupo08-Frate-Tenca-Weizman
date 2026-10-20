@@ -34,6 +34,22 @@ def refine_peaks_parabolic(ecg: np.ndarray, peaks: np.ndarray):
     return p + delta, y1 - 0.25 * (y0 - y2) * delta
 
 
+def r_peaks_from_marks(ecg: np.ndarray, marks: np.ndarray, fs: float, offset: int,
+                       sign: int, search: float = 0.03) -> tuple[np.ndarray, np.ndarray]:
+    """(t_r [s], amplitud): pico R real cerca de cada marca, refinado con la parábola.
+
+    Busca la deflexión dominante (con la polaridad `sign` del registro) a
+    ±`search` s de marca + `offset` (ver edr.qrs_reference). Si dos marcas
+    caen en el mismo pico, queda uno solo.
+    """
+    h = int(round(search * fs))
+    c = marks + offset
+    c = c[(c >= h) & (c < len(ecg) - h)]
+    k = c - h + np.argmax(sign * ecg[c[:, None] + np.arange(-h, h + 1)], axis=1)
+    t, amp = refine_peaks_parabolic(sign * ecg, np.unique(k))
+    return t / fs, amp
+
+
 def validate_against_reference(detected: np.ndarray, reference: np.ndarray,
                                fs: float, tol: float = 0.10) -> dict:
     """Se, VPP, TP, FP, FN con tolerancia `tol` en segundos."""

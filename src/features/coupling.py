@@ -3,14 +3,17 @@
 Aporte novedoso (H1/H2).  Esquema v2 §2 y §4.7.
 Bloque: Espectral (Integrante 3).
 
-CR = coherencia(VLF+LF) / coherencia(HF). RR y EDR se remuestrean a 2 Hz
-porque Welch y el espectro cruzado necesitan muestreo uniforme.
+CR compara la coherencia RR-EDR en una banda lenta (ciclo de apnea) con la de
+la banda respiratoria. Las bandas, la ventana y la forma de CR se eligen con
+datos (E3); H1 se prueba con configuraciones fijadas de antemano (E2). RR y EDR
+se remuestrean a 2 Hz porque Welch y el espectro cruzado necesitan muestreo
+uniforme.
 """
 from fractions import Fraction
 
 import numpy as np
 from scipy.interpolate import CubicSpline
-from scipy.signal import coherence, resample_poly, welch
+from scipy.signal import coherence, csd, resample_poly, welch
 
 
 def resample_uniform(t: np.ndarray, x: np.ndarray, fs: float = 2.0,
@@ -53,10 +56,32 @@ def weighted_coherence(x: np.ndarray, y: np.ndarray, fs: float, nperseg: int,
     return float((cxy[m] * pyy[m]).sum() / w) if w > 0 else np.nan
 
 
-def coherence_bands(rr_u: np.ndarray, edr_u: np.ndarray, fs: float = 2.0,
-                    nperseg: int = 512) -> dict:
-    """Coherencia media por banda, potencia cruzada y CR para una ventana."""
-    raise NotImplementedError
+def coherence_spectrum(x: np.ndarray, y: np.ndarray, fs: float,
+                       nperseg: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """(f, coherencia, |potencia cruzada|) por Welch, con 50 % de solapamiento.
+
+    Con una ventana de 2 * nperseg muestras quedan 3 segmentos.
+    """
+    kw = dict(fs=fs, nperseg=nperseg, noverlap=nperseg // 2, detrend="linear")
+    f, cxy = coherence(x, y, **kw)
+    _, pxy = csd(x, y, **kw)
+    return f, cxy, np.abs(pxy)
+
+
+def coherence_bands(x: np.ndarray, y: np.ndarray, fs: float, nperseg: int,
+                    bands: dict) -> dict:
+    """Coherencia media y potencia cruzada media en cada banda {nombre: (f1, f2)}.
+
+    Devuelve {'coh_<nombre>': ..., 'xp_<nombre>': ...}. La banda incluye f1 y
+    excluye f2. CR y sus variantes se arman a partir de estas columnas.
+    """
+    f, cxy, pxy = coherence_spectrum(x, y, fs, nperseg)
+    out = {}
+    for name, (f1, f2) in bands.items():
+        m = (f >= f1) & (f < f2)
+        out[f"coh_{name}"] = float(cxy[m].mean()) if m.any() else np.nan
+        out[f"xp_{name}"] = float(pxy[m].mean()) if m.any() else np.nan
+    return out
 
 
 def surrogate_floor(rr_u: np.ndarray, edr_u: np.ndarray, fs: float = 2.0,
