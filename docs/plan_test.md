@@ -29,7 +29,7 @@ Valores vigentes al escribir este plan. Los marcados con † pueden cambiar en l
 |---|---|
 | Registros excluidos | c05, x22, x33 (grabaciones duplicadas) |
 | Filtro del ECG | Butterworth pasabanda 0,5–45 Hz, orden 3, fase cero (fijado en 4.2, `notebooks/07_filtro.ipynb`) |
-| Latidos † | marcas `.qrs` de la base, pico R refinado con parábola de 3 puntos |
+| Latidos † | marcas `.qrs` de la base, pico R refinado con parábola de 3 puntos (refinamiento verificado en 4.1, `notebooks/00_adquisicion.ipynb`) |
 | RR | se corrige si está fuera de 0,3–2 s o si se aparta más de 20 % de la mediana de 11 vecinos; se interpola |
 | EDR † | área con signo del QRS (±60 ms del centro, polaridad medida por registro) |
 | F (detector) | log de la potencia cruzada RR–EDR promediada en 0,01–0,05 Hz; ventana de 240 s centrada en cada minuto; Welch con 3 segmentos de 50 % de solapamiento; RR y EDR remuestreados a 2 Hz; sin normalizar ni suavizar |
@@ -90,4 +90,14 @@ Un solo notebook, `notebooks/99_test.ipynb`, ejecutado una vez sobre el commit `
 
 ## 9. Desvíos posteriores a este plan
 
-_(vacío)_
+### 9.1 (20/10/2026, antes de abrir test) Se agrega la etapa 4.1 a las condiciones del punto 2.1
+
+La lista del punto 2.1 dejó afuera la 4.1 (contexto de la adquisición). Casi toda es descriptiva, pero una parte toca el pipeline: el refinamiento parabólico del pico R (fila "Latidos" de la sección 3) se usaba sin haberse verificado. La 4.1 lo verifica con una prueba de dos fases a 50 Hz, con una regla fijada antes de correr, y queda como una condición más para abrir test.
+
+### 9.2 (20/10/2026, antes de abrir test) Nuevo resultado secundario: acierto por registro contra el AHI
+
+Se agrega al punto 2 de la sección 6: Spearman, sobre los 20 registros, entre la fracción de minutos de apnea estimada (la misma de M2) y el AHI de la base, para F y para la HRV, con IC por bootstrap por sujeto. Es descriptivo, sin test de hipótesis, como el resto de la sección 6.
+
+Motivo: M2 usa la fracción de minutos anotados, y el AHI es la medida clínica de gravedad. No pasa a ser una medida principal por dos razones:
+- **Con datos:** en desarrollo, la fracción de minutos con apnea y el AHI tienen un Spearman de 0,94 (IC 0,84 a 0,97). Como tercera medida principal repetiría casi lo mismo que M2 y le quitaría potencia a la corrección de Holm.
+- **Metodológica:** el detector estima minutos y el AHI cuenta eventos por hora de sueño, que desde el ECG no se conoce. Es una decisión de criterio, no algo que los datos puedan decidir.
