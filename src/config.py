@@ -24,16 +24,19 @@ ALL_RECORDS = LEARNING_RECORDS + TEST_RECORDS
 # Registros con respiración real (a01r ... c03r): solo para validar EDR/Wiener.
 RESP_RECORDS = ["a01", "a02", "a03", "a04", "b01", "c01", "c02", "c03"]
 
-# Registros que se excluyen del análisis, con el motivo.
-EXCLUDED = {
-    "c05": "Misma grabación que c06 (c05 empieza 80 s después, nota de PhysioNet "
-           "2013). Se conserva c06 para no contar dos veces al mismo sujeto.",
-}
+# Pares de registros que son la misma grabación: muestras idénticas, con un
+# desfase. c05/c06 lo documenta PhysioNet (nota de 2013); x22/x35 y x33/x34 se
+# encontraron comparando las señales (src/duplicates.py). En los tres pares,
+# additional-information.txt les asigna perfiles distintos.
+SAME_RECORDING = [("c05", "c06"), ("x22", "x35"), ("x33", "x34")]
 
-# Registros que se asignan al sujeto de otro, aunque su perfil (edad, sexo,
-# altura, peso) difiera. c06 y c05 son la misma grabación, pero la tabla les da
-# perfiles distintos (171 cm/65 kg y 169 cm/57 kg); el de c05 coincide con x33.
-SUBJECT_ALIASES = {"c06": "c05"}
+# Registros que se excluyen del análisis, con el motivo. De cada par de
+# SAME_RECORDING se conserva la grabación que empieza antes.
+EXCLUDED = {
+    "c05": "Misma grabación que c06; c05 empieza 80 s después (nota de PhysioNet 2013).",
+    "x22": "Misma grabación que x35; x22 empieza 40 s después.",
+    "x33": "Misma grabación que x34; x33 empieza 70 s después.",
+}
 
 # --- Partición -----------------------------------------------------------
 SEED = 2026

@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 
 from .config import (ALL_RECORDS, EXCLUDED, MAX_APNEA_DIFF, RAW_DIR,
-                     RESP_RECORDS, SEED, SUBJECT_ALIASES, TEST_FRAC)
+                     RESP_RECORDS, SAME_RECORDING, SEED, TEST_FRAC)
 from .data import load_apnea_labels, load_record_info
 
 PROFILE = ["age", "sex", "height_cm", "weight_kg"]
@@ -40,24 +40,40 @@ def category_from_labels(labels: np.ndarray) -> str:
 
 
 def assign_subjects(info: pd.DataFrame,
-                    aliases: dict = SUBJECT_ALIASES) -> pd.Series:
+                    same_recording: list = SAME_RECORDING) -> pd.Series:
     """Sujeto de cada registro ('S01', 'S02', ...), indexado por registro.
 
-    PhysioNet no dice qué registros son del mismo sujeto. Se infiere así:
-    1. Mismo perfil exacto (edad, sexo, altura, peso) -> mismo sujeto. Que
-       coincidan los cuatro valores por azar es muy improbable, y varios de
-       estos grupos tienen además el mismo AI/HI.
-    2. Cada registro de `aliases` toma el perfil de su destino (c06 -> c05).
+    PhysioNet no dice qué registros son del mismo sujeto. Dos registros se
+    unen si tienen el mismo perfil exacto (edad, sexo, altura, peso) o si son
+    la misma grabación (`same_recording`), y la unión es transitiva.
+    - Perfil: que coincidan los cuatro valores por azar es muy improbable, y el
+      latido promedio de esos registros se parece mucho más que entre grupos.
+    - Grabación: la tabla tiene errores; a los pares de SAME_RECORDING les da
+      perfiles distintos aunque son la misma señal.
     Ante la duda conviene agrupar: juntar de más solo cuesta balance en la
     partición; separar a una misma persona filtra información al test.
     Los sujetos se numeran por orden de su primer registro.
     """
     key = info.set_index("record")[PROFILE].astype(str).agg(" ".join, axis=1)
-    for rec, target in aliases.items():
-        key[rec] = key[target]
-    first = key.index.to_series().groupby(key).min().sort_values()
-    ids = {k: f"S{i:02d}" for i, k in enumerate(first.index, 1)}
-    return key.map(ids).rename("subject")
+    parent = {r: r for r in key.index}
+
+    def root(r):
+        while parent[r] != r:
+            r = parent[r]
+        return r
+
+    def union(a, b):
+        ra, rb = root(a), root(b)
+        parent[max(ra, rb)] = min(ra, rb)   # la raíz es el primer registro
+
+    for recs in key.groupby(key).groups.values():
+        for r in recs[1:]:
+            union(recs[0], r)
+    for a, b in same_recording:
+        union(a, b)
+    roots = key.index.to_series().map(root)
+    ids = {r: f"S{i:02d}" for i, r in enumerate(sorted(roots.unique()), 1)}
+    return roots.map(ids).rename("subject")
 
 
 def record_table(raw_dir=RAW_DIR) -> pd.DataFrame:

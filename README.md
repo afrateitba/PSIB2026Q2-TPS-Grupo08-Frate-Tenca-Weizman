@@ -15,9 +15,9 @@ Determinar, minuto a minuto y usando solo el ECG, si hay apnea del sueño. El cr
 
 [Apnea-ECG Database](https://physionet.org/content/apnea-ecg/1.0.0/) (PhysioNet; Penzel et al., 2000): 70 registros nocturnos, ECG a 100 Hz, una etiqueta apnea/normal por minuto. Las señales respiratorias de 8 registros se usan solo para validar.
 
-- Partición 70/30 por registro, estratificada por categoría A/B/C, con semilla fija (`data/split.csv`).
-- Los registros con respiración van siempre a desarrollo.
-- Se excluye c05: es la misma grabación que c06.
+- Partición 70/30 por sujeto, estratificada por categoría A/B/C y balanceada en minutos de apnea, con semilla fija (`data/split.csv`). Los sujetos se infieren del perfil de cada registro (edad, sexo, altura, peso) y de las grabaciones duplicadas.
+- Los sujetos con registros con respiración van siempre a desarrollo.
+- Hay tres pares de registros que son la misma grabación: c05/c06 (documentado por PhysioNet), x22/x35 y x33/x34 (encontrados comparando las señales, `src/duplicates.py`). Se excluyen c05, x22 y x33; quedan 67 registros.
 
 ## Instalación
 

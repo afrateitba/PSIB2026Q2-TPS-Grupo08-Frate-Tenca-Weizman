@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.config import LEARNING_RECORDS, RAW_DIR
+from src.config import EXCLUDED, LEARNING_RECORDS, RAW_DIR
 from src.data import load_record_info, parse_record_info, parse_test_annotations
 from src.split import (assign_subjects, candidate_splits, category_from_labels,
                        make_split, record_table)
@@ -125,17 +125,19 @@ def test_parse_record_info():
 
 def test_assign_subjects():
     info = pd.DataFrame({
-        "record":    ["a01", "a02", "c05", "c06", "x01", "x33"],
-        "age":       [51, 38, 28, 28, 51, 28],
-        "sex":       ["M", "M", "F", "F", "M", "F"],
-        "height_cm": [175, 180, 169, 171, 175, 169],
-        "weight_kg": [102, 120, 57, 65, 102, 57],
+        "record":    ["a01", "a02", "c05", "c06", "c07", "x01", "x33", "x34"],
+        "age":       [51, 38, 28, 28, 30, 51, 28, 30],
+        "sex":       ["M", "M", "F", "F", "F", "M", "F", "F"],
+        "height_cm": [175, 180, 169, 171, 168, 175, 169, 168],
+        "weight_kg": [102, 120, 57, 65, 56, 102, 57, 56],
     })
-    s = assign_subjects(info, aliases={"c06": "c05"})
+    s = assign_subjects(info, same_recording=[("c05", "c06"), ("x33", "x34")])
     assert s["a01"] == s["x01"] == "S01"     # mismo perfil
     assert s["a02"] == "S02"                 # perfil único
-    assert s["c05"] == s["c06"] == s["x33"] == "S03"  # alias + perfil
-    assert assign_subjects(info, aliases={})["c06"] != s["c05"]
+    # c06 -(grabación)- c05 -(perfil)- x33 -(grabación)- x34 -(perfil)- c07
+    assert s["c05"] == s["c06"] == s["c07"] == s["x33"] == s["x34"] == "S03"
+    s0 = assign_subjects(info, same_recording=[])
+    assert s0["c06"] != s0["c05"] and s0["c07"] != s0["c05"]
 
 
 @pytest.mark.skipif(not (RAW_DIR / "additional-information.txt").exists(),
@@ -144,8 +146,9 @@ def test_subjects_real_data():
     info = load_record_info()
     assert len(info) == 70
     s = assign_subjects(info)
-    assert s.drop("c05").nunique() == 31     # c05 está excluido del análisis
-    assert s["c06"] == s["x33"]
+    assert s.drop(list(EXCLUDED)).nunique() == 29
+    assert s["c06"] == s["c07"] == s["x34"]
+    assert s["c01"] == s["x17"] == s["x35"]
     assert s["a07"] == s["a16"] == s["x01"] == s["x30"]
 
 
@@ -157,7 +160,8 @@ _ALL_LABELS = (RAW_DIR / "test-dataset-annos.txt").exists() and all(
 def test_split_real_data():
     s = make_split(record_table())
     assert (s.groupby("subject").set.nunique() == 1).all()
-    assert s[s.set == "test"].category.value_counts().to_dict() == {"A": 12, "B": 3, "C": 6}
+    assert len(s) == 67 and not s.record.isin(list(EXCLUDED)).any()
+    assert s[s.set == "test"].category.value_counts().to_dict() == {"A": 12, "B": 3, "C": 5}
     g = s.groupby("set")
     frac = g.apnea_minutes.sum() / g.n_minutes.sum()
     assert abs(frac["test"] - frac["dev"]) <= 0.02
