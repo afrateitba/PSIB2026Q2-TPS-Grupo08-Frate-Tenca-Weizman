@@ -201,6 +201,9 @@ def test_select_variant_orients_and_prefers_simple():
         assert sel["signos"]["invertida"] == -1.0            # se dio vuelta
         assert {"compleja", "simple"} <= set(sel["grupo"]) and "azar" not in sel["grupo"]
         assert sel["ganadora"] == "simple"                   # empate -> la más simple
+    agr = sel["acuerdo"]
+    assert {"dif", "dif_lo", "dif_hi"} <= set(agr.columns) and (agr.dif <= 0).all()
+    assert (agr.dif_lo <= agr.dif + 1e-9).all() and (agr.dif <= agr.dif_hi + 1e-9).all()
     sel = select_variant(tab, y, g, recs, comp, n_boot=300, n_boot_rec=200, rule="max")
     assert sel["grupo"] == [sel["auc"].auc.idxmax()] and sel["ganadora"] == sel["grupo"][0]
 

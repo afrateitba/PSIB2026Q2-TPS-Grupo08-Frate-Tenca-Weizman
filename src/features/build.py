@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from ..config import RAW_DIR
+from ..config import ECG_FILTER, RAW_DIR
 from ..data import load_apnea_labels, load_ecg, load_qrs
 from ..preprocessing.filters import apply_zero_phase, design_bandpass
 from ..qrs.pan_tompkins import r_peaks_from_marks
@@ -28,18 +28,20 @@ ESTIMATORS = ("welch3", "welch7", "multitaper")
 
 
 def record_series(rec: str, raw_dir: Path = RAW_DIR, fs_u: float = 2.0,
-                  edr_method: str = "area", edr_methods: tuple = ()) -> dict:
+                  edr_method: str = "area", edr_methods: tuple = (),
+                  filt: tuple = ECG_FILTER) -> dict:
     """RR limpio y EDR de un registro, remuestreados a `fs_u` en una grilla común.
 
     Devuelve t, rr, edr (el de `edr_method`), edrs ({método: serie} para
     `edr_method` y `edr_methods`), y t_rr, rr_beats, corrected (RR por latido)
     para la HRV y la calidad por minuto. Métodos de EDR: los de
     edr.compute_edr, y "combined": promedio del área y la deriva, cada una
-    estandarizada sobre la noche (sin etiquetas).
+    estandarizada sobre la noche (sin etiquetas). `filt`: pasabanda del ECG
+    (corte bajo, corte alto, orden).
     """
     ecg, fs = load_ecg(rec, raw_dir)
     qrs = load_qrs(rec, raw_dir)
-    x = apply_zero_phase(ecg, design_bandpass(fs, 0.5, 40, 2))
+    x = apply_zero_phase(ecg, design_bandpass(fs, *filt))
     off, sign = qrs_reference(x, qrs, fs)
     t_r, _ = r_peaks_from_marks(x, qrs, fs, off, sign)
     t_rr, rr, corrected = clean_rr(t_r)
@@ -49,7 +51,7 @@ def record_series(rec: str, raw_dir: Path = RAW_DIR, fs_u: float = 2.0,
         base |= {"area", "baseline"}
     grids = {"rr": resample_uniform(t_rr, rr, fs_u)}
     for m in sorted(base):
-        grids[m] = resample_uniform(*compute_edr(ecg, qrs, fs, m), fs_u)
+        grids[m] = resample_uniform(*compute_edr(ecg, qrs, fs, m, filt), fs_u)
     t0 = max(g[0][0] for g in grids.values())
     t1 = min(g[0][-1] for g in grids.values())
     cut = {k: g[1][(g[0] >= t0) & (g[0] <= t1)] for k, g in grids.items()}
@@ -100,12 +102,13 @@ def _attach(tab: pd.DataFrame, rec: str, s: dict, raw_dir: Path) -> pd.DataFrame
 
 def record_minute_table(rec: str, width_s: float, bands: dict,
                         raw_dir: Path = RAW_DIR, series: dict | None = None,
-                        edr_method: str = "area", estimator: str = "welch3") -> pd.DataFrame:
+                        edr_method: str = "area", estimator: str = "welch3",
+                        filt: tuple = ECG_FILTER) -> pd.DataFrame:
     """Tabla por minuto de un registro: acoplamiento RR-EDR, etiqueta y calidad.
 
     `series` permite reutilizar record_series() al probar varias ventanas.
     """
-    s = series or record_series(rec, raw_dir, edr_method=edr_method)
+    s = series or record_series(rec, raw_dir, edr_method=edr_method, filt=filt)
     edr = s["edrs"][edr_method] if "edrs" in s else s["edr"]
     n_min = len(load_apnea_labels(rec, raw_dir))
     tab = minute_coupling(s["t"], s["rr"], edr, s["fs"], n_min, width_s, bands, estimator)

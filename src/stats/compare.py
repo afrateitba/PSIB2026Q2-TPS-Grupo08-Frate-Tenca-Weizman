@@ -118,10 +118,10 @@ def agreement_compare(table: pd.DataFrame, labels: np.ndarray, records: np.ndarr
         boot.append([_spearman(real[d], est[d]) for d in draws])
     rho, boot = np.array(rho), np.array(boot).T
     best = int(np.nanargmax(rho))
-    dhi = np.nanpercentile(boot - boot[:, [best]], 97.5, axis=0)
+    dlo, dhi = np.nanpercentile(boot - boot[:, [best]], [2.5, 97.5], axis=0)
     lo, hi = np.nanpercentile(boot, [2.5, 97.5], axis=0)
-    return pd.DataFrame({"spearman": rho, "ic_lo": lo, "ic_hi": hi, "empata": dhi >= 0},
-                        index=table.columns)
+    return pd.DataFrame({"spearman": rho, "ic_lo": lo, "ic_hi": hi, "dif": rho - rho[best],
+                         "dif_lo": dlo, "dif_hi": dhi, "empata": dhi >= 0}, index=table.columns)
 
 
 RULES = ("original", "noninferior", "max")

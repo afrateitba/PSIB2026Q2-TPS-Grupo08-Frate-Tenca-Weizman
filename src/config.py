@@ -44,6 +44,11 @@ TEST_FRAC = 0.30
 # Diferencia máxima entre la fracción de minutos de apnea de test y la de dev.
 MAX_APNEA_DIFF = 0.02
 
+# --- Filtro del ECG ------------------------------------------------------
+# Pasabanda Butterworth (corte bajo Hz, corte alto Hz, orden), aplicado ida y
+# vuelta. Es el que se usó en E1 a E3b; se revisa en la etapa 4.2.
+ECG_FILTER = (0.5, 40.0, 2)
+
 # --- Bandas espectrales (Hz) ---------------------------------------------
 BANDS = {
     "VLF": (0.01, 0.04),

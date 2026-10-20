@@ -18,6 +18,7 @@ noches), así que se mide en cada registro con qrs_reference() y no se supone.
 """
 import numpy as np
 
+from ..config import ECG_FILTER
 from ..features.coupling import weighted_coherence
 from ..preprocessing.filters import apply_zero_phase, design_bandpass
 from ..qrs.pan_tompkins import refine_peaks_parabolic
@@ -117,19 +118,20 @@ def edr_series(t_beats: np.ndarray, values: np.ndarray,
 EDR_METHODS = ("area", "baseline")
 
 
-def compute_edr(ecg: np.ndarray, qrs: np.ndarray, fs: float,
-                method: str = "area") -> tuple[np.ndarray, np.ndarray]:
+def compute_edr(ecg: np.ndarray, qrs: np.ndarray, fs: float, method: str = "area",
+                filt: tuple = ECG_FILTER) -> tuple[np.ndarray, np.ndarray]:
     """(t, edr) con uno de los dos métodos que E1 no pudo separar.
 
-    E1 (notebooks/02_E1_edr.ipynb) dejó empatadas dos variantes; las dos pasan
-    a E3, que elige con la detección de apnea:
+    E1 (notebooks/02_E1_edr.ipynb) dejó empatadas dos variantes y E3 eligió
+    el área:
     - "area": área con signo del QRS (±60 ms del centro, polaridad del
-      registro) sobre el ECG con pasabanda 0,5-40 Hz de orden 2.
+      registro) sobre el ECG con el pasabanda `filt` (corte bajo, corte alto,
+      orden; por defecto config.ECG_FILTER).
     - "baseline": mediana del segmento PR (-100 a -50 ms) del ECG crudo.
     En los dos casos solo se usan latidos con RR de 0,3 a 2 s.
     """
     if method == "area":
-        x = apply_zero_phase(ecg, design_bandpass(fs, 0.5, 40, 2))
+        x = apply_zero_phase(ecg, design_bandpass(fs, *filt))
         off, sign = qrs_reference(x, qrs, fs)
         centers = qrs + off
         beats, ok = beat_matrix(x, centers, fs, 0.06)
