@@ -3,7 +3,8 @@
 Consigna: contextualización del método de adquisición.  Esquema v2: §3 y §4.1.
 
 Archivos por registro:
-    <rec>.dat / .hea   ECG, 100 Hz, 16 bits, ~200 unidades A/D por mV
+    <rec>.dat / .hea   ECG, 100 Hz, conversor de 12 bits guardado en formato 16,
+                       200 unidades por mV (verificado en notebooks/00_adquisicion.ipynb)
     <rec>.apn          etiqueta apnea (A) / normal (N) por minuto
     <rec>.qrs          QRS automáticos (sqrs125), sin auditar: contienen errores
     <rec>r.dat / .hea  respiración real (solo RESP_RECORDS)
@@ -73,6 +74,21 @@ def load_ecg(rec: str, raw_dir: Path = RAW_DIR) -> tuple[np.ndarray, float]:
     """ECG en mV y frecuencia de muestreo."""
     r = wfdb.rdrecord(str(raw_dir / rec))
     return r.p_signal[:, 0].astype(float), float(r.fs)
+
+
+def load_ecg_digital(rec: str, raw_dir: Path = RAW_DIR) -> np.ndarray:
+    """ECG en unidades del conversor (enteros, tal como están guardados)."""
+    r = wfdb.rdrecord(str(raw_dir / rec), physical=False)
+    return r.d_signal[:, 0].astype(int)
+
+
+def load_header(rec: str, raw_dir: Path = RAW_DIR) -> dict:
+    """Formato del ECG según el .hea: fs, muestras, formato de archivo,
+    ganancia (unidades por mV), bits del conversor, cero del conversor y unidad."""
+    h = wfdb.rdheader(str(raw_dir / rec))
+    return {"fs": float(h.fs), "muestras": int(h.sig_len), "formato": str(h.fmt[0]),
+            "ganancia": float(h.adc_gain[0]), "bits": int(h.adc_res[0]),
+            "cero": int(h.adc_zero[0]), "unidad": h.units[0]}
 
 
 def load_qrs(rec: str, raw_dir: Path = RAW_DIR) -> np.ndarray:

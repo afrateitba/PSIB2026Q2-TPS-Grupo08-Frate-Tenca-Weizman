@@ -29,7 +29,7 @@ ESTIMATORS = ("welch3", "welch7", "multitaper")
 
 def record_series(rec: str, raw_dir: Path = RAW_DIR, fs_u: float = 2.0,
                   edr_method: str = "area", edr_methods: tuple = (),
-                  filt: tuple = ECG_FILTER) -> dict:
+                  filt: tuple = ECG_FILTER, refine: bool = True) -> dict:
     """RR limpio y EDR de un registro, remuestreados a `fs_u` en una grilla común.
 
     Devuelve t, rr, edr (el de `edr_method`), edrs ({método: serie} para
@@ -37,13 +37,14 @@ def record_series(rec: str, raw_dir: Path = RAW_DIR, fs_u: float = 2.0,
     para la HRV y la calidad por minuto. Métodos de EDR: los de
     edr.compute_edr, y "combined": promedio del área y la deriva, cada una
     estandarizada sobre la noche (sin etiquetas). `filt`: pasabanda del ECG
-    (corte bajo, corte alto, orden).
+    (corte bajo, corte alto, orden). `refine`: refinamiento parabólico del
+    pico R (4.1).
     """
     ecg, fs = load_ecg(rec, raw_dir)
     qrs = load_qrs(rec, raw_dir)
     x = apply_zero_phase(ecg, design_bandpass(fs, *filt))
     off, sign = qrs_reference(x, qrs, fs)
-    t_r, _ = r_peaks_from_marks(x, qrs, fs, off, sign)
+    t_r, _ = r_peaks_from_marks(x, qrs, fs, off, sign, refine=refine)
     t_rr, rr, corrected = clean_rr(t_r)
     methods = list(dict.fromkeys((edr_method,) + tuple(edr_methods)))
     base = {m for m in methods if m in EDR_METHODS}
@@ -144,13 +145,14 @@ def record_hrv_table(rec: str, width_s: float, raw_dir: Path = RAW_DIR,
 
 
 def record_feature_tables(rec: str, widths: tuple, estimators: tuple, edr_methods: tuple,
-                          bands: dict, raw_dir: Path = RAW_DIR) -> tuple[pd.DataFrame, pd.DataFrame]:
+                          bands: dict, raw_dir: Path = RAW_DIR,
+                          refine: bool = True) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Todas las tablas de E3a y E4 de un registro: (acoplamiento, HRV), en formato largo.
 
     Calcula las series una sola vez. Está a nivel de módulo para poder
     repartir los registros entre procesos.
     """
-    s = record_series(rec, raw_dir, edr_method=edr_methods[0], edr_methods=edr_methods)
+    s = record_series(rec, raw_dir, edr_method=edr_methods[0], edr_methods=edr_methods, refine=refine)
     coup = [record_minute_table(rec, w, bands, raw_dir, series=s, edr_method=m, estimator=e)
             .assign(edr=m, window=w, estimator=e)
             for m in edr_methods for w in widths for e in estimators]
