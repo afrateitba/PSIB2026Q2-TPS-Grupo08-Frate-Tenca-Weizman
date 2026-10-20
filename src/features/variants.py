@@ -10,6 +10,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from .postprocess import NORMALIZATIONS, normalize, smooth
+
 BANDS = {"cpc_l": (0.01, 0.10), "cpc_r": (0.10, 0.40),
          "v2_l": (0.01, 0.15), "v2_r": (0.15, 0.40), "ap_l": (0.01, 0.05)}
 BAND_CONFIGS = {"CPC": ("cpc_l", "cpc_r"), "v2": ("v2_l", "v2_r"), "apnea": ("ap_l", "v2_r")}
@@ -36,6 +38,7 @@ ORDER = {
     "bandas": {"CPC": 0, "v2": 1, "apnea": 2},
     "edr": {"baseline": 0, "area": 1, "combined": 2},
     "hrv": {f: i for i, f in enumerate(HRV_FEATURES)},
+    "normalizacion": {"none": 0, "baseline": 1, "zscore": 2},
 }
 
 
@@ -57,6 +60,30 @@ def coupling_variants(tab: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
                              "complejidad": (ORDER["estimador"][est], ORDER["forma"][form], int(w),
                                              ORDER["bandas"][band], ORDER["edr"][edr])})
     return pd.DataFrame(cols), pd.DataFrame(meta).set_index("variante")
+
+
+def postprocess_variants(wide: pd.DataFrame, meta: pd.DataFrame,
+                         norms: tuple = NORMALIZATIONS, ks: tuple = (1, 3, 5)
+                         ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Aplica a cada candidata todas las combinaciones de normalización y suavizado (E3b).
+
+    `wide` está indexada por (record, minute) y tiene que incluir todos los
+    minutos de cada noche: la normalización y el suavizado usan la noche
+    completa, y recién después se filtran los minutos a evaluar. La
+    complejidad nueva antepone (normalización, suavizado) a la de la candidata.
+    """
+    rec = pd.Series(wide.index.get_level_values("record"), index=wide.index)
+    minute = pd.Series(wide.index.get_level_values("minute"), index=wide.index)
+    cols, rows = {}, []
+    for v in wide.columns:
+        for n in norms:
+            z = normalize(wide[v], rec, n)
+            for k in ks:
+                name = f"{v}|{n}|k{k}"
+                cols[name] = smooth(z, rec, minute, k)
+                rows.append({"variante": name, "base": v, "normalizacion": n, "suavizado": k,
+                             "complejidad": (ORDER["normalizacion"][n], k) + tuple(meta.loc[v, "complejidad"])})
+    return pd.DataFrame(cols, index=wide.index), pd.DataFrame(rows).set_index("variante")
 
 
 def hrv_variants(tab: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:

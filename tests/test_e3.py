@@ -167,6 +167,19 @@ def test_variants_build_all_combinations():
     assert hw.shape == (10, 10) and "hrv|300s|lf_hf" in hm.index
 
 
+def test_postprocess_variants():
+    from src.features.variants import postprocess_variants
+    idx = pd.MultiIndex.from_product([["a", "b"], range(6)], names=["record", "minute"])
+    wide = pd.DataFrame({"f": [0, 9, 0, 0, 0, 0, 10, 10, 30, 10, 10, 10.0]}, index=idx)
+    meta = pd.DataFrame({"complejidad": [(3,)]}, index=["f"])
+    pw, pm = postprocess_variants(wide, meta)
+    assert pw.shape == (12, 9) and pm.loc["f|none|k1", "complejidad"] == (0, 1, 3)
+    assert pw["f|none|k1"].equals(wide["f"])
+    assert pw.loc[("a", 1), "f|none|k3"] == 0                     # el pico aislado se suaviza
+    assert pw["f|baseline|k1"].groupby(level=0).min().tolist() == [0, 0]
+    assert min(pm.complejidad) == (0, 1, 3) and max(pm.complejidad) == (2, 5, 3)
+
+
 def _toy_selection_data(seed=6, n_subj=12, per=150):
     rng = np.random.default_rng(seed)
     g = np.repeat(np.arange(n_subj), per)
