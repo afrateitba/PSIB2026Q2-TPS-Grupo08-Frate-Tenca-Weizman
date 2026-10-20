@@ -28,7 +28,7 @@ Valores vigentes al escribir este plan. Los marcados con † pueden cambiar en l
 | Componente | Valor |
 |---|---|
 | Registros excluidos | c05, x22, x33 (grabaciones duplicadas) |
-| Filtro del ECG † | Butterworth pasabanda 0,5–40 Hz, orden 2, fase cero |
+| Filtro del ECG | Butterworth pasabanda 0,5–45 Hz, orden 3, fase cero (fijado en 4.2, `notebooks/07_filtro.ipynb`) |
 | Latidos † | marcas `.qrs` de la base, pico R refinado con parábola de 3 puntos |
 | RR | se corrige si está fuera de 0,3–2 s o si se aparta más de 20 % de la mediana de 11 vecinos; se interpola |
 | EDR † | área con signo del QRS (±60 ms del centro, polaridad medida por registro) |

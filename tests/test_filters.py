@@ -48,6 +48,8 @@ def test_beat_spectrum_of_narrow_vs_wide_beat():
     assert cumulative_energy_freq(fn, pn, 0.99) > cumulative_energy_freq(fw, pw, 0.99)
 
 
-def test_config_filter_is_valid():
+def test_config_filter_meets_measured_spec():
     low, high, order = ECG_FILTER
     assert 0 < low < high < FS / 2 and order >= 1
+    # Banda medida en desarrollo en notebooks/07_filtro.ipynb: 0,77-41,8 Hz.
+    assert meets_spec(design_bandpass(FS, *ECG_FILTER), FS, (0.77, 41.8), {0.1: 20}, max_pass_db=1)
