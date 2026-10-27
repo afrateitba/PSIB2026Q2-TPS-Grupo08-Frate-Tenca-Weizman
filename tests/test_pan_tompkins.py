@@ -51,3 +51,28 @@ def test_validate_against_reference_counts():
 def test_validate_empty():
     m = validate_against_reference(np.array([]), np.array([10, 20]), FS)
     assert m["TP"] == 0 and m["FN"] == 2 and np.isnan(m["VPP"])
+
+
+
+def test_recovers_after_amplitude_drop():
+    """Si el ECG baja de amplitud a mitad de la noche (como en a03), el detector no queda ciego."""
+    x, true_r = _synthetic_ecg(dur=1200.0)
+    a = int(300 * FS)
+    x[a:] *= 0.15
+    m = validate_against_reference(detect_r_peaks(x, FS), true_r, FS, tol=0.02)
+    assert m["Se"] >= 0.98 and m["VPP"] >= 0.98
+
+
+def test_recovers_after_artifact_burst():
+    """Después de varios minutos de artefacto fuerte, vuelve a detectar los latidos."""
+    import time
+    x, true_r = _synthetic_ecg(dur=1200.0)
+    rng = np.random.default_rng(SEED)
+    a, b = int(200 * FS), int(400 * FS)
+    x[a:b] += 4.0 * rng.standard_normal(b - a)
+    t0 = time.time()
+    det = detect_r_peaks(x, FS)
+    assert time.time() - t0 < 5
+    after = true_r[true_r > b + int(10 * FS)]
+    m = validate_against_reference(det[det > b + int(10 * FS)], after, FS, tol=0.02)
+    assert m["Se"] >= 0.98 and m["VPP"] >= 0.98

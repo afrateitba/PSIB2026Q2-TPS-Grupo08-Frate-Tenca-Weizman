@@ -34,51 +34,68 @@ def pan_tompkins_signals(ecg: np.ndarray, fs: float):
     return bp, d, mwi
 
 
+def _learn(mwi: np.ndarray, start: int, fs: float) -> tuple[float, float]:
+    """(nivel de señal, nivel de ruido) iniciales a partir de 2 s de señal integrada."""
+    w = mwi[start:start + int(2 * fs)]
+    return w.max() / 3, w.mean() / 2
+
+
 def _classify(mwi: np.ndarray, d: np.ndarray, fs: float) -> np.ndarray:
     """Umbrales adaptativos, búsqueda hacia atrás y descarte de ondas T.
 
     Devuelve los índices de los picos de la señal integrada que son QRS.
+
+    Si la búsqueda hacia atrás no encuentra un latido (el umbral quedó por
+    encima de los QRS, por ejemplo después de un artefacto o si baja la
+    amplitud del ECG), los umbrales se vuelven a aprender con los 2 s que
+    siguen, igual que al principio del registro. Sin esto el detector puede
+    quedar ciego durante minutos.
     """
     cand, _ = find_peaks(mwi, distance=max(1, int(round(QRS_REFRACTORY_S * fs))))
     if len(cand) == 0:
         return np.array([], dtype=int)
-    learn = mwi[: int(2 * fs)]                      # fase de aprendizaje: 2 s
-    spki, npki = learn.max() / 3, learn.mean() / 2  # nivel de señal y de ruido
+    spki, npki = _learn(mwi, 0, fs)
     h = int(round(QRS_SLOPE_WIN_S * fs))
     twave = QRS_TWAVE_S * fs
 
     def slope(k):
         return np.abs(d[max(k - h, 0):k + h + 1]).max()
 
-    qrs, rr, noise, last_slope = [], [], [], None
+    # nmax: el pico de ruido más alto desde el último QRS. Alcanza con ese para
+    # la búsqueda hacia atrás, y guardar solo ese hace que cada paso cueste lo
+    # mismo aunque pasen minutos sin latidos.
+    qrs, rr, nmax, last_slope = [], [], None, None
     for k in cand:
         thr = npki + 0.25 * (spki - npki)
         # Búsqueda hacia atrás: hueco mayor que 1,66 RR medios -> latido perdido.
-        if len(rr) and noise and k - qrs[-1] > QRS_SEARCHBACK * np.mean(rr[-8:]):
-            j = max(noise, key=lambda c: mwi[c])
+        if rr and nmax is not None and k - qrs[-1] > QRS_SEARCHBACK * np.mean(rr[-8:]):
+            j, nmax = nmax, None
             if mwi[j] > 0.5 * thr:
                 rr.append(j - qrs[-1])
                 qrs.append(j)
                 last_slope = slope(j)
                 spki = 0.25 * mwi[j] + 0.75 * spki
-                noise = []
-                thr = npki + 0.25 * (spki - npki)
+            else:
+                spki, npki = _learn(mwi, k, fs)
+            thr = npki + 0.25 * (spki - npki)
         if mwi[k] > thr:
             s = slope(k)
             # Onda T: muy cerca del QRS anterior y con menos de la mitad de su pendiente.
             if qrs and k - qrs[-1] < twave and s < 0.5 * last_slope:
                 npki = 0.125 * mwi[k] + 0.875 * npki
-                noise.append(k)
+                if nmax is None or mwi[k] > mwi[nmax]:
+                    nmax = k
                 continue
             if qrs:
                 rr.append(k - qrs[-1])
             qrs.append(k)
             last_slope = s
             spki = 0.125 * mwi[k] + 0.875 * spki
-            noise = []
+            nmax = None
         else:
             npki = 0.125 * mwi[k] + 0.875 * npki
-            noise.append(k)
+            if nmax is None or mwi[k] > mwi[nmax]:
+                nmax = k
     return np.array(qrs, dtype=int)
 
 
