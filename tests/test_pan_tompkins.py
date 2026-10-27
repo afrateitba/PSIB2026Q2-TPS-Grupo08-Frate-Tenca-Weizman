@@ -76,3 +76,37 @@ def test_recovers_after_artifact_burst():
     after = true_r[true_r > b + int(10 * FS)]
     m = validate_against_reference(det[det > b + int(10 * FS)], after, FS, tol=0.02)
     assert m["Se"] >= 0.98 and m["VPP"] >= 0.98
+
+
+def _x17_like(dur=600.0, seed=SEED, early=None):
+    """ECG como x17: QRS negativo y angosto, onda T positiva, alta y empinada a ~0,35 s; RR ~1,2 s."""
+    rng = np.random.default_rng(seed)
+    t_r = np.cumsum(rng.uniform(1.1, 1.3, size=int(dur / 1.1)))
+    t_r = t_r[t_r < dur - 2]
+    if early is not None:                                  # latido prematuro a 0,45 RR
+        t_r = np.sort(np.append(t_r, t_r[early] + 0.45 * 1.2))
+    t = np.arange(0, dur, 1 / FS)
+    x = np.zeros_like(t)
+    for tr in t_r:
+        x -= 0.35 * np.exp(-0.5 * ((t - tr) / 0.010) ** 2)                 # QRS negativo
+        tt = t - tr - 0.33
+        x += 0.30 * np.exp(-0.5 * (tt / np.where(tt < 0, 0.045, 0.022)) ** 2)  # T asimétrica, bajada empinada
+    x += 0.005 * rng.standard_normal(len(t))
+    return x, np.round(t_r * FS).astype(int)
+
+
+@pytest.mark.xfail(strict=True, reason="Limitación conocida: una onda T empinada (como en x17) tiene "
+                   "más de la mitad de la pendiente del QRS y la regla clásica no la descarta.")
+def test_tall_t_wave_not_counted():
+    """Con ondas T altas y empinadas (como x17), no debería contar la T como otro latido."""
+    x, true_r = _x17_like()
+    m = validate_against_reference(detect_r_peaks(x, FS), true_r, FS, tol=0.03)
+    assert m["Se"] >= 0.99 and m["VPP"] >= 0.99
+
+
+def test_premature_beat_still_detected():
+    """Un latido prematuro (a 0,45 RR) tiene pendiente de QRS: no se descarta como onda T."""
+    x, true_r = _x17_like(early=200)
+    det = detect_r_peaks(x, FS)
+    k = true_r[np.argmin(np.abs(np.diff(true_r)))+1]       # el latido prematuro
+    assert np.min(np.abs(det - k)) <= 3
