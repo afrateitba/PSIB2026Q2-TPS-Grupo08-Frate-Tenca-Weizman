@@ -55,3 +55,16 @@ BANDS = {
     "LF": (0.04, 0.15),
     "HF": (0.15, 0.40),
 }
+
+
+# --- Detección de QRS (Pan-Tompkins a 100 Hz) -----------------------------
+# Valores clásicos de Pan y Tompkins (1985), en segundos para que no dependan
+# de fs. Supuestos de la literatura: se verifican en notebooks/08_qrs.ipynb.
+QRS_BAND = (5.0, 15.0, 2)      # pasabanda (Hz, Hz, orden), ida y vuelta
+QRS_INTEGRATION_S = 0.150      # ventana de integración
+QRS_REFRACTORY_S = 0.200       # período refractario entre dos QRS
+QRS_TWAVE_S = 0.360            # un pico más cerca que esto puede ser onda T
+QRS_SLOPE_WIN_S = 0.075        # ventana para medir la pendiente máxima
+QRS_SEARCHBACK = 1.66          # hueco (en RR medios) que dispara la búsqueda hacia atrás
+QRS_LOCATE_S = 0.080           # búsqueda del pico R alrededor del QRS detectado
+QRS_TOLERANCE_S = 0.10         # tolerancia para emparejar con las .qrs
