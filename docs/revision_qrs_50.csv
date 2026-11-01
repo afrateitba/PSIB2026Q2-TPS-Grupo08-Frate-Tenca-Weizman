@@ -1,0 +1,51 @@
+caso,record,tipo,sample,tiempo_s,clasificacion,comentario
+1,x25,FP,172176,1721.76,error de las marcas de la base,"QRS visible en la posición detectada, similar a los vecinos y con continuidad del ritmo. Sin marca de referencia cercana."
+2,a02,FP,1862308,18623.08,dudoso,Artefacto intenso: no permite distinguir con seguridad el QRS.
+3,x27,FN,664237,6642.37,dudoso,
+4,a02,FP,2492792,24927.92,error de las marcas de la base,"Hay un complejo estrecho similar a los vecinos, detectado en azul, sin una marca naranja correspondiente."
+5,x17,FP,1071709,10717.09,error del detector,"La detección seleccionada está al terminar la onda ancha posterior al QRS, cerca de la línea de base. Parece una detección adicional del mismo latido."
+6,x12,FP,3180662,31806.62,error del detector,"La detección seleccionada está al terminar la onda ancha posterior al QRS, cerca de la línea de base. Parece una detección adicional del mismo latido."
+7,c01,FP,13867,138.67,error del detector,"Detecta una oscilación rápida y repetitiva sin complejos QRS distinguibles, compatible con artefacto."
+8,x04,FP,13550,135.5,error del detector,"La detección está sobre una oscilación rápida repetitiva, sin morfología de QRS visible."
+9,c09,FP,15461,154.61,error del detector,Mismo patrón de oscilación rápida; la cruz seleccionada no identifica un QRS reconocible.
+10,x17,FP,2413697,24136.97,error del detector,La detección seleccionada cae en un tramo visualmente plano después de un artefacto intenso.
+11,a02,FP,483467,4834.67,error de las marcas de la base,"El detector encuentra un QRS claro y similar a los vecinos, sin marca de referencia cercana."
+12,x25,FP,283836,2838.36,error de las marcas de la base,
+13,x20,FP,2405828,24058.28,error de las marcas de la base,
+14,x17,FP,720378,7203.78,error del detector,
+15,x17,FP,932290,9322.9,error del detector,Detección adicional al final de la onda posterior al QRS.
+16,a12,FP,1783858,17838.58,error de las marcas de la base,"Complejo estrecho reconocible y compatible con el ritmo vecino, sin marca correspondiente."
+17,x14,FP,959188,9591.88,error de las marcas de la base,"Complejo estrecho reconocible y compatible con el ritmo vecino, sin marca correspondiente."
+18,a02,FP,338537,3385.37,error de las marcas de la base,"QRS visible en la posición detectada, sin referencia cercana."
+19,x14,FP,2698698,26986.98,dudoso,Artefacto intenso que impide distinguir claramente el QRS seleccionado.
+20,a17,FN,1087645,10876.45,dudoso,
+21,x20,FP,2358886,23588.86,error de las marcas de la base,
+22,x25,FP,132554,1325.54,error de las marcas de la base,"QRS claro, similar a los vecinos y sin marca correspondiente."
+23,a08,FN,1589264,15892.64,dudoso,"Marca entre QRS detectados, sobre una zona con artefactos y sin otro complejo claramente identificable."
+24,b03,FP,88731,887.31,dudoso,La detección cae dentro de una ráfaga de ruido; no permite atribuir el error con seguridad.
+25,x17,FP,964275,9642.75,error del detector,
+26,b02,FN,87918,879.18,error del detector,
+27,a12,FP,1746887,17468.87,error de las marcas de la base,"Complejo bifásico claro, con deflexión negativa dominante, sin referencia cercana."
+28,x17,FP,1819815,18198.15,error del detector,"Detección al final de la onda posterior al QRS, sin otro complejo visible."
+29,b02,FP,1408794,14087.94,dudoso,Ruido y desplazamiento de línea de base impiden identificar con seguridad el evento.
+30,x25,FP,2114314,21143.14,error de las marcas de la base,"QRS claro y ubicado en la secuencia esperada, sin marca correspondiente."
+31,x20,FP,2406433,24064.33,dudoso,Grandes desplazamientos y distorsión de señal.
+32,a02,FP,1590880,15908.8,dudoso,Detección dentro de una ráfaga de ruido.
+33,a12,FP,1458314,14583.14,error de las marcas de la base,"Complejo estrecho negativo similar a los vecinos, sin referencia cercana."
+34,x14,FP,944195,9441.95,error de las marcas de la base,"Complejo reconocible en secuencia de latidos, sin referencia cercana."
+35,x17,FP,30833,308.33,error del detector,Detección adicional al finalizar la onda posterior al QRS.
+36,x14,FP,27256,272.56,dudoso,Marca cercana y complejo distorsionado; posible diferencia de localización.
+37,x17,FP,1032198,10321.98,error del detector,Detección posterior al QRS sin otro complejo visible.
+38,c02,FP,486628,4866.28,dudoso,Complejo próximo a referencia con ruido; atribución incierta.
+39,x17,FP,955585,9555.85,error del detector,Detección adicional posterior al QRS.
+40,a02,FP,3131884,31318.84,error de las marcas de la base,QRS claro sin marca correspondiente.
+41,x17,FP,1371367,13713.67,error del detector,Detección adicional al finalizar la onda posterior al QRS.
+42,x17,FP,2045173,20451.73,error del detector,Detección posterior al QRS sin otro complejo visible.
+43,a02,FP,1936642,19366.42,error de las marcas de la base,"QRS estrecho similar a los vecinos, sin referencia cercana."
+44,x17,FP,1478747,14787.47,error del detector,Detección adicional posterior al QRS.
+45,x17,FP,396609,3966.09,error de las marcas de la base,"La posición seleccionada corresponde al QRS negativo, sin referencia cercana."
+46,x34,FP,52645,526.45,error de las marcas de la base,"Complejo negativo estrecho similar a los vecinos, sin referencia cercana."
+47,c09,FP,1279,12.79,error del detector,Oscilación rápida repetitiva sin QRS reconocible.
+48,c09,FP,22351,223.51,error del detector,Oscilación rápida repetitiva sin QRS reconocible.
+49,x17,FP,1012461,10124.61,error del detector,Detección adicional al finalizar la onda posterior al QRS.
+50,x12,FP,3169515,31695.15,error del detector,
