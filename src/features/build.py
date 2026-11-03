@@ -158,3 +158,33 @@ def record_feature_tables(rec: str, widths: tuple, estimators: tuple, edr_method
             for m in edr_methods for w in widths for e in estimators]
     hrv = [record_hrv_table(rec, w, raw_dir, series=s).assign(window=w) for w in widths]
     return pd.concat(coup, ignore_index=True), pd.concat(hrv, ignore_index=True)
+
+
+# --- Política de calidad: notebook 10 ---
+def attach_window_quality(tab, rec, width_s=240.0,
+                          raw_dir=RAW_DIR, exclude_lost=False):
+    """Adjunta calidad del ECG a una tabla por minuto.
+
+    Por defecto conserva todas las filas. exclude_lost=True aplica
+    la regla candidata evaluada y no adoptada en el notebook 10.
+    No modifica F ni aplica la regla de RR corregidos.
+    """
+    from ..data import load_ecg_digital, load_header
+    from ..preprocessing.quality import window_signal_quality
+
+    d = load_ecg_digital(rec, raw_dir)
+    header = load_header(rec, raw_dir)
+    calidad = window_signal_quality(
+        d, header["fs"], header["bits"],
+        tab["minute"].to_numpy(),
+        width_s=width_s,
+        adc_zero=header["cero"],
+    )
+
+    out = tab.copy()
+    for col in ("ventana_completa", "segundos_perdidos", "sin_perdida"):
+        out[col] = calidad[col].to_numpy()
+
+    if exclude_lost:
+        out = out.loc[out["sin_perdida"]].copy()
+    return out
