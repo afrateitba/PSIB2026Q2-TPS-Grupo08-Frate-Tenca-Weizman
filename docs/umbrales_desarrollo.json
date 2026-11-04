@@ -1,0 +1,38 @@
+{
+  "metodo": "Youden",
+  "regla": "score >= umbral",
+  "detector_principal": "F",
+  "umbrales": {
+    "F": -6.948641462292339,
+    "VLF": 0.001258477270410224
+  },
+  "F": {
+    "edr": "area",
+    "ventana_s": 240,
+    "estimador": "welch3",
+    "banda_hz": [
+      0.01,
+      0.05
+    ],
+    "transformacion": "log(max(potencia_cruzada, 1e-12))"
+  },
+  "VLF": {
+    "ventana_s": 180,
+    "estimador": "Lomb",
+    "banda_hz": [
+      0.01,
+      0.04
+    ],
+    "transformacion": "ninguna"
+  },
+  "calidad": {
+    "max_fraccion_rr_corregidos": 0.2,
+    "excluir_senal_perdida": false
+  },
+  "qrs": "marcas de la base",
+  "wiener": false,
+  "minutos_ajuste": 22275,
+  "registros_ajuste": 47,
+  "sujetos_ajuste": 19,
+  "validacion_completa_pendiente": true
+}
