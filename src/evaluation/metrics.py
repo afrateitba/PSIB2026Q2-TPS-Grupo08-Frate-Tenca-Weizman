@@ -62,6 +62,41 @@ def category_from_minutes(apnea_minutes: float) -> str:
     return "C" if apnea_minutes < 5 else "B"
  
  
+def night_minutes(records, y_true, y_pred) -> pd.DataFrame:
+    """Por registro: minutos evaluados, minutos de apnea anotados y estimados, y horas.
+
+    Las horas son las de los minutos evaluados. Es la entrada de `record_metrics`.
+    """
+    d = pd.DataFrame({"r": np.asarray(records), "y": _binary(y_true, "y_true"),
+                      "p": _binary(y_pred, "y_pred")})
+    g = d.groupby("r", sort=False)
+    t = pd.DataFrame({"minutos_evaluados": g.size(), "min_anotados": g["y"].sum(),
+                      "min_estimados": g["p"].sum()})
+    t["horas"] = t.minutos_evaluados / 60
+    t.index.name = "registro"
+    return t
+
+
+def fit_night_calibration(frac_est, frac_real) -> tuple[float, float]:
+    """Recta por noche (mínimos cuadrados): fracción real = a + b * fracción estimada.
+
+    Se ajusta con las noches de entrenamiento. Si las fracciones estimadas no
+    varían, devuelve la identidad (a = 0, b = 1): no hay con qué calibrar.
+    """
+    x, y = np.asarray(frac_est, float), np.asarray(frac_real, float)
+    if len(x) != len(y) or len(x) < 2:
+        raise ValueError("Hacen falta al menos 2 noches, con estimada y real.")
+    if np.ptp(x) == 0:
+        return 0.0, 1.0
+    b, a = np.polyfit(x, y, 1)
+    return float(a), float(b)
+
+
+def apply_night_calibration(frac_est, a: float, b: float) -> np.ndarray:
+    """Fracción calibrada, recortada entre 0 y 1."""
+    return np.clip(a + b * np.asarray(frac_est, float), 0.0, 1.0)
+
+
 def record_metrics(minutes_pred, minutes_true, hours, records=None) -> dict:
     """Medidas por registro: minutos de apnea por hora y categoría A/B/C.
  
