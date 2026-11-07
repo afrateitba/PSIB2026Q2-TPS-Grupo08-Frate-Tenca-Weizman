@@ -91,6 +91,8 @@ Números vigentes de F en desarrollo (con el filtro de 4.2, sobre los 22.123 min
 
 Con el umbral de Youden, validado dejando sujetos afuera sobre los 22.275 minutos del pipeline final (`11`): sensibilidad **0,84**, especificidad **0,75** y acierto por registro **0,81**. El detector estima un 48,5 % de minutos con apnea, contra el 39,8 % anotado: **sobreestima la apnea total**, y queda como limitación.
 
+**Estimación honesta de desarrollo** (validación cruzada anidada, `12`): con toda la elección repetida sin ver a los sujetos de afuera, F da área bajo la curva **0,851** (intervalo de confianza de 0,760 a 0,916), sensibilidad **0,84**, especificidad **0,75** y acierto por registro **0,81**. Los cinco grupos eligen la misma F. Con la regla de la base, las 12 noches de control quedan como B; separando las noches A del resto se acierta el **83 %** (`13`).
+
 **4.1 Adquisición ✓** (`00_adquisicion.ipynb`)
 - **Medido en los 47 registros:** 100 Hz, ganancia de 200 unidades por mV (5 µV por paso) y conversor de **12 bits**, guardado en formato de 16 bits. Los valores van de −2048 a 2047. v2 decía 16 bits.
 - **Citado** (los archivos no lo dicen): las etiquetas las puso un experto a partir de la polisomnografía (Penzel et al., 2000); las `.qrs` son automáticas y no están auditadas; la derivación.
@@ -159,6 +161,8 @@ Con el umbral de Youden, validado dejando sujetos afuera sobre los 22.275 minuto
 | Minutos malos | ¿Hay que excluir también la señal perdida? | No: se mantiene la regla vigente | 160 minutos más; límite −0,0209 | `10` |
 | Umbrales | ¿Youden o una alternativa? | Youden; ninguna alternativa ni combinación mejora en los sujetos de afuera | sensibilidad 0,84; especificidad 0,75; estima 48,5 % de apnea contra 39,8 % anotado | `11` |
 | Descriptivo | ¿Cuánto separa cada feature? | F es la que más separa; de la variabilidad cardíaca, la potencia de muy baja frecuencia | delta de Cliff: F 0,75; muy baja frecuencia 0,62 | `descriptivo_features` |
+| Validación anidada | ¿Cuánto rinde F con sujetos que no se usaron para elegirla? | Área bajo la curva 0,851 y acierto por registro 0,81; elección estable. La referencia era optimista (0,73 afuera). La calibración por noche no se adopta | optimismo de F: 0,024; las 12 noches de control quedan como B | `12` |
+| Categoría por noche | ¿Un corte calibrado separa mejor las noches A del resto? | No: la regla de la base ya acierta el 83 %, y el corte calibrado, el 77 % | diferencia −0,064 (intervalo de −0,196 a +0,042) | `13` |
 
 ---
 
@@ -271,6 +275,8 @@ Con el umbral de Youden, validado dejando sujetos afuera sobre los 22.275 minuto
 | ✅ | Descriptivo de las features | Delta de Cliff con intervalo de confianza por sujeto, y comparación dentro de cada sujeto con Holm | `descriptivo_features` |
 | ✅ | Métricas para test | Por minuto y por registro, incluida la categoría de cada noche, con sus pruebas | `src/evaluation/metrics.py` |
 | ✅ | Commits de los tres | Augusto 22, Karolina 15 y Leah 7 | historial de git |
+| ✅ | Validación cruzada anidada | Toda la elección repetida dejando sujetos afuera: F da 0,851 de área bajo la curva y 0,81 de acierto por registro; control contra filtraciones superado; con 10 sujetos, el acierto por registro confirmaría H2 en el 62 al 79 % de los sorteos | `12`, `src/stats/nested.py` |
+| ✅ | Categoría por noche | "A contra el resto" con la regla de la base acierta el 83 %; el corte calibrado no mejora y no se adopta. Se agrega como resultado secundario (plan de test 9.3) | `13` |
 | ➖ | Piso de coherencia por *surrogates* | No aplica, porque F no usa la coherencia. `surrogate_floor` queda vacía | `src/features/coupling.py` |
 
 #### 8.2 Falta
@@ -278,7 +284,6 @@ Con el umbral de Youden, validado dejando sujetos afuera sobre los 22.275 minuto
 | | Ítem | Qué hay que hacer | Qué ya existe → qué hay que escribir | Terminado cuando |
 |---|---|---|---|---|
 | ⬜ | **Avance obligatorio (27/10)** | La fecha ya pasó. Si se presentó, anotar la devolución de la docente (en particular, si confirmó que el aporte es nuevo) y pasar este ítem a hecho | Todo el contenido existe (notebooks `00` a `11`) | La devolución anotada en el esquema |
-| ⬜ | **Validación cruzada anidada** | Repetir toda la elección (E3a → E3b → umbral) dejando afuera cada grupo de sujetos | Existe: `subject_folds` y `cross_validate_selection`, que repite solo la elección de un nivel, y el `11`, que ya valida el umbral dejando sujetos afuera con F fija. Hay que escribir: la versión anidada con el umbral y el notebook `12` | AUC, exactitud y acierto por registro en los sujetos de afuera: es la estimación de desarrollo que se reporta (condición 3 del plan) |
 | ⬜ | **Revisión manual de 4.3 en el notebook** | La revisión de las 50 discrepancias está completa en `docs/revision_qrs_50.csv` (21 errores del detector, 18 de las marcas de la base y 11 dudosos), pero el `08` todavía dice que está pendiente. Hay que resumirla en el notebook | Existe: el archivo con las 50 clasificaciones | El `08` resume la revisión. Conviene hacerlo junto con sacar Colab de ese notebook |
 | ⬜ | **Notebooks reproducibles sin Colab** | Los notebooks `08`, `09`, `10` y `descriptivo_features` dependen de Google Colab: importan `google.colab`, montan el Drive y fijan la carpeta del proyecto en `/content/drive/MyDrive/TP-PSB-G8-main`. En otra computadora fallan en la primera celda. Además, el `09` reescribe archivos del repo al ejecutarse (`%%writefile` de `src/preprocessing/wiener.py` y de `tests/test_wiener.py`) y el `10` tiene pruebas copiadas adentro (`codigo_tests`): si se vuelven a correr, pueden pisar la versión commiteada con una más vieja. El `08`, el `09` y el descriptivo se ejecutaron fuera de orden. El `11` ya se corrigió | Existe: la forma de ubicar la carpeta que usan los notebooks `00` a `07` (`ROOT = Path.cwd().parent if Path.cwd().name == "notebooks" else Path.cwd()`), y los archivos que escriben esos notebooks ya están en el repo. Hay que cambiar: la celda del Drive por esa línea, y sacar las celdas que escriben archivos y las pruebas copiadas adentro. Después, ejecutar cada notebook de principio a fin (7.6) y commitearlo con sus salidas | Los cuatro corren de principio a fin en una computadora con el repo clonado, sin Colab y sin errores. Sus resultados coinciden con los guardados; si alguno cambia, se revisa la decisión de esa etapa |
 | ⬜ | **Congelar** | Actualizar las filas † de `plan_test.md` §3 (latidos: marcas de la base con parábola; EDR por área; umbrales de `docs/umbrales_desarrollo.json`), este esquema y el README; commitear y poner la etiqueta | — | Están cumplidas las 4 condiciones de `plan_test.md` §2 y existe la etiqueta `congelado-test` |
@@ -289,8 +294,7 @@ Con el umbral de Youden, validado dejando sujetos afuera sobre los 22.275 minuto
 | ⬜ | **Preparación de la defensa** | Todos responden sobre todo (lo pide la consigna): cada integrante tiene que poder explicar los bloques de los otros | Existe: las preguntas probables de la sección 10 | Cada uno repasó la sección 10 y los notebooks de los otros bloques |
 | ⬜ | GUI (opcional) | Visor del mapa nocturno por registro. Solo si sobra tiempo después de lo demás | — | — |
 
-**Orden de lo que queda:** validación cruzada anidada → notebooks sin Colab y revisión manual en el `08` → congelar → test → figuras de resultados, informe, presentación y defensa.
-- La validación cruzada anidada ya se puede hacer, porque el umbral está definido.
+**Orden de lo que queda:** notebooks sin Colab y revisión manual en el `08` → congelar → test → figuras de resultados, informe, presentación y defensa.
 - Los notebooks tienen que correr limpios antes de congelar, porque el congelamiento fija la versión que se reporta.
 
 **Bloques sugeridos** (como en v2; los responsables los define el grupo):
@@ -298,7 +302,7 @@ Con el umbral de Youden, validado dejando sujetos afuera sobre los 22.275 minuto
 | Bloque | Ítems |
 |---|---|
 | Quien armó cada notebook | sacar Colab de su notebook (`08`, `09`, `10`, descriptivo) y resumir la revisión manual en el `08` |
-| Estadística | validación cruzada anidada y test |
+| Estadística | test |
 | Todos | avance, figuras, informe, presentación y defensa |
 
 ---
@@ -307,12 +311,12 @@ Con el umbral de Youden, validado dejando sujetos afuera sobre los 22.275 minuto
 
 | Riesgo | Qué se sabe | Qué se hace |
 |---|---|---|
-| H2 no se confirma en test | En desarrollo, la diferencia de AUC tiene un IC que incluye 0; test tiene 10 sujetos | Se reportan el efecto y su IC. M2 es la medida más fuerte (0,81 contra 0,42) |
+| H2 no se confirma en test | Con sujetos de afuera, F supera a la referencia en las dos medidas (área bajo la curva +0,12, acierto por registro +0,57), pero test tiene 10 sujetos: el acierto por registro confirmaría H2 en el 62 al 79 % de los sorteos (`12`) | Se reportan el efecto y su intervalo; "sin diferencia" no quiere decir "iguales" |
 | El Pan-Tompkins propio empeora F | **Pasó en parte:** no fue no inferior en el acierto por registro (4.3) | Se siguen usando las `.qrs`; el detector se reporta como validación |
 | Wiener no mejora el EDR | **Pasó:** no fue no inferior en el acierto por registro (4.4) | Se reporta como resultado; el tema obligatorio queda cubierto |
 | La política de minutos malos sesga contra la apnea | **Resuelto:** se mantuvo la regla vigente, y la exclusión por señal perdida no mostró diferencia entre clases (`10`) | — |
-| Números de desarrollo optimistas | Se eligió con desarrollo; el optimismo de E3a fue de 0,021 | Validación cruzada anidada y test |
-| La matriz A/B/C de test es inestable | Hay solo 3 registros B, y B es la categoría menos consistente con el AHI | Se dice en el informe |
+| Números de desarrollo optimistas | Medido: el optimismo de F es de 0,024 (`12`); la referencia es más optimista (0,81 → 0,73) | Se reportan los números de la validación anidada |
+| La matriz A/B/C de test es inestable | Hay solo 3 noches B, y con la regla de la base las noches de control salen como B (`12`) | Se reporta igual, como estaba fijado, y se agrega "A contra el resto" (plan de test 9.3) |
 | Commits desbalanceados | Ya hay commits de los tres (22, 15 y 7) | Seguir repartiendo lo que falta |
 | El detector sobreestima la apnea | Con Youden estima un 48,5 % de minutos con apnea, contra el 39,8 % anotado (`11`) | Se reporta como limitación. Puede pesar sobre todo en la categoría de las noches de control, que casi no tienen apnea |
 
@@ -342,6 +346,7 @@ Con el umbral de Youden, validado dejando sujetos afuera sobre los 22.275 minuto
 | 3 | E3a (`04`) | Se agregaron la regla de no inferioridad (B) y la de mayor AUC (C), y la forma "potencia sola", después de la primera corrida | La regla original era defectuosa; la nueva forma es un control. Cuál regla se usa lo decidió la validación cruzada |
 | 4 | Plan de test 9.1 | La 4.1 se agrega a las condiciones para abrir test | El refinamiento no estaba verificado |
 | 5 | Plan de test 9.2 | El AHI entra como resultado secundario | Es la medida clínica; como principal repetiría M2 (Spearman 0,94) |
+| 6 | Plan de test 9.3 | Se agrega "A contra el resto" como resultado secundario | La regla de la base deja las noches de control como B; la división se eligió por criterio clínico después de ver la matriz del `12` |
 
 ---
 
@@ -358,4 +363,4 @@ Con el umbral de Youden, validado dejando sujetos afuera sobre los 22.275 minuto
 | HRV | Métodos: features | `src/features/hrv_time.py` | `04` |
 | Lomb | Métodos: features espectrales | `src/features/lomb.py` | `04` |
 | (aporte) Acoplamiento | Métodos y resultados | `src/features/edr.py`, `coupling.py`, `build.py`, `variants.py` | `02` a `06` |
-| Análisis estadístico | Resultados | `src/stats/` | `03` a `06`, `11`, `descriptivo_features`, `12` (pendiente), `99` (pendiente) |
+| Análisis estadístico | Resultados | `src/stats/` | `03` a `06`, `11`, `descriptivo_features`, `12`, `13`, `99` (pendiente) |
