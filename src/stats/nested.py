@@ -19,7 +19,8 @@ import numpy as np
 import pandas as pd
 from scipy.stats import rankdata
 
-from ..evaluation.metrics import apply_night_calibration, fit_night_calibration
+from ..evaluation.metrics import (apply_a_cut, apply_night_calibration, category_from_minutes,
+                                  fit_a_cut, fit_night_calibration)
 from ..features.variants import postprocess_variants
 from .compare import pair_counts, select_variant
 from .thresholds import roc_youden
@@ -104,18 +105,22 @@ def nested_cv(families: dict, info: pd.DataFrame, subject_of: pd.Series,
         d = _evaluated(info, out, sc_out)
         d.insert(0, "grupo", k)
         for fam, c in ch.items():
-            # Recta por noche: fracción real contra estimada, en las noches de entrenamiento.
+            # Con las noches de entrenamiento: la recta por noche (fracción real
+            # contra estimada) y el corte que separa las noches A del resto (notebook 13).
             p_tr = (d_tr[f"score_{fam}"] >= c["umbral"]).groupby(level="record").mean()
             real_tr = d_tr["label"].groupby(level="record").mean()
             a, b = fit_night_calibration(p_tr.to_numpy(), real_tr.loc[p_tr.index].to_numpy())
+            min_tr = d_tr["label"].groupby(level="record").sum().loc[p_tr.index]
+            cut_a = fit_a_cut(p_tr.to_numpy(), [category_from_minutes(m) == "A" for m in min_tr])
             d[f"pred_{fam}"] = (d[f"score_{fam}"] >= c["umbral"]).astype(int)
             frac = d[f"pred_{fam}"].groupby(level="record").transform("mean")
             d[f"frac_{fam}"] = frac
             d[f"frac_cal_{fam}"] = apply_night_calibration(frac.to_numpy(), a, b)
+            d[f"a_corte_{fam}"] = apply_a_cut(frac.to_numpy(), cut_a)
             choices.append({"grupo": k, "familia": fam, "sujetos_afuera": len(fold),
                             "elegida_e3a": c["elegida_e3a"], "tamaño_grupo_e3a": len(c["grupo_e3a"]),
                             "variante": c["variante"], "signo": c["signo"], "umbral": c["umbral"],
-                            "cal_a": a, "cal_b": b})
+                            "cal_a": a, "cal_b": b, "corte_a": cut_a})
         rows.append(d)
     return pd.concat(rows), pd.DataFrame(choices)
 
@@ -194,6 +199,24 @@ def record_agreement_boot(t: pd.DataFrame, cols=("est_F", "est_HRV"), n_boot: in
     dif = np.array(boot[a]) - np.array(boot[b])
     rows[f"{a} - {b}"] = {"spearman": point[a] - point[b], "ic_lo": np.nanpercentile(dif, 2.5),
                           "ic_hi": np.nanpercentile(dif, 97.5)}
+    return pd.DataFrame(rows).T
+
+
+def category_agreement_boot(t: pd.DataFrame, real: str, cols, n_boot: int = 2000,
+                            seed: int = 2026) -> pd.DataFrame:
+    """Fracción de noches con la categoría correcta para cada columna de `cols`, y
+    la diferencia (segunda - primera) con bootstrap por sujeto."""
+    rng = np.random.default_rng(seed)
+    hit = {c: (t[c].to_numpy() == t[real].to_numpy()).astype(float) for c in cols}
+    by_subj = [np.flatnonzero(t["subject"].to_numpy() == s) for s in pd.unique(t["subject"])]
+    a, b = cols[0], cols[1]
+    dif = []
+    for _ in range(n_boot):
+        d = np.concatenate([by_subj[i] for i in rng.integers(0, len(by_subj), len(by_subj))])
+        dif.append(hit[b][d].mean() - hit[a][d].mean())
+    rows = {c: {"acierto": hit[c].mean(), "ic_lo": np.nan, "ic_hi": np.nan} for c in cols}
+    rows[f"{b} - {a}"] = {"acierto": hit[b].mean() - hit[a].mean(),
+                          "ic_lo": np.percentile(dif, 2.5), "ic_hi": np.percentile(dif, 97.5)}
     return pd.DataFrame(rows).T
 
 
