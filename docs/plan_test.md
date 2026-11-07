@@ -29,12 +29,15 @@ Valores vigentes al escribir este plan. Los marcados con † pueden cambiar en l
 |---|---|
 | Registros excluidos | c05, x22, x33 (grabaciones duplicadas) |
 | Filtro del ECG | Butterworth pasabanda 0,5–45 Hz, orden 3, fase cero (fijado en 4.2, `notebooks/07_filtro.ipynb`) |
-| Latidos † | marcas `.qrs` de la base, pico R refinado con parábola de 3 puntos (refinamiento verificado en 4.1, `notebooks/00_adquisicion.ipynb`) |
+| Latidos | marcas `.qrs` de la base, pico R refinado con parábola de 3 puntos (refinamiento verificado en 4.1, `notebooks/00_adquisicion.ipynb`). El detector propio no se adopta: no fue no inferior en acierto por registro (`notebooks/08_qrs.ipynb`) |
 | RR | se corrige si está fuera de 0,3–2 s o si se aparta más de 20 % de la mediana de 11 vecinos; se interpola |
-| EDR † | área con signo del QRS (±60 ms del centro, polaridad medida por registro) |
+| Minutos con señal perdida | no se excluyen; se aplica solo la regla del 20 % de RR corregidos (`notebooks/10_calidad.ipynb`) |
+| EDR | área con signo del QRS (±60 ms del centro, polaridad medida por registro), sobre el ECG filtrado, sin filtro de Wiener (`notebooks/09_wiener.ipynb`) |
 | F (detector) | log de la potencia cruzada RR–EDR promediada en 0,01–0,05 Hz; ventana de 240 s centrada en cada minuto; Welch con 3 segmentos de 50 % de solapamiento; RR y EDR remuestreados a 2 Hz; sin normalizar ni suavizar |
 | HRV de referencia | potencia del RR en 0,01–0,04 Hz (VLF) con periodograma de Lomb, ventana de 180 s; sin normalizar ni suavizar |
-| Umbral de F y de la HRV † | índice de Youden en desarrollo; un minuto es apnea si la feature es ≥ umbral |
+| Umbral de F y de la HRV | índice de Youden en desarrollo: un minuto es apnea si F ≥ −6,948641462292339 o, para la referencia, si VLF ≥ 0,001258477270410224 (`notebooks/11_umbrales.ipynb`, `docs/umbrales_desarrollo.json`) |
+
+Valores definitivos al 7/11/2026, antes de abrir test. Las filas que estaban marcadas con † se cerraron en las etapas 4.3, 4.4, minutos malos y umbrales.
 
 ## 4. Minutos que se evalúan
 
