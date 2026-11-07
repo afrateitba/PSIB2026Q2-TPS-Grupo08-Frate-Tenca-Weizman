@@ -1,7 +1,7 @@
 # Esquema general v3 — TPS PSIB 2026Q2, Grupo 08 (Frate, Tenca, Weizman)
 ## Acoplamiento cardiopulmonar derivado del ECG como criterio de detección de apnea del sueño
 
-> **Estado al 6/11/2026.** Reemplaza al esquema v2. Todo lo que dice este documento está medido en los registros de desarrollo y tiene su notebook; lo que es una decisión de criterio, y no de datos, se marca como tal.
+> **Estado al 7/11/2026.** Reemplaza al esquema v2. Todo lo que dice este documento está medido en los registros de desarrollo y tiene su notebook; lo que es una decisión de criterio, y no de datos, se marca como tal.
 >
 > **Cambios principales respecto de v2:** H1 se reformula (con apnea **aparece** un acoplamiento lento; el respiratorio no se pierde). El detector ya no es el cociente de coherencias CR sino **F = log de la potencia cruzada RR–EDR en 0,01–0,05 Hz**, en una ventana de 4 min. El EDR es el **área del QRS**. No se normaliza por noche. La referencia de H2 es la **mejor HRV elegida con datos** (VLF con Lomb), no el LF/HF. La partición es **por sujeto**, sin las grabaciones duplicadas. El filtro pasa a 0,5–45 Hz, orden 3. La base es de **12 bits**, no de 16. Las elecciones usan una **regla de no inferioridad**, y test tiene un plan cerrado (`docs/plan_test.md`).
 
@@ -163,6 +163,7 @@ Con el umbral de Youden, validado dejando sujetos afuera sobre los 22.275 minuto
 | Descriptivo | ¿Cuánto separa cada feature? | F es la que más separa; de la variabilidad cardíaca, la potencia de muy baja frecuencia | delta de Cliff: F 0,75; muy baja frecuencia 0,62 | `descriptivo_features` |
 | Validación anidada | ¿Cuánto rinde F con sujetos que no se usaron para elegirla? | Área bajo la curva 0,851 y acierto por registro 0,81; elección estable. La referencia era optimista (0,73 afuera). La calibración por noche no se adopta | optimismo de F: 0,024; las 12 noches de control quedan como B | `12` |
 | Categoría por noche | ¿Un corte calibrado separa mejor las noches A del resto? | No: la regla de la base ya acierta el 83 %, y el corte calibrado, el 77 % | diferencia −0,064 (intervalo de −0,196 a +0,042) | `13` |
+| Diagnóstico de errores | ¿Dónde se equivoca F? | Los falsos positivos caen sobre todo en noches con apnea (53 %) y cerca de los episodios; los falsos negativos, dentro de episodios largos de dos sujetos (S09, S02). Una decisión en dos niveles mejoraría poco: no se prueba | techo realista: especificidad 0,748 → 0,804; sin los bordes de los episodios, 0,796 | `14` |
 
 ---
 
@@ -277,6 +278,7 @@ Con el umbral de Youden, validado dejando sujetos afuera sobre los 22.275 minuto
 | ✅ | Commits de los tres | Augusto 22, Karolina 15 y Leah 7 | historial de git |
 | ✅ | Validación cruzada anidada | Toda la elección repetida dejando sujetos afuera: F da 0,851 de área bajo la curva y 0,81 de acierto por registro; control contra filtraciones superado; con 10 sujetos, el acierto por registro confirmaría H2 en el 62 al 79 % de los sorteos | `12`, `src/stats/nested.py` |
 | ✅ | Categoría por noche | "A contra el resto" con la regla de la base acierta el 83 %; el corte calibrado no mejora y no se adopta. Se agrega como resultado secundario (plan de test 9.3) | `13` |
+| ✅ | Diagnóstico de errores | Dónde caen los falsos positivos y negativos, qué sujetos explican la variación entre grupos y el techo de una decisión en dos niveles, que no se prueba. Es descriptivo, para el informe | `14`, `src/evaluation/errors.py` |
 | ➖ | Piso de coherencia por *surrogates* | No aplica, porque F no usa la coherencia. `surrogate_floor` queda vacía | `src/features/coupling.py` |
 
 #### 8.2 Falta
@@ -319,6 +321,7 @@ Con el umbral de Youden, validado dejando sujetos afuera sobre los 22.275 minuto
 | La matriz A/B/C de test es inestable | Hay solo 3 noches B, y con la regla de la base las noches de control salen como B (`12`) | Se reporta igual, como estaba fijado, y se agrega "A contra el resto" (plan de test 9.3) |
 | Commits desbalanceados | Ya hay commits de los tres (22, 15 y 7) | Seguir repartiendo lo que falta |
 | El detector sobreestima la apnea | Con Youden estima un 48,5 % de minutos con apnea, contra el 39,8 % anotado (`11`) | Se reporta como limitación. Puede pesar sobre todo en la categoría de las noches de control, que casi no tienen apnea |
+| Errores que no arregla un umbral | Los falsos negativos se concentran en dos sujetos (S09 y S02, que detectan el 39 % y el 26 % de su apnea); los minutos con señal perdida en la ventana son falsos positivos casi siempre (96 %, aunque son el 2,6 %) (`14`) | Se documentan en el informe como limitaciones |
 
 ---
 
@@ -363,4 +366,4 @@ Con el umbral de Youden, validado dejando sujetos afuera sobre los 22.275 minuto
 | HRV | Métodos: features | `src/features/hrv_time.py` | `04` |
 | Lomb | Métodos: features espectrales | `src/features/lomb.py` | `04` |
 | (aporte) Acoplamiento | Métodos y resultados | `src/features/edr.py`, `coupling.py`, `build.py`, `variants.py` | `02` a `06` |
-| Análisis estadístico | Resultados | `src/stats/` | `03` a `06`, `11`, `descriptivo_features`, `12`, `13`, `99` (pendiente) |
+| Análisis estadístico | Resultados | `src/stats/` | `03` a `06`, `11`, `descriptivo_features`, `12`, `13`, `14`, `99` (pendiente) |
