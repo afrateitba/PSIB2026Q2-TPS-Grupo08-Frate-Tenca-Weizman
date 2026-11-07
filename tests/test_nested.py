@@ -2,9 +2,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.evaluation.metrics import apply_night_calibration, fit_night_calibration, night_minutes
-from src.stats.nested import (fold_auc, nested_cv, record_agreement_boot, record_table,
-                              select_pipeline, subsample_h2)
+from src.evaluation.metrics import (apply_a_cut, apply_night_calibration, fit_a_cut,
+                                    fit_night_calibration, night_minutes)
+from src.stats.nested import (category_agreement_boot, fold_auc, nested_cv, record_agreement_boot,
+                              record_table, select_pipeline, subsample_h2)
 
 
 def _toy(n_subj=10, n_min=120, seed=0):
@@ -56,8 +57,31 @@ def test_nested_cv_never_uses_heldout_labels():
     m = perm.index.get_level_values("record").isin(out)
     perm.loc[m, "label"] = np.random.default_rng(1).permutation(perm.loc[m, "label"].to_numpy())
     pred2, ch2 = nested_cv(fams, perm, subject_of, idx, folds[:1], **KW)
-    cols = ["variante", "signo", "umbral", "cal_a", "cal_b"]
+    cols = ["variante", "signo", "umbral", "cal_a", "cal_b", "corte_a"]
     pd.testing.assert_frame_equal(ch1[cols], ch2[cols])
+
+
+def test_a_cut():
+    frac = np.array([0.05, 0.08, 0.12, 0.20, 0.25, 0.40, 0.55, 0.70])
+    is_a = np.array([False, False, False, False, False, True, True, True])
+    cut = fit_a_cut(frac, is_a)
+    assert 0.25 < cut <= 0.40
+    assert (apply_a_cut(frac, cut) == is_a).all()
+    assert apply_a_cut([0.1, 0.5], 0.3).tolist() == [False, True]
+    assert fit_a_cut([0.1, 0.2], [True, True]) == -np.inf        # todas A: corte por debajo de todo
+
+
+def test_nested_cv_adds_a_cut_and_agreement():
+    fams, info, subject_of, idx, folds = _toy()
+    pred, choices = nested_cv(fams, info, subject_of, idx, folds, **KW)
+    assert {"a_corte_F", "a_corte_HRV"} <= set(pred.columns) and "corte_a" in choices
+    t = pred.groupby(level="record").agg(real=("a_corte_F", "first"))
+    t["subject"] = subject_of.loc[t.index]
+    t["nunca"] = False
+    t["igual"] = t["real"]
+    r = category_agreement_boot(t, "real", ["nunca", "igual"], n_boot=100)
+    assert r.loc["igual", "acierto"] == 1.0
+    assert r.loc["igual - nunca", "acierto"] == pytest.approx(t.real.mean())
 
 
 def test_fold_auc_and_record_agreement():

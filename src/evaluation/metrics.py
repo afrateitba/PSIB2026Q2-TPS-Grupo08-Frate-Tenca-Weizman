@@ -97,6 +97,30 @@ def apply_night_calibration(frac_est, a: float, b: float) -> np.ndarray:
     return np.clip(a + b * np.asarray(frac_est, float), 0.0, 1.0)
 
 
+def fit_a_cut(frac_est, is_a) -> float:
+    """Corte sobre la fracción de minutos marcados como apnea que separa las
+    noches A (100 minutos de apnea o más) del resto (notebook 13).
+
+    Los candidatos son los puntos medios entre fracciones estimadas
+    consecutivas, más los dos extremos. Se elige el que deja más noches bien
+    clasificadas; si hay empate, el del medio entre los empatados.
+    """
+    x = np.asarray(frac_est, float)
+    a = np.asarray(is_a, bool)
+    if len(x) != len(a) or len(x) < 2:
+        raise ValueError("Hacen falta al menos 2 noches, con fracción y clase.")
+    u = np.unique(x)
+    cand = np.r_[-np.inf, (u[:-1] + u[1:]) / 2, np.inf]
+    ok = np.array([int((apply_a_cut(x, c) == a).sum()) for c in cand])
+    tied = cand[ok == ok.max()]
+    return float(tied[len(tied) // 2])
+
+
+def apply_a_cut(frac_est, cut: float) -> np.ndarray:
+    """True (noche A) si la fracción estimada es >= corte."""
+    return np.asarray(frac_est, float) >= cut
+
+
 def record_metrics(minutes_pred, minutes_true, hours, records=None) -> dict:
     """Medidas por registro: minutos de apnea por hora y categoría A/B/C.
  
