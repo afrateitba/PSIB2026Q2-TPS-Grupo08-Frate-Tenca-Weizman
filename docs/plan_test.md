@@ -101,3 +101,11 @@ Se agrega al punto 2 de la sección 6: Spearman, sobre los 20 registros, entre l
 Motivo: M2 usa la fracción de minutos anotados, y el AHI es la medida clínica de gravedad. No pasa a ser una medida principal por dos razones:
 - **Con datos:** en desarrollo, la fracción de minutos con apnea y el AHI tienen un Spearman de 0,94 (IC 0,84 a 0,97). Como tercera medida principal repetiría casi lo mismo que M2 y le quitaría potencia a la corrección de Holm.
 - **Metodológica:** el detector estima minutos y el AHI cuenta eventos por hora de sueño, que desde el ECG no se conoce. Es una decisión de criterio, no algo que los datos puedan decidir.
+
+### 9.3 (6/11/2026, antes de abrir test) Nuevo resultado secundario: noches A contra el resto
+
+Se agrega al punto 2 de la sección 6, además de la matriz A/B/C: la clasificación de cada noche en A (100 minutos de apnea estimados o más) contra el resto, con la misma regla de la base, para F y para la referencia. No agrega ningún parámetro: es la matriz A/B/C agrupada en dos clases.
+
+Motivo: en desarrollo, con sujetos de afuera (`notebooks/12_validacion_anidada.ipynb` y `13_categoria_noche.ipynb`), la regla de la base deja las 12 noches de control como B, porque el detector sobreestima la apnea de cada noche, y la clase B tiene pocas noches (3 en test) y es la menos consistente con el índice de apnea-hipopnea. Separar A del resto clasifica bien el 83 % de las noches de desarrollo. Un corte calibrado en desarrollo para esta división no mejoró (77 %; diferencia de −0,064, con intervalo de confianza de −0,196 a +0,042) y no se adopta.
+
+Se declara: la división en dos se eligió por criterio clínico (la A es la clase consistente con el índice de apnea-hipopnea) después de ver la matriz A/B/C del notebook 12. Una versión con tres categorías y dos cortes calibrados se descartó sin mirar sus resultados.
