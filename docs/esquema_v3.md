@@ -1,7 +1,7 @@
 # Esquema general v3 — TPS PSIB 2026Q2, Grupo 08 (Frate, Tenca, Weizman)
 ## Acoplamiento cardiopulmonar derivado del ECG como criterio de detección de apnea del sueño
 
-> **Estado al 20/10/2026.** Reemplaza al esquema v2. Todo lo que dice este documento está medido en los registros de desarrollo y tiene su notebook; lo que es una decisión de criterio, y no de datos, se marca como tal.
+> **Estado al 6/11/2026.** Reemplaza al esquema v2. Todo lo que dice este documento está medido en los registros de desarrollo y tiene su notebook; lo que es una decisión de criterio, y no de datos, se marca como tal.
 >
 > **Cambios principales respecto de v2:** H1 se reformula (con apnea **aparece** un acoplamiento lento; el respiratorio no se pierde). El detector ya no es el cociente de coherencias CR sino **F = log de la potencia cruzada RR–EDR en 0,01–0,05 Hz**, en una ventana de 4 min. El EDR es el **área del QRS**. No se normaliza por noche. La referencia de H2 es la **mejor HRV elegida con datos** (VLF con Lomb), no el LF/HF. La partición es **por sujeto**, sin las grabaciones duplicadas. El filtro pasa a 0,5–45 Hz, orden 3. La base es de **12 bits**, no de 16. Las elecciones usan una **regla de no inferioridad**, y test tiene un plan cerrado (`docs/plan_test.md`).
 
@@ -77,17 +77,19 @@
 | Paso | Valor vigente | Estado | Dónde |
 |---|---|---|---|
 | Filtro | Butterworth pasabanda 0,5–45 Hz, orden 3, ida y vuelta (`config.ECG_FILTER`) | ✓ 4.2 | `07_filtro.ipynb` |
-| Latidos | marcas `.qrs` de la base; el pico R se busca a ±30 ms con la polaridad del registro y se refina con una parábola de 3 puntos | refinamiento ✓ 4.1; detector propio pendiente (4.3) | `00_adquisicion.ipynb` |
-| Wiener | no se aplica todavía | pendiente (4.4) | — |
+| Latidos | marcas `.qrs` de la base; el pico R se busca a ±30 ms con la polaridad del registro y se refina con una parábola de 3 puntos | ✓ refinamiento (4.1); el detector propio se evaluó en 4.3 y no se adopta | `00`, `08` |
+| Wiener | no se aplica | ✓ evaluado en 4.4: no se adopta | `09` |
 | RR | se corrige si está fuera de 0,3–2 s o si se aparta más de 20 % de la mediana de 11 vecinos; se interpola | vigente (supuesto, ver 4.5) | `src/qrs/rr_clean.py` |
-| Minutos evaluados | con etiqueta, con 20 % o menos de RR corregidos y con la feature calculable | vigente (supuesto, ver 4.5) | `plan_test.md` §4 |
+| Minutos evaluados | con etiqueta, con 20 % o menos de RR corregidos y con la feature calculable (22.275 minutos de desarrollo) | ✓ se mantiene (`10`): excluir además la señal perdida no se adopta. La regla del 20 % en sí sigue sin verificarse | `plan_test.md` §4, `10` |
 | EDR | área con signo del QRS (±60 ms del centro, polaridad medida en cada registro), sobre el ECG filtrado | ✓ E1 + E3a | `02_E1_edr.ipynb` |
 | Remuestreo | RR y EDR a 2 Hz con interpolación cúbica | ✓ (lineal da el mismo ranking, E1) | `src/features/coupling.py` |
 | **F (detector)** | log de la potencia cruzada RR–EDR promediada en 0,01–0,05 Hz; ventana de **240 s** centrada en cada minuto; Welch con 3 segmentos y 50 % de solapamiento; sin normalizar ni suavizar | ✓ E3a + E3b | `04`, `06` |
 | HRV de referencia | potencia del RR en VLF (0,01–0,04 Hz) con periodograma de Lomb, ventana de 180 s; sin normalizar ni suavizar | ✓ E4 + E3b | `04`, `06` |
-| Umbral | índice de Youden en desarrollo; un minuto es apnea si F ≥ umbral | pendiente | — |
+| Umbral | índice de Youden en desarrollo: un minuto es apnea si F ≥ −6,9486 (referencia: potencia de muy baja frecuencia ≥ 0,0012585) | ✓ `11` | `11`, `docs/umbrales_desarrollo.json` |
 
 Números vigentes de F en desarrollo (con el filtro de 4.2, sobre los 22.123 minutos de evaluación de E3a): AUC **0,875** y acierto por registro **0,810**.
+
+Con el umbral de Youden, validado dejando sujetos afuera sobre los 22.275 minutos del pipeline final (`11`): sensibilidad **0,84**, especificidad **0,75** y acierto por registro **0,81**. El detector estima un 48,5 % de minutos con apnea, contra el 39,8 % anotado: **sobreestima la apnea total**, y queda como limitación.
 
 **4.1 Adquisición ✓** (`00_adquisicion.ipynb`)
 - **Medido en los 47 registros:** 100 Hz, ganancia de 200 unidades por mV (5 µV por paso) y conversor de **12 bits**, guardado en formato de 16 bits. Los valores van de −2048 a 2047. v2 decía 16 bits.
@@ -102,15 +104,22 @@ Números vigentes de F en desarrollo (con el filtro de 4.2, sobre los 22.123 min
 - El filtro de v2 (0,5–40 Hz, orden 2) atenuaba 10,4 dB a 41,8 Hz. Ganó el de menor orden que cumple.
 - **Verificación:** F no inferior (AUC 0,876 → 0,875; acierto 0,813 → 0,810). Control E1: 0,531 → 0,520.
 
-**4.3 Detección QRS: pendiente** (sección 8).
+**4.3 Detección QRS: evaluada, no se adopta** (`08`)
+- Pan-Tompkins propio a 100 Hz (`detect_r_peaks`), sin suponer la polaridad del R. Contra las marcas de la base, con todos los latidos de desarrollo: sensibilidad 0,996 y valor predictivo positivo 0,972. El peor registro es x17 (0,92 y 0,59).
+- Verificación con F: no inferior en el área bajo la curva por minuto (+0,004; intervalo de confianza de −0,0004 a +0,008), pero no en el acierto por registro (−0,024; intervalo de −0,097 a +0,019). Como hay que cumplir las dos, **se siguen usando las marcas de la base**.
+- Control con la respiración real (descriptivo): 0,521 → 0,535; sube en 6 de los 8 registros.
+- Revisión manual de 50 discrepancias sorteadas (`docs/revision_qrs_50.csv`): 21 errores del detector, 18 errores de las marcas de la base y 11 dudosos. El notebook todavía dice que la revisión está pendiente (sección 8).
 
-**4.4 Recorte en realizaciones y Wiener: pendiente** (sección 8).
+**4.4 Recorte en realizaciones y Wiener: evaluado, no se adopta** (`09`)
+- Latidos de −250 a +400 ms alineados en R; el promedio estima la señal y el residuo, el ruido; H = S_s / (S_s + S_n) por registro, aplicado al electrocardiograma continuo (`src/preprocessing/wiener.py`).
+- Verificación con F: no inferior en el área bajo la curva (+0,004; intervalo de confianza de −0,009 a +0,017), pero no en el acierto por registro (−0,047; intervalo de −0,165 a +0,038). **No se adopta.**
+- Control con la respiración real (descriptivo): 0,521 → 0,534; sube en 7 de los 8 registros.
 - Por qué no borra el EDR (vale lo de v2): un filtro LTI aplica la misma ganancia a todos los latidos. Lo que no se hace es promediar latidos ni empujarlos hacia el template.
 
 **4.5 Limpieza de RR y minutos malos**
 - Las reglas del RR y la del 20 % de minutos corregidos vienen de v2 y **no se verificaron con datos**.
 - **Medido en 4.1:** la regla del 20 % excluye una mediana de 0,2 % de los minutos por registro, pero a02 pierde el 41 % y x17 el 27 %. Saca algo más de minutos con apnea que normales (3,5 % contra 2,3 %; IC de la diferencia −2,8 a +6,8 puntos). No ve la señal perdida.
-- La política se decide antes de los umbrales (sección 8).
+- **Decidido en `10`: se mantiene la regla vigente.** Excluir además las ventanas de 240 s con señal perdida sacaría 160 minutos más (0,72 %), sin diferencia entre clases: 0,68 % de los normales y 0,78 % de los minutos con apnea (intervalo de confianza de la diferencia: −0,47 a +0,68 puntos). En el acierto por registro, el límite inferior de la diferencia quedó en −0,0209, apenas por debajo de −0,02, así que no cumplió la no inferioridad. Queda como limitación que algunos minutos con señal perdida se siguen evaluando.
 
 **4.6 Segmentación ✓**
 - La unidad de decisión es **1 minuto**, alineado con las etiquetas.
@@ -145,6 +154,11 @@ Números vigentes de F en desarrollo (con el filtro de 4.2, sobre los 22.123 min
 | E3b | ¿Normalizar o suavizar? | Ninguna de las dos; ventana de 4 min | F 0,876 (IC 0,81 a 0,93); acierto por registro F 0,81 contra HRV 0,42 | `06` |
 | 4.2 | ¿El filtro cumple la especificación? | No; pasa a 0,5–45 Hz, orden 3 | F no inferior | `07` |
 | 4.1 | ¿Qué dicen los archivos? ¿Sirve el refinamiento? | 12 bits; el refinamiento recupera el tiempo entre muestras | 10,0 → 2,5 ms | `00` |
+| 4.3 | ¿El detector propio puede reemplazar a las marcas de la base? | No: falla la no inferioridad en el acierto por registro | sensibilidad 0,996; acierto por registro −0,024 (límite −0,097) | `08` |
+| 4.4 | ¿Conviene el filtro de Wiener? | No se adopta: falla la no inferioridad en el acierto por registro | acierto por registro −0,047 (límite −0,165) | `09` |
+| Minutos malos | ¿Hay que excluir también la señal perdida? | No: se mantiene la regla vigente | 160 minutos más; límite −0,0209 | `10` |
+| Umbrales | ¿Youden o una alternativa? | Youden; ninguna alternativa ni combinación mejora en los sujetos de afuera | sensibilidad 0,84; especificidad 0,75; estima 48,5 % de apnea contra 39,8 % anotado | `11` |
+| Descriptivo | ¿Cuánto separa cada feature? | F es la que más separa; de la variabilidad cardíaca, la potencia de muy baja frecuencia | delta de Cliff: F 0,75; muy baja frecuencia 0,62 | `descriptivo_features` |
 
 ---
 
@@ -212,6 +226,7 @@ Números vigentes de F en desarrollo (con el filtro de 4.2, sobre los 22.123 min
   2. resultados;
   3. **Decisión**, escrita después de correr, con los números.
 - Se commitea ejecutado, con sus salidas. Las figuras van a `results/figuras/`, que no se versiona.
+- Tiene que correr en cualquier computadora con el repo clonado: la carpeta del proyecto se ubica a partir de dónde se abre el notebook, sin rutas fijas ni Google Drive. El notebook no escribe archivos de `src/` ni de `tests/`: el código y las pruebas se editan en sus archivos y se commitean aparte.
 - Se corre con `jupyter nbconvert --to notebook --execute --inplace notebooks/<nombre>.ipynb`. En Windows, con `.venv/Scripts` en el PATH, y `python -X utf8` si se imprimen acentos.
 - La caché de E3 (`results/e3/`) no se versiona. Se regenera corriendo `04_E3a_features.ipynb`, que tarda mucho. La usan las verificaciones para tomar los minutos de E3a.
 
@@ -249,40 +264,41 @@ Números vigentes de F en desarrollo (con el filtro de 4.2, sobre los 22.123 min
 | ✅ | E3b | Sin normalizar ni suavizar; ventana de 240 s | `06` |
 | ✅ | Herramientas estadísticas | AUC con bootstrap por sujeto, acierto por registro, orientación, regla de elección, validación cruzada por sujetos, Wilcoxon por sujeto, Holm y Youden | `src/stats/` |
 | ✅ | Documentación | Esquema v3 y README actualizado | `docs/`, `README.md` |
+| ✅ | 4.3 Detección QRS | Pan-Tompkins propio a 100 Hz con sus pruebas, validado contra las marcas de la base y con revisión manual de 50 discrepancias. No se adopta: falla la no inferioridad en el acierto por registro | `08`, `src/qrs/pan_tompkins.py`, `docs/revision_qrs_50.csv` |
+| ✅ | 4.4 Realizaciones y Wiener | Implementado con sus pruebas y evaluado. No se adopta: falla la no inferioridad en el acierto por registro | `09`, `src/preprocessing/wiener.py` |
+| ✅ | Minutos malos | Se mantiene la regla vigente; excluir también la señal perdida no cumplió la no inferioridad (límite −0,0209) | `10`, `src/preprocessing/quality.py` |
+| ✅ | Umbrales | Youden para F (≥ −6,9486) y para la referencia (≥ 0,0012585). Las alternativas y las combinaciones no mejoran en los sujetos de afuera | `11`, `docs/umbrales_desarrollo.json`, `src/stats/thresholds.py` |
+| ✅ | Descriptivo de las features | Delta de Cliff con intervalo de confianza por sujeto, y comparación dentro de cada sujeto con Holm | `descriptivo_features` |
+| ✅ | Métricas para test | Por minuto y por registro, incluida la categoría de cada noche, con sus pruebas | `src/evaluation/metrics.py` |
+| ✅ | Commits de los tres | Augusto 22, Karolina 15 y Leah 7 | historial de git |
 | ➖ | Piso de coherencia por *surrogates* | No aplica, porque F no usa la coherencia. `surrogate_floor` queda vacía | `src/features/coupling.py` |
 
 #### 8.2 Falta
 
 | | Ítem | Qué hay que hacer | Qué ya existe → qué hay que escribir | Terminado cuando |
 |---|---|---|---|---|
-| ⬜ | **Avance obligatorio (27/10)** | Mostrar el preprocesamiento y las features, y confirmar con la docente que el aporte es nuevo (lo pedía v2) | Todo el contenido existe (notebooks `00` a `07` y figuras en `results/figuras/`) → armar la presentación del avance | Presentado, con la devolución anotada en el esquema |
-| ⬜ | **4.3 Detección QRS** | Pan-Tompkins propio con las etapas clásicas (pasabanda de ~5–15 Hz, derivada, cuadrado, integración en ventana de ~150 ms, umbrales adaptativos con búsqueda hacia atrás), con los coeficientes llevados a 100 Hz y **sin suponer la polaridad del R**. Antes, revisar a mano una muestra de las `.qrs`, elegida con semilla antes de mirarla, porque son automáticas. Validar contra las `.qrs` con Se y VPP, tolerancia de 100 ms | Existe: `qrs_reference` (polaridad por registro), `r_peaks_from_marks` y `refine_peaks_parabolic` (refinamiento) y `record_series`. Hay que escribir: `detect_r_peaks` y `validate_against_reference` (vacías), una opción en `record_series` para usar el detector propio, los tests y el notebook `08` | F con el detector propio es no inferior a F con las `.qrs` (7.4): se adopta. Si no, se siguen usando las `.qrs` y el detector se reporta como validación |
-| ⬜ | **4.4 Realizaciones y Wiener** | Recortar latidos alineados en R (−250 a +400 ms); cada uno es una realización. Promedio de ensamble → PSD de la señal; latido menos promedio → PSD del ruido. H = S_s / (S_s + S_n) por registro, aplicado como filtro LTI sobre el ECG continuo, antes de calcular el EDR | Existe: picos R refinados, `beat_matrix` (recorta ventanas simétricas: sirve de base) y `validate_edr` (la métrica de E1). Hay que escribir: `extract_realizations`, `estimate_psds` y `wiener_filter` (vacías), una opción en `record_series`, los tests y el notebook `09` | F es no inferior (7.4): se adopta (plan de test 2.1). La métrica de E1 en los 8 registros con respiración se reporta como control. Si no mejora, se reporta igual |
-| ⬜ | **Minutos malos** | Decidir qué minutos se evalúan: (a) la regla del 20 % de RR corregidos, que se asumió; (b) la señal perdida (tramos planos o clavados en el tope de 1 s o más), que hoy se interpola y que la regla del 20 % no ve. Regla candidata, sin parámetros libres: un minuto se evalúa solo si su ventana de 240 s no tiene señal perdida | Existe: `flat_mask`, `saturated_mask`, `minute_quality` y la medición de la 4.1. Hay que escribir: la máscara por ventana y la regla en `build`, los tests y el notebook `10` | Medidos cuántos minutos y registros pierde, el sesgo entre minutos con apnea y normales (IC por sujeto) y la no inferioridad de F. Si cambia los minutos evaluados, se agrega como desvío en `plan_test.md` §9 |
-| ⬜ | **Umbrales** | Youden de F y de la HRV en desarrollo. Alternativas fijadas antes de correr: la mediana de los Youden de los remuestreos por sujeto, y el umbral que iguala la apnea total estimada con la real. Combinar F con la HRV (AND u OR) | Existe: `roc_youden`, `record_agreement` y `subject_folds`. Hay que escribir: las alternativas, la combinación y el notebook `11` | Youden es la referencia. Otra opción se adopta solo si mejora en los sujetos de afuera de la validación cruzada, con IC. Los umbrales quedan escritos y commiteados (condición 2 del plan de test) |
-| ⬜ | **Descriptivo de las features** | Mann-Whitney y delta de Cliff de todas las features (HRV y acoplamiento) entre minutos con y sin apnea, con Holm | Hay que escribir: `mann_whitney_cliff` (vacía) y la tabla para el informe | Tabla con el tamaño del efecto y su IC por feature. Con ~20.000 minutos el p no informa |
-| ⬜ | **Validación cruzada anidada** | Repetir toda la elección (E3a → E3b → umbral) dejando afuera cada grupo de sujetos | Existe: `subject_folds` y `cross_validate_selection`, que repite solo la elección de un nivel. Hay que escribir: la versión anidada con el umbral y el notebook `12` | AUC, exactitud y acierto por registro en los sujetos de afuera: es la estimación de desarrollo que se reporta (condición 3 del plan) |
-| ⬜ | **Congelar** | Actualizar las filas † de `plan_test.md` §3, este esquema y el README; commitear y poner la etiqueta | — | Están cumplidas las 4 condiciones de `plan_test.md` §2 y existe la etiqueta `congelado-test` |
-| ⬜ | **Test** | Correr `notebooks/99_test.ipynb` una sola vez sobre la etiqueta, con el plan (§4 a §6) | Existe: `compare_variants`, `agreement_compare`, `paired_subject_test` y `holm`. Hay que escribir: `minute_metrics` y `record_metrics` (vacías) y el notebook | Ejecutado una vez y commiteado con sus salidas tal como quedaron |
+| ⬜ | **Avance obligatorio (27/10)** | La fecha ya pasó. Si se presentó, anotar la devolución de la docente (en particular, si confirmó que el aporte es nuevo) y pasar este ítem a hecho | Todo el contenido existe (notebooks `00` a `11`) | La devolución anotada en el esquema |
+| ⬜ | **Validación cruzada anidada** | Repetir toda la elección (E3a → E3b → umbral) dejando afuera cada grupo de sujetos | Existe: `subject_folds` y `cross_validate_selection`, que repite solo la elección de un nivel, y el `11`, que ya valida el umbral dejando sujetos afuera con F fija. Hay que escribir: la versión anidada con el umbral y el notebook `12` | AUC, exactitud y acierto por registro en los sujetos de afuera: es la estimación de desarrollo que se reporta (condición 3 del plan) |
+| ⬜ | **Revisión manual de 4.3 en el notebook** | La revisión de las 50 discrepancias está completa en `docs/revision_qrs_50.csv` (21 errores del detector, 18 de las marcas de la base y 11 dudosos), pero el `08` todavía dice que está pendiente. Hay que resumirla en el notebook | Existe: el archivo con las 50 clasificaciones | El `08` resume la revisión. Conviene hacerlo junto con sacar Colab de ese notebook |
+| ⬜ | **Notebooks reproducibles sin Colab** | Los notebooks `08`, `09`, `10` y `descriptivo_features` dependen de Google Colab: importan `google.colab`, montan el Drive y fijan la carpeta del proyecto en `/content/drive/MyDrive/TP-PSB-G8-main`. En otra computadora fallan en la primera celda. Además, el `09` reescribe archivos del repo al ejecutarse (`%%writefile` de `src/preprocessing/wiener.py` y de `tests/test_wiener.py`) y el `10` tiene pruebas copiadas adentro (`codigo_tests`): si se vuelven a correr, pueden pisar la versión commiteada con una más vieja. El `08`, el `09` y el descriptivo se ejecutaron fuera de orden. El `11` ya se corrigió | Existe: la forma de ubicar la carpeta que usan los notebooks `00` a `07` (`ROOT = Path.cwd().parent if Path.cwd().name == "notebooks" else Path.cwd()`), y los archivos que escriben esos notebooks ya están en el repo. Hay que cambiar: la celda del Drive por esa línea, y sacar las celdas que escriben archivos y las pruebas copiadas adentro. Después, ejecutar cada notebook de principio a fin (7.6) y commitearlo con sus salidas | Los cuatro corren de principio a fin en una computadora con el repo clonado, sin Colab y sin errores. Sus resultados coinciden con los guardados; si alguno cambia, se revisa la decisión de esa etapa |
+| ⬜ | **Congelar** | Actualizar las filas † de `plan_test.md` §3 (latidos: marcas de la base con parábola; EDR por área; umbrales de `docs/umbrales_desarrollo.json`), este esquema y el README; commitear y poner la etiqueta | — | Están cumplidas las 4 condiciones de `plan_test.md` §2 y existe la etiqueta `congelado-test` |
+| ⬜ | **Test** | Correr `notebooks/99_test.ipynb` una sola vez sobre la etiqueta, con el plan (§4 a §6) | Existe: `compare_variants`, `agreement_compare`, `paired_subject_test`, `holm`, `minute_metrics`, `record_metrics` y los umbrales en `docs/umbrales_desarrollo.json`. Hay que escribir: el notebook | Ejecutado una vez y commiteado con sus salidas tal como quedaron |
 | ⬜ | **Figuras finales** | La central: el mapa nocturno de acoplamiento con las apneas superpuestas, en un registro A y uno C. Además: ECG filtrado con los R refinados, RR, EDR, ROC de F contra la HRV y apnea estimada contra real a lo largo de la noche | Existe: los mapas de E2 (a03 y c02, en `03`) y las figuras de cada notebook en `results/figuras/`. Hay que escribir: `coherence_night_map` (vacía) y las figuras finales con un estilo común | Cada figura del informe se genera desde código del repo |
 | ⬜ | **Informe** | 8 páginas como máximo, más 4 de anexo, con la estructura de la sección 12 | Existe: las decisiones con sus números en cada notebook y en este esquema | Entregado en PDF el 10/11 |
 | ⬜ | **Presentación** | 15–20 min | — | Lista para la defensa |
 | ⬜ | **Preparación de la defensa** | Todos responden sobre todo (lo pide la consigna): cada integrante tiene que poder explicar los bloques de los otros | Existe: las preguntas probables de la sección 10 | Cada uno repasó la sección 10 y los notebooks de los otros bloques |
-| ⬜ | **Commits balanceados** | Cada integrante commitea su bloque, en una rama por bloque con un PR que revisa otro (7.7). Hoy todos los commits están a nombre de una sola persona | — | El historial muestra commits de los tres |
 | ⬜ | GUI (opcional) | Visor del mapa nocturno por registro. Solo si sobra tiempo después de lo demás | — | — |
 
-**Orden:** avance → 4.3 → 4.4 → minutos malos → umbrales → validación cruzada anidada → congelar → test → figuras de resultados, informe, presentación y defensa. El descriptivo va en cualquier momento antes de congelar.
-- Los minutos malos van después de 4.3 y 4.4, porque esas etapas pueden cambiar qué latidos se usan; así los minutos evaluados cambian una sola vez.
-- Los umbrales van después de los minutos malos, porque dependen de qué minutos se evalúan.
-- La validación cruzada anidada necesita el umbral definido.
+**Orden de lo que queda:** validación cruzada anidada → notebooks sin Colab y revisión manual en el `08` → congelar → test → figuras de resultados, informe, presentación y defensa.
+- La validación cruzada anidada ya se puede hacer, porque el umbral está definido.
+- Los notebooks tienen que correr limpios antes de congelar, porque el congelamiento fija la versión que se reporta.
 
 **Bloques sugeridos** (como en v2; los responsables los define el grupo):
 
 | Bloque | Ítems |
 |---|---|
-| Latidos | 4.3 y minutos malos |
-| Señal | 4.4 |
-| Estadística | umbrales, descriptivo, validación cruzada anidada y test |
+| Quien armó cada notebook | sacar Colab de su notebook (`08`, `09`, `10`, descriptivo) y resumir la revisión manual en el `08` |
+| Estadística | validación cruzada anidada y test |
 | Todos | avance, figuras, informe, presentación y defensa |
 
 ---
@@ -292,12 +308,13 @@ Números vigentes de F en desarrollo (con el filtro de 4.2, sobre los 22.123 min
 | Riesgo | Qué se sabe | Qué se hace |
 |---|---|---|
 | H2 no se confirma en test | En desarrollo, la diferencia de AUC tiene un IC que incluye 0; test tiene 10 sujetos | Se reportan el efecto y su IC. M2 es la medida más fuerte (0,81 contra 0,42) |
-| El Pan-Tompkins propio empeora F | Las `.qrs` funcionan hoy | Se siguen usando las `.qrs` y el detector se reporta como validación |
-| Wiener no mejora el EDR | — | Se reporta como resultado |
-| La política de minutos malos sesga contra la apnea | Hoy la regla del 20 % no muestra sesgo significativo, pero el IC llega a +6,8 puntos | Se mide con IC antes de adoptarla |
+| El Pan-Tompkins propio empeora F | **Pasó en parte:** no fue no inferior en el acierto por registro (4.3) | Se siguen usando las `.qrs`; el detector se reporta como validación |
+| Wiener no mejora el EDR | **Pasó:** no fue no inferior en el acierto por registro (4.4) | Se reporta como resultado; el tema obligatorio queda cubierto |
+| La política de minutos malos sesga contra la apnea | **Resuelto:** se mantuvo la regla vigente, y la exclusión por señal perdida no mostró diferencia entre clases (`10`) | — |
 | Números de desarrollo optimistas | Se eligió con desarrollo; el optimismo de E3a fue de 0,021 | Validación cruzada anidada y test |
 | La matriz A/B/C de test es inestable | Hay solo 3 registros B, y B es la categoría menos consistente con el AHI | Se dice en el informe |
-| Commits desbalanceados | Hoy todos los commits están a nombre de una sola persona | Repartir los bloques de la sección 8 |
+| Commits desbalanceados | Ya hay commits de los tres (22, 15 y 7) | Seguir repartiendo lo que falta |
+| El detector sobreestima la apnea | Con Youden estima un 48,5 % de minutos con apnea, contra el 39,8 % anotado (`11`) | Se reporta como limitación. Puede pesar sobre todo en la categoría de las noches de control, que casi no tienen apnea |
 
 ---
 
@@ -334,11 +351,11 @@ Números vigentes de F en desarrollo (con el filtro de 4.2, sobre los 22.123 min
 |---|---|---|---|
 | Adquisición | Materiales: base de datos | `src/data.py`, `src/preprocessing/quality.py`, `src/qrs/quantization.py` | `00`, `01` |
 | Filtros convencionales | Métodos: preprocesamiento | `src/preprocessing/filters.py` | `07` |
-| Recorte en realizaciones | Métodos: filtro óptimo | `src/preprocessing/wiener.py` | `09` (pendiente) |
-| Filtros óptimos | Métodos: filtro óptimo | `src/preprocessing/wiener.py` | `09` (pendiente) |
-| Detección QRS | Métodos: detección de latidos | `src/qrs/pan_tompkins.py`, `src/qrs/rr_clean.py` | `08` (pendiente) |
+| Recorte en realizaciones | Métodos: filtro óptimo | `src/preprocessing/wiener.py` | `09` |
+| Filtros óptimos | Métodos: filtro óptimo | `src/preprocessing/wiener.py` | `09` |
+| Detección QRS | Métodos: detección de latidos | `src/qrs/pan_tompkins.py`, `src/qrs/rr_clean.py` | `08` |
 | Segmentación | Métodos: ventanas | `src/features/windows.py` | `04`, `06` |
 | HRV | Métodos: features | `src/features/hrv_time.py` | `04` |
 | Lomb | Métodos: features espectrales | `src/features/lomb.py` | `04` |
 | (aporte) Acoplamiento | Métodos y resultados | `src/features/edr.py`, `coupling.py`, `build.py`, `variants.py` | `02` a `06` |
-| Análisis estadístico | Resultados | `src/stats/` | `03` a `06`, `11`, `12`, `99` |
+| Análisis estadístico | Resultados | `src/stats/` | `03` a `06`, `11`, `descriptivo_features`, `12` (pendiente), `99` (pendiente) |
