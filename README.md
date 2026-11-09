@@ -16,6 +16,7 @@ Determinar, minuto a minuto y usando solo el ECG, si hay apnea del sueño. El cr
 **Documentos:**
 - [`docs/esquema_v3.md`](docs/esquema_v3.md): pipeline vigente, qué se decidió y con qué datos, criterios de trabajo y lo que falta.
 - [`docs/plan_test.md`](docs/plan_test.md): cómo y cuándo se evalúa en test.
+- [`informe/informe.tex`](informe/informe.tex): el informe en LaTeX, con la bibliografía en `informe/referencias.bib` y las figuras en `informe/figuras/`. Se compila desde `informe/` con `latexmk -pdf informe.tex` (pdflatex y biber); también funciona en Overleaf.
 
 ## Datos
 
