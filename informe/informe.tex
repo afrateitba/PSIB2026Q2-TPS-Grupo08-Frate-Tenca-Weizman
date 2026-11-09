@@ -401,9 +401,32 @@ un notebook por etapa. El código y las instrucciones para reproducir los result
   \end{tabularx}
 \end{table}
 
-\pendiente{Comentar la tabla~\ref{tab:etapas}: el detector propio y el filtro de Wiener
-pasan el área bajo la curva pero fallan en el acierto por registro; F detecta
-cuánto oscilan juntas las señales, no su sincronía.}
+La tabla~\ref{tab:etapas} resume las decisiones tomadas en desarrollo.
+El filtro pasabanda de 0,5 a 45~Hz se incorporó porque cumplió las
+especificaciones y mantuvo el desempeño de F según el criterio de
+no inferioridad. En cambio, el detector QRS propio y el filtro de Wiener
+no se incorporaron al detector final: aunque cumplieron el criterio
+en el área bajo la curva por minuto, no lo hicieron en el acierto
+por registro. Por lo tanto, se conservaron las marcas de QRS de la base,
+con el refinamiento del pico R, y el ECG filtrado sin Wiener.
+
+Para construir el EDR se eligió el área del QRS, que presentó una
+coherencia con la respiración real superior a la obtenida por azar.
+En la comparación de features, la potencia cruzada RR--EDR mostró
+un área bajo la curva de 0,871, frente a 0,810 de la mejor feature
+basada solo en RR. Agregar la coherencia no mejoró la detección,
+por lo que se conservó la potencia cruzada sin ese componente.
+Esto indica que, entre las alternativas evaluadas, resultó más útil
+la magnitud de las oscilaciones compartidas que su asociación
+lineal normalizada.
+
+Finalmente, la normalización por noche y el suavizado tampoco
+mejoraron el desempeño. Se eligió una ventana de 240~s, sin estas
+operaciones, y un umbral de Youden de $-6{,}9486$, con el que se
+obtuvo una sensibilidad de 0,84 y una especificidad de 0,75 en
+desarrollo. Estos resultados se utilizaron para definir el detector;
+su desempeño en sujetos no utilizados en la selección se presenta
+en las evaluaciones siguientes.
 
 \subsection{Hipótesis 1}
 \label{sec:res-h1}
