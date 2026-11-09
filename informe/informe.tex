@@ -431,11 +431,28 @@ en las evaluaciones siguientes.
 \subsection{Hipótesis 1}
 \label{sec:res-h1}
 
-\pendiente{E2: el acoplamiento lento sube en 11 de 14 sujetos (rango-biserial 0,81; Holm
-$p = 0{,}011$) y la coherencia respiratoria no baja (8 de 14; Holm $p = 1$); 36 de 36
-configuraciones en la dirección de H1. Con la respiración real el efecto aparece en los 5
-registros con apnea. Figura central: mapa nocturno de acoplamiento con las apneas
-superpuestas, en un registro A y uno C.}
+En los registros A y B de desarrollo, el cociente entre la coherencia
+lenta y la respiratoria aumentó durante la apnea en 11 de los
+14 sujetos evaluados. Con las bandas del acoplamiento cardiopulmonar
+publicado, el tamaño del efecto rango-biserial fue de 0,81 y el valor
+$p$ corregido por Holm fue de 0,011. Las 36 configuraciones evaluadas
+mostraron cambios en la dirección planteada por H1, aunque esto no
+implica que todas alcanzaran significancia estadística.
+
+Al analizar la coherencia respiratoria por separado, no se detectó
+una disminución durante la apnea ($p$ de Holm $= 1$). En conjunto,
+estos resultados son compatibles con la aparición de un acoplamiento
+lento adicional, más que con un desplazamiento del acoplamiento
+respiratorio hacia frecuencias menores. Sin embargo, la ausencia de
+una diferencia significativa no permite afirmar que la coherencia
+respiratoria se mantenga sin cambios.
+
+Como control, se repitió el análisis reemplazando el EDR por la
+respiración registrada. El efecto apareció en los cinco registros
+con apnea que contaban con esta señal, lo que respalda que el
+comportamiento observado no depende únicamente de la construcción
+del EDR. Estos resultados corresponden a desarrollo; su réplica
+en sujetos reservados se presenta en la evaluación en test.
 
 % Ejemplo de figura (generarla desde el repo y guardarla en informe/figuras/):
 % \begin{figure}[htbp]
@@ -448,11 +465,34 @@ superpuestas, en un registro A y uno C.}
 \subsection{Estimación honesta en desarrollo}
 \label{sec:res-anidada}
 
-\pendiente{Validación cruzada anidada (notebook 12): con toda la elección repetida sin ver a
-los sujetos de afuera, F da área bajo la curva 0,851 \ic{0,760}{0,916}, sensibilidad 0,84,
-especificidad 0,75 y acierto por registro 0,81; los cinco grupos eligen la misma F; optimismo
-de 0,024. La referencia era más optimista (0,81 → 0,73). El detector estima un 48,5~\% de
-minutos con apnea contra el 39,8~\% anotado. Noches A contra el resto: 83~\% (notebook 13).}
+Al repetir la elección de la feature, el posprocesamiento y el umbral
+mediante validación cruzada anidada por sujetos, F obtuvo un área bajo
+la curva media entre grupos de 0,851, con un intervalo de confianza
+del 95~\% de 0,760 a 0,916. La sensibilidad fue de 0,839,
+la especificidad de 0,748 y el acierto por registro de 0,807.
+El área bajo la curva disminuyó 0,024 respecto de la obtenida al
+elegir y evaluar el detector con todos los sujetos de desarrollo.
+
+Los cinco grupos eligieron la misma configuración de F: potencia
+cruzada RR--EDR con una ventana de 240~s, sin normalización ni
+suavizado. Los umbrales variaron entre $-6{,}96$ y $-6{,}91$.
+En cambio, la feature de referencia de HRV cambió entre grupos
+y obtuvo un área bajo la curva media de 0,729. La diferencia
+a favor de F fue de 0,122, con un intervalo de confianza del
+95~\% de 0,022 a 0,193. Esta comparación es descriptiva:
+la evaluación final de H2 se realiza en test con las
+configuraciones fijadas en desarrollo.
+
+Aunque F permitió ordenar las noches según su fracción de apnea,
+presentó una sobreestimación de los minutos afectados. El sesgo
+fue de $+5{,}0$ minutos de apnea por hora, con límites de acuerdo
+de $-21{,}1$ a $+31{,}0$. La categoría A/B/C fue correcta en el
+57~\% de las noches y las doce noches de control se clasificaron
+como B. Al considerar únicamente la separación entre las noches A
+y el resto, el porcentaje de clasificación correcta fue del 83~\%.
+Estos resultados muestran que la capacidad de ordenar los registros
+no asegura una estimación precisa de la cantidad de apnea
+ni de la categoría de cada noche.
 
 \subsection{Evaluación en test}
 \label{sec:res-test}
