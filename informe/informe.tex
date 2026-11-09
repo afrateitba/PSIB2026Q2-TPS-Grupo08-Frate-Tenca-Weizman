@@ -110,12 +110,73 @@
 \subsection{Marco teórico}
 \label{sec:marco}
 
-\pendiente{Apnea del sueño y cómo se diagnostica (polisomnografía, índice de
-apnea-hipopnea). Qué deja ver el ECG: la serie RR (variabilidad de la frecuencia cardíaca,
-\cite{taskforce1996}) y la respiración derivada del ECG (EDR, \cite{moody1985}), porque la
-respiración cambia el eje eléctrico y el área del QRS. El ciclo de apnea oscila entre 0,01 y
-0,1~Hz (un ciclo cada 10 a 100~s), por debajo de la banda respiratoria (0,15 a 0,4~Hz).
-Acoplamiento cardiopulmonar: potencia cruzada y coherencia entre RR y EDR.}
+La apnea del sueño se caracteriza por episodios repetidos de interrupción
+o reducción de la respiración durante el descanso. En la apnea obstructiva,
+estos episodios se producen por el cierre total o parcial de la vía aérea
+superior, aunque se mantiene el esfuerzo respiratorio. Para su diagnóstico
+se utiliza la polisomnografía, que registra distintas señales fisiológicas
+y permite identificar los eventos respiratorios y su relación con el sueño.
+A partir de este estudio se calcula el índice de apnea-hipopnea (AHI), que
+expresa la cantidad de apneas e hipopneas por hora de sueño
+\parencite{kapur2017}.
+
+El interés por detectar apnea a partir del ECG surge porque los episodios
+respiratorios también pueden manifestarse en la actividad cardíaca.
+Durante la apnea pueden aparecer variaciones cíclicas de la frecuencia
+cardíaca, que se observan en los intervalos entre picos R consecutivos.
+Estos intervalos forman la serie RR y permiten estudiar la variabilidad
+de la frecuencia cardíaca (HRV), tanto en el tiempo como en la frecuencia
+\parencite{taskforce1996,penzel2002}. A su vez, la respiración modifica la
+posición del corazón respecto de los electrodos y la impedancia del tórax,
+lo que genera cambios en la amplitud y el área del complejo QRS. A partir
+de estas variaciones puede obtenerse una señal de respiración derivada
+del ECG, denominada EDR \parencite{moody1985}. De esta manera, un mismo
+registro permite obtener información sobre las variaciones cardíacas y
+respiratorias.
+
+La relación entre ambas señales puede estudiarse mediante el análisis
+del acoplamiento cardiopulmonar. Para ello se utilizan medidas como la
+potencia cruzada, que permite identificar componentes compartidas en
+distintas frecuencias, y la coherencia, que cuantifica su asociación
+lineal normalizada. \textcite{thomas2005} utilizaron este enfoque para
+caracterizar distintos regímenes de acoplamiento durante el sueño.
+Este antecedente permite plantear que las oscilaciones lentas compartidas
+entre RR y EDR podrían aportar información para detectar apnea, además
+de la que ofrece el análisis de la variabilidad cardíaca por separado.
+
+\subsection{Estado del arte}
+\label{sec:estado}
+
+La detección de apnea a partir del ECG fue el objetivo del
+PhysioNet/Computers in Cardiology Challenge 2000, para el cual se
+desarrolló la base Apnea-ECG utilizada en este trabajo. En una comparación
+de trece algoritmos participantes, \textcite{penzel2002} encontraron que
+los mejores resultados se obtenían al analizar características
+espectrales de los intervalos cardíacos y de las variaciones del ECG
+asociadas con la respiración. Dos de los métodos superaron el 90~\%
+de exactitud en la clasificación por minuto, lo que mostró el potencial
+de estas señales para identificar episodios de apnea.
+
+En esta misma línea, \textcite{dechazal2003} combinaron características
+de los intervalos entre latidos y del EDR mediante clasificadores
+discriminantes lineales y cuadráticos, y alcanzaron una exactitud por
+minuto superior al 90~\% en un conjunto independiente. Por su parte,
+el trabajo de \textcite{thomas2005} permitió estudiar la relación entre
+ambas señales desde el acoplamiento cardiopulmonar y vincularla con
+la estabilidad del sueño. Estos antecedentes motivan el uso conjunto
+de RR y EDR, aunque sus resultados corresponden a métodos y condiciones
+de evaluación que deben considerarse al compararlos con otras propuestas.
+
+A partir de estos antecedentes, en este trabajo se estudia una feature
+conjunta RR--EDR basada en la potencia cruzada en la banda lenta asociada
+al ciclo de apnea. Se busca determinar si esta información permite
+mejorar la detección por minuto respecto de una feature basada únicamente
+en la variabilidad cardíaca, utilizando un punto de corte estadístico
+y sin aprendizaje automático. Las características y el umbral se eligen
+con los registros de desarrollo, mientras que la evaluación final se
+realiza sobre sujetos reservados para test. La propuesta se plantea como
+un análisis de la información contenida en el ECG y no como un reemplazo
+de la polisomnografía.
 
 \subsection{Estado del arte}
 \label{sec:estado}
