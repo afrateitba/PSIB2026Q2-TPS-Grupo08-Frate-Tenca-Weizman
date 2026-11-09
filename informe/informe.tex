@@ -390,11 +390,31 @@ minutos con apnea contra el 39,8~\% anotado. Noches A contra el resto: 83~\% (no
   \end{tabular}
 \end{table}
 
-\pendiente{Resultados de \texttt{notebooks/99\_test.ipynb}: decisión de H2 por medida;
-fracción de minutos que quedan afuera; sensibilidad, especificidad y exactitud por minuto;
-matriz A/B/C y A contra el resto; Bland--Altman de los minutos de apnea por hora; Spearman
-contra el índice de apnea-hipopnea; réplica de H1; análisis de sensibilidad con todos los
-minutos.}
+Ninguna de las dos medidas muestra diferencia (Tabla~\ref{tab:test}): H2 no se confirma ni se rechaza con estos datos. Con 10 sujetos los intervalos son muy anchos, así que el resultado tampoco indica que F y la referencia sean equivalentes. Se evaluaron 8.556 de los 9.754 minutos con etiqueta (el 12,3~\% queda afuera, casi todo de c04 y x29, por la regla del 20~\% de RR corregidos). Los resultados secundarios están en la Tabla~\ref{tab:test-sec}.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Resultados secundarios en test, con los umbrales de desarrollo.}
+  \label{tab:test-sec}
+  \small
+  \begin{tabular}{@{}llcc@{}}
+    \toprule
+    & Medida & F & Referencia (VLF) \\
+    \midrule
+    Por minuto & Sensibilidad & $0{,}790$ & $0{,}735$ \\
+               & Especificidad & $0{,}642$ & $0{,}686$ \\
+               & Exactitud & $0{,}706$ & $0{,}707$ \\
+    \midrule
+    Por noche  & Sesgo (min de apnea por hora) & $+7{,}3$ & $+5{,}1$ \\
+               & Límites de acuerdo & $-27{,}9$ a $+42{,}5$ & $-25{,}4$ a $+35{,}6$ \\
+               & Categoría A/B/C correcta & 45~\% & 60~\% \\
+               & A contra el resto correcta & 70~\% & 70~\% \\
+               & Spearman con el AHI (IC 95~\%) & $0{,}70$ ($0{,}15$ a $0{,}91$) & $0{,}68$ ($-0{,}04$ a $0{,}91$) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+F sobreestima la apnea, como en desarrollo: las 5 noches C quedan como B. \textbf{H1 no se replica}: en los 15 registros A/B de test (8 sujetos), el cociente de coherencias sube con la apnea en solo 4 de 8 sujetos (CPC publicado) y 3 de 8 (esquema v2), con $p$ de Holm 1. Con todos los minutos con etiqueta, ninguna conclusión cambia.
 
 % =====================================================================
 \section{Discusión}
