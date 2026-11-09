@@ -1,0 +1,149 @@
+% Bibliografía del informe. Se compila con biber (biblatex).
+
+% Base de datos (README, src/data.py, esquema 4.1)
+@inproceedings{penzel2000,
+  author    = {Penzel, Thomas and Moody, George B. and Mark, Roger G. and Goldberger, Ary L. and Peter, J. Hermann},
+  title     = {The Apnea-{ECG} Database},
+  booktitle = {Computers in Cardiology 2000},
+  volume    = {27},
+  pages     = {255--258},
+  year      = {2000},
+  doi       = {10.1109/CIC.2000.898505}
+}
+
+@article{goldberger2000,
+  author  = {Goldberger, Ary L. and Amaral, Luis A. N. and Glass, Leon and Hausdorff, Jeffrey M. and Ivanov, Plamen Ch. and Mark, Roger G. and Mietus, Joseph E. and Moody, George B. and Peng, Chung-Kang and Stanley, H. Eugene},
+  title   = {{PhysioBank}, {PhysioToolkit}, and {PhysioNet}: Components of a New Research Resource for Complex Physiologic Signals},
+  journal = {Circulation},
+  year    = {2000},
+  volume  = {101},
+  number  = {23},
+  pages   = {e215--e220},
+  doi     = {10.1161/01.CIR.101.23.e215}
+}
+
+% Detector QRS propio (src/qrs/pan_tompkins.py)
+@article{pan1985,
+  author  = {Pan, Jiapu and Tompkins, Willis J.},
+  title   = {A Real-Time {QRS} Detection Algorithm},
+  journal = {IEEE Transactions on Biomedical Engineering},
+  year    = {1985},
+  volume  = {BME-32},
+  number  = {3},
+  pages   = {230--236},
+  doi     = {10.1109/TBME.1985.325532}
+}
+
+% Acoplamiento cardiopulmonar (CPC publicado, E2)
+@article{thomas2005,
+  author  = {Thomas, Robert Joseph and Mietus, Joseph E. and Peng, Chung-Kang and Goldberger, Ary L.},
+  title   = {An Electrocardiogram-Based Technique to Assess Cardiopulmonary Coupling during Sleep},
+  journal = {Sleep},
+  year    = {2005},
+  volume  = {28},
+  number  = {9},
+  pages   = {1151--1161},
+  doi     = {10.1093/sleep/28.9.1151}
+}
+
+% Respiración derivada del ECG
+@inproceedings{moody1985,
+  author    = {Moody, George B. and Mark, Roger G. and Zoccola, Andrea and Mantero, Sara},
+  title     = {Derivation of Respiratory Signals from Multi-Lead {ECGs}},
+  booktitle = {Computers in Cardiology 1985},
+  volume    = {12},
+  pages     = {113--116},
+  year      = {1985}
+}
+
+% Variabilidad de la frecuencia cardíaca
+@article{taskforce1996,
+  author  = {{Task Force of the European Society of Cardiology and the North American Society of Pacing and Electrophysiology}},
+  shortauthor = {{Task Force}},
+  title   = {Heart Rate Variability: Standards of Measurement, Physiological Interpretation and Clinical Use},
+  journal = {Circulation},
+  year    = {1996},
+  volume  = {93},
+  number  = {5},
+  pages   = {1043--1065},
+  doi     = {10.1161/01.CIR.93.5.1043}
+}
+
+% Periodograma de Lomb (src/features/lomb.py)
+@article{lomb1976,
+  author  = {Lomb, Nicholas R.},
+  title   = {Least-Squares Frequency Analysis of Unequally Spaced Data},
+  journal = {Astrophysics and Space Science},
+  year    = {1976},
+  volume  = {39},
+  number  = {2},
+  pages   = {447--462},
+  doi     = {10.1007/BF00648343}
+}
+
+% Método de Welch (src/features/coupling.py)
+@article{welch1967,
+  author  = {Welch, Peter D.},
+  title   = {The Use of Fast {Fourier} Transform for the Estimation of Power Spectra: A Method Based on Time Averaging over Short, Modified Periodograms},
+  journal = {IEEE Transactions on Audio and Electroacoustics},
+  year    = {1967},
+  volume  = {15},
+  number  = {2},
+  pages   = {70--73},
+  doi     = {10.1109/TAU.1967.1161901}
+}
+
+% Umbral (src/stats/thresholds.py)
+@article{youden1950,
+  author  = {Youden, W. J.},
+  title   = {Index for Rating Diagnostic Tests},
+  journal = {Cancer},
+  year    = {1950},
+  volume  = {3},
+  number  = {1},
+  pages   = {32--35}
+}
+
+% Corrección por comparaciones múltiples (src/stats/tests.py)
+@article{holm1979,
+  author  = {Holm, Sture},
+  title   = {A Simple Sequentially Rejective Multiple Test Procedure},
+  journal = {Scandinavian Journal of Statistics},
+  year    = {1979},
+  volume  = {6},
+  number  = {2},
+  pages   = {65--70}
+}
+
+% Bootstrap por sujeto
+@book{efron1993,
+  author    = {Efron, Bradley and Tibshirani, Robert J.},
+  title     = {An Introduction to the Bootstrap},
+  publisher = {Chapman \& Hall},
+  address   = {New York},
+  year      = {1993}
+}
+
+% Delta de Cliff (descriptivo_features)
+@article{cliff1993,
+  author  = {Cliff, Norman},
+  title   = {Dominance Statistics: Ordinal Analyses to Answer Ordinal Questions},
+  journal = {Psychological Bulletin},
+  year    = {1993},
+  volume  = {114},
+  number  = {3},
+  pages   = {494--509},
+  doi     = {10.1037/0033-2909.114.3.494}
+}
+
+% Concordancia por registro (plan de test 6.2)
+@article{bland1986,
+  author  = {Bland, J. Martin and Altman, Douglas G.},
+  title   = {Statistical Methods for Assessing Agreement Between Two Methods of Clinical Measurement},
+  journal = {The Lancet},
+  year    = {1986},
+  volume  = {327},
+  number  = {8476},
+  pages   = {307--310},
+  doi     = {10.1016/S0140-6736(86)90837-8}
+}

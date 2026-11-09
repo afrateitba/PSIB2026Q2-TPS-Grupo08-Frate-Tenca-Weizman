@@ -1,0 +1,436 @@
+% =====================================================================
+% Informe del trabajo de señales — PSIB 2026Q2, Grupo 08
+% Acoplamiento cardiopulmonar derivado del ECG como criterio de detección
+% de apnea del sueño
+%
+% Compilar desde esta carpeta:   latexmk -pdf informe.tex
+% (pdflatex + biber; en Overleaf funciona tal cual).
+%
+% Límite de la consigna: 8 páginas de cuerpo + 4 de anexo. Entrega: 10/11, 17:00.
+% En modo borrador la portada dice dónde termina el cuerpo y el anexo.
+% Los textos en rojo (\pendiente) son lo que falta escribir y los "?" rojos
+% (\falta) son números que salen de notebooks/99_test.ipynb. Antes de entregar,
+% pasar a \borradorfalse y revisar que el log no tenga avisos "Pendiente".
+%
+% Fuentes de los números: docs/esquema_v3.md (secciones 4 y 5),
+% docs/plan_test.md y los notebooks de cada etapa.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+% ---------- Modo ----------
+\newif\ifborrador
+\borradortrue    % \borradorfalse para la versión de entrega
+
+% ---------- Paquetes ----------
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext,newtxmath}          % Times, como el informe de imágenes
+\usepackage[spanish,es-tabla,es-noindentfirst]{babel}
+\usepackage{microtype}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{subcaption}
+\usepackage{enumitem}
+\setlist{nosep, leftmargin=*}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, babel}
+\usepackage{csquotes}
+\usepackage[backend=biber, style=authoryear, maxcitenames=2, maxbibnames=10,
+            uniquelist=false, uniquename=init, giveninits=true, doi=true, url=false,
+            isbn=false]{biblatex}
+\addbibresource{referencias.bib}
+\usepackage[hidelinks]{hyperref}   % siempre al final
+
+\graphicspath{{figuras/}}
+
+% ---------- Datos de la portada ----------
+\newcommand{\titulo}{Trabajo de señales: acoplamiento cardiopulmonar derivado del ECG
+                     como criterio de detección de apnea del sueño}
+\newcommand{\materia}{16.63 - Procesamiento de Señales e Imágenes Biomédicas 2026Q2}
+\newcommand{\fecha}{10 de noviembre de 2026}
+\newcommand{\repo}{\url{https://github.com/afrateitba/TP-PSB-G8}}
+
+% ---------- Comandos propios ----------
+% Texto que falta escribir: rojo en borrador; en la entrega desaparece y deja un aviso en el log.
+\newcommand{\pendiente}[1]{%
+  \ifborrador\textcolor{red}{[#1]}%
+  \else\PackageWarning{informe}{Pendiente sin resolver en la pagina \thepage}\fi}
+% Número que falta (sale de test).
+\newcommand{\falta}{\ifborrador\textcolor{red}{?}\else\PackageWarning{informe}{Falta un numero en la pagina \thepage}\fi}
+
+% Intervalo de confianza: \ic{0,760}{0,916}
+\newcommand{\ic}[2]{(#1 a #2)}
+
+% =====================================================================
+\begin{document}
+
+% ---------- Portada (modelo: informe del trabajo de imágenes) ----------
+\begin{titlepage}
+  \centering
+  \vspace*{0.4cm}
+  \includegraphics[width=0.62\textwidth]{logo_itba.png}\par
+  \vspace{1.4cm}
+  \rule{\linewidth}{0.5pt}\par
+  \vspace{0.35cm}
+  {\Large \titulo\par}
+  \vspace{0.25cm}
+  \rule{\linewidth}{0.5pt}\par
+  \vspace{1.0cm}
+  {\large\bfseries \materia\par}
+  \vspace{1.0cm}
+  {\large\bfseries Grupo 8\par}
+  \vspace{0.15cm}
+  {\large Augusto Frate -- 65013\\[0.1cm]
+          Karolina Tenca -- 62751\\[0.1cm]
+          Leah Weizman -- 69550\par}
+  \vspace{1.0cm}
+  {\large\bfseries Profesores\par}
+  \vspace{0.15cm}
+  {\large Roberto Sebastian Tomas\\[0.1cm]
+          Francisco Tassara\\[0.1cm]
+          Lucila Capurro\\[0.1cm]
+          Victoria Reppucci\par}
+  \vfill
+  {\fecha\par}
+  \ifborrador
+    \vspace{0.4cm}
+    {\small\color{red}Borrador. El cuerpo termina en la página \pageref{fin-cuerpo} (límite: 8);
+    el anexo va de la página \pageref{inicio-anexo} a la \pageref{fin-anexo} (límite: 4).\par}
+  \fi
+\end{titlepage}
+
+% =====================================================================
+\section{Introducción}
+\label{sec:intro}
+
+\subsection{Marco teórico}
+\label{sec:marco}
+
+\pendiente{Apnea del sueño y cómo se diagnostica (polisomnografía, índice de
+apnea-hipopnea). Qué deja ver el ECG: la serie RR (variabilidad de la frecuencia cardíaca,
+\cite{taskforce1996}) y la respiración derivada del ECG (EDR, \cite{moody1985}), porque la
+respiración cambia el eje eléctrico y el área del QRS. El ciclo de apnea oscila entre 0,01 y
+0,1~Hz (un ciclo cada 10 a 100~s), por debajo de la banda respiratoria (0,15 a 0,4~Hz).
+Acoplamiento cardiopulmonar: potencia cruzada y coherencia entre RR y EDR.}
+
+\subsection{Estado del arte}
+\label{sec:estado}
+
+\pendiente{La base y el Challenge 2000 \parencite{penzel2000,goldberger2000}: los mejores
+métodos llegaron a cerca del 90~\% de exactitud por minuto con aprendizaje automático. El
+acoplamiento cardiopulmonar de \textcite{thomas2005}. Qué es nuevo acá (lo pidió la
+devolución): sumar al RR la respiración derivada del ECG en la banda del ciclo de apnea, con
+un punto de corte estadístico y sin aprendizaje automático.}
+
+\subsection{Objetivos e hipótesis}
+\label{sec:objetivos}
+
+El objetivo es detectar la apnea del sueño minuto a minuto a partir del ECG, con un punto de
+corte estadístico y sin aprendizaje automático. Se plantean dos hipótesis:
+
+\begin{description}[leftmargin=0pt, labelindent=0pt, itemindent=!]
+  \item[H1.] Durante la apnea aparece un acoplamiento lento entre la serie RR y el EDR, en la
+    banda del ciclo de apnea (0,01 a 0,1~Hz), dentro de cada sujeto. El acoplamiento
+    respiratorio (0,15 a 0,4~Hz) no desaparece.
+  \item[H2.] La feature conjunta RR--EDR (F) detecta la apnea mejor que la mejor feature de
+    variabilidad cardíaca, que usa solo el RR.
+\end{description}
+
+% =====================================================================
+\section{Materiales y métodos}
+\label{sec:metodos}
+
+\subsection{Base de datos y adquisición}
+\label{sec:base}
+
+Se usó la Apnea-ECG Database de PhysioNet \parencite{penzel2000,goldberger2000}: 70
+registros nocturnos de ECG de una derivación, muestreados a 100~Hz con 12 bits, con una
+etiqueta de apnea o normal por minuto asignada por un experto a partir de la polisomnografía.
+Ocho registros incluyen la respiración, que se usó solo para validar. Como a 100~Hz el pico R
+queda cuantizado a 10~ms, se lo ubica a $\pm 30$~ms de cada marca de QRS de la base, según la
+polaridad del registro, y se refina con una parábola de 3 puntos; el refinamiento se verificó
+con una prueba de dos fases a 50~Hz.
+
+Tres pares de registros resultaron ser la misma grabación (c05/c06, x22/x35 y x33/x34); se
+excluyó uno de cada par y quedaron 67. Como la base no identifica a las personas, se agruparon
+los registros con igual perfil (edad, sexo, altura y peso), lo que dio 29 sujetos. La
+partición 70/30 se sorteó por sujeto con semilla 2026 (tabla~\ref{tab:particion}), con cuotas
+exactas por categoría, una diferencia de 2 puntos o menos en la fracción de minutos con apnea
+y los registros con respiración en desarrollo.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Partición por sujeto. Categoría A: 100 minutos de apnea o más; B: de 5 a 99;
+           C: menos de 5.}
+  \label{tab:particion}
+  \begin{tabular}{lccccc}
+    \toprule
+    Conjunto & A & B & C & Registros & Sujetos \\
+    \midrule
+    Desarrollo & 28 & 7 & 12 & 47 & 19 \\
+    Test       & 12 & 3 &  5 & 20 & 10 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Diseño de la evaluación}
+\label{sec:diseno}
+
+Todas las decisiones se tomaron con los registros de desarrollo, y test se evaluó una sola vez,
+al final. Como los minutos de una persona no son independientes, la unidad estadística es el
+sujeto: los intervalos de confianza al 95~\% se obtienen por bootstrap de sujetos
+\parencite{efron1993}, con 2000 remuestreos en desarrollo y 10\,000 en test. Se usan dos
+medidas: el área bajo la curva ROC por minuto, con todos los minutos juntos porque el detector
+aplica un único umbral, y el acierto por registro, definido como la correlación de Spearman
+entre la fracción de minutos con apnea estimada y la anotada.
+
+Entre candidatas se retienen las no inferiores a la mejor en área bajo la curva (límite
+inferior del intervalo de la diferencia $\geq -0{,}02$) que además empatan en acierto por
+registro, y de ellas se elige la más simple. Esta regla reemplazó, después de una primera
+corrida, a la de declarar empate cuando el intervalo incluía el cero, que dejaba pasar
+candidatas ruidosas. Cada elección se controla con validación cruzada en 5 grupos de sujetos.
+Las etapas obligatorias se adoptan solo si F resulta no inferior en ambas medidas.
+
+\subsection{Preprocesamiento y detección de latidos}
+\label{sec:preproc}
+
+El ECG se filtra con un Butterworth pasabanda de 0,5 a 45~Hz y orden 3, aplicado ida y vuelta
+para no introducir desfase. La especificación se obtuvo de desarrollo sin usar etiquetas:
+atenuación de 1~dB o menos entre el ritmo cardíaco más bajo (0,77~Hz) y la frecuencia por
+debajo de la cual está el 99~\% de la energía del latido (41,8~Hz), y de 20~dB o más a
+0,1~Hz. Se eligió el menor orden que la cumple.
+
+Como detector propio se implementó el algoritmo de \textcite{pan1985} adaptado a 100~Hz:
+pasabanda de 5 a 15~Hz, derivada, cuadrado, integración en 150~ms y umbrales adaptativos con
+período refractario, discriminación de ondas T y búsqueda hacia atrás. Las etapas lineales
+están centradas, por lo que no introducen retardo, y el cuadrado hace al detector
+independiente de la polaridad del R. Se validó contra las marcas de la base con una tolerancia
+de 100~ms. Los intervalos RR fuera de 0,3 a 2~s o que se apartan más de 20~\% de la mediana de
+sus 11 vecinos se reemplazan por interpolación. Se evalúan los minutos con etiqueta, con
+20~\% o menos de intervalos corregidos y con feature calculable (22\,275 en desarrollo).
+
+\subsection{Recorte en realizaciones y filtro de Wiener}
+\label{sec:wiener}
+
+El ECG de cada registro se segmentó en realizaciones de $-250$ a $+400$~ms alineadas en el pico
+R. El promedio de las realizaciones estima la señal y el residuo, el ruido; con sus densidades
+espectrales se construye por registro $H(f) = S_s(f) / \left(S_s(f) + S_n(f)\right)$, que se
+aplica al ECG continuo como un FIR simétrico de 129 coeficientes. Al ser lineal e invariante,
+el filtro aplica la misma ganancia a todos los latidos y preserva las variaciones de amplitud
+de las que se obtiene el EDR.
+
+\subsection{Segmentación y features}
+\label{sec:features}
+
+La unidad de decisión es el minuto. Las features espectrales se calculan en una ventana de
+240~s centrada en cada minuto, elegida entre 3 y 8,5~min; resolver 0,01~Hz requiere segmentos
+de más de 100~s.
+
+El EDR es el área con signo del QRS en $\pm 60$~ms alrededor de cada latido, sobre el ECG
+filtrado. Se eligió entre cinco métodos \parencite{moody1985} por su coherencia con la
+respiración real y, al empatar con la deriva de línea de base, por su desempeño en la
+detección. RR y EDR se remuestrean a 2~Hz por interpolación cúbica. F es el logaritmo de la
+potencia cruzada RR--EDR promediada entre 0,01 y 0,05~Hz, estimada por el método de
+\textcite{welch1967} con 3 segmentos de 120~s (ventana de Hann y 50~\% de solapamiento), sin
+normalización por noche ni suavizado. La referencia de H2 es la mejor feature de variabilidad
+cardíaca \parencite{taskforce1996} elegida con la misma regla: la potencia del RR entre 0,01
+y 0,04~Hz en 180~s, estimada con el periodograma de \textcite{lomb1976}, que no requiere
+interpolar el RR. En ambos casos, un minuto se clasifica como apnea si la feature supera el
+umbral que maximiza el índice de \textcite{youden1950} en desarrollo
+(figura~\ref{fig:pipeline}).
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+      font=\footnotesize,
+      paso/.style={draw, rounded corners=2pt, align=center, text width=1.6cm,
+                   minimum height=1.3cm, fill=gray!8},
+      flecha/.style={-{Stealth[length=2mm]}, thick},
+      node distance=0.36cm]
+    \node[paso] (ecg)  {ECG\\a 100 Hz};
+    \node[paso, right=of ecg]  (filt) {Pasabanda\\0,5--45 Hz};
+    \node[paso, right=of filt] (lat)  {Picos R\\refinados};
+    \node[paso, right=of lat, yshift=0.78cm, minimum height=1.0cm]  (rr)  {Serie RR\\limpia};
+    \node[paso, right=of lat, yshift=-0.78cm, minimum height=1.0cm] (edr) {EDR: área\\del QRS};
+    \path (rr.east) -- (edr.east) coordinate[midway] (m);
+    \node[paso, right=of m, text width=2.0cm] (F) {F: potencia\\cruzada en\\0,01--0,05 Hz};
+    \node[paso, right=of F]   (umb) {Umbral\\de Youden};
+    \node[paso, right=of umb] (out) {Apnea\\por minuto};
+    \draw[flecha] (ecg) -- (filt);
+    \draw[flecha] (filt) -- (lat);
+    \draw[flecha] (lat.east) -- ++(0.15,0) |- (rr.west);
+    \draw[flecha] (lat.east) -- ++(0.15,0) |- (edr.west);
+    \draw[flecha] (rr.east) -- ++(0.15,0) |- (F.west);
+    \draw[flecha] (edr.east) -- ++(0.15,0) |- (F.west);
+    \draw[flecha] (F) -- (umb);
+    \draw[flecha] (umb) -- (out);
+  \end{tikzpicture}
+  \caption{Detector propuesto. La referencia de H2 usa solo la serie RR.}
+  \label{fig:pipeline}
+\end{figure}
+
+\subsection{Análisis estadístico y evaluación en test}
+\label{sec:estadistica}
+
+H1 se evaluó en los registros A y B de desarrollo (35 registros, 14 sujetos) con el cociente
+entre la coherencia RR--EDR lenta y la respiratoria, en ventanas de 512~s y con dos pares de
+bandas fijados de antemano: los del acoplamiento cardiopulmonar de \textcite{thomas2005}
+(0,01--0,1 y 0,1--0,4~Hz) y los de la versión anterior del trabajo (0,01--0,15 y
+0,15--0,4~Hz). Para cada sujeto se calculó la diferencia de medianas entre minutos con y sin
+apnea, promediada entre sus registros, y se aplicó la prueba de Wilcoxon de rangos con signo
+con corrección de \textcite{holm1979}; el tamaño del efecto es el rango-biserial.
+
+La estimación honesta de desarrollo se obtuvo con validación cruzada anidada por sujetos, que
+repite toda la elección (feature, posprocesamiento y umbral) sin los sujetos de evaluación. En
+test, H2 se evalúa con dos medidas principales: M1, el área bajo la curva por minuto, y M2, el
+acierto por registro. Para cada una se calcula la diferencia entre F y la referencia, con su
+intervalo al 95~\% y un valor $p$ bilateral por bootstrap corregido por Holm; H2 se confirma
+en una medida si $p < 0{,}05$ a favor de F. Como resultados secundarios se reportan la
+sensibilidad, la especificidad y la exactitud por minuto, la categoría de cada noche (A, B, C
+y A contra el resto), los minutos de apnea por hora con Bland--Altman \parencite{bland1986},
+la correlación con el índice de apnea-hipopnea y la réplica de H1. La clasificación A contra
+el resto se agregó tras observar en desarrollo que el detector, al sobreestimar la apnea,
+deja las noches de control como B.
+
+\subsection{Implementación}
+\label{sec:implementacion}
+
+Se implementó en Python (NumPy, SciPy, pandas, Matplotlib y wfdb), con pruebas automáticas y
+un notebook por etapa. El código y las instrucciones para reproducir los resultados están en
+\repo.
+
+% =====================================================================
+\section{Resultados}
+\label{sec:resultados}
+
+\subsection{Decisiones en desarrollo}
+\label{sec:res-desarrollo}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Resultados que sostienen cada decisión, en los 47 registros de desarrollo. Área:
+           área bajo la curva por minuto; acierto: acierto por registro; límite: límite
+           inferior del intervalo de la diferencia.}
+  \label{tab:etapas}
+  \small
+  \begin{tabularx}{\textwidth}{@{}lX@{}}
+    \toprule
+    Etapa & Resultado \\
+    \midrule
+    Sujetos            & Correlación mediana entre latidos promedio: 0,94 dentro del sujeto y
+                         0,74 entre sujetos. \\
+    Refinamiento del R & Desacuerdo entre fases de 10,0 a 2,5~ms; se mantiene. \\
+    Filtro             & F no inferior al filtro anterior (área 0,876 → 0,875); se adopta. \\
+    Detector propio    & Sensibilidad 0,996 y valor predictivo positivo 0,972, pero F no es no
+                         inferior en acierto (límite $-0{,}097$); no se adopta. \\
+    Filtro de Wiener   & F no es no inferior en acierto (límite $-0{,}165$); no se adopta. \\
+    Señal perdida      & Excluir esos minutos no es no inferior (límite $-0{,}0209$); no se
+                         excluyen. \\
+    EDR                & Coherencia del área del QRS con la respiración real: 0,53 (azar 0,16). \\
+    Feature            & F: área 0,871; mejor variabilidad cardíaca (muy baja frecuencia):
+                         0,810. \\
+    Coherencia         & No aporta: F sin ella da 0,874; la coherencia sola, 0,63. \\
+    Posprocesamiento   & Normalizar o suavizar no mejora; con ventana de 4~min, área 0,876. \\
+    Umbral             & F $\geq -6{,}9486$: sensibilidad 0,84 y especificidad 0,75. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\pendiente{Comentar la tabla~\ref{tab:etapas}: el detector propio y el filtro de Wiener
+pasan el área bajo la curva pero fallan en el acierto por registro; F detecta
+cuánto oscilan juntas las señales, no su sincronía.}
+
+\subsection{Hipótesis 1}
+\label{sec:res-h1}
+
+\pendiente{E2: el acoplamiento lento sube en 11 de 14 sujetos (rango-biserial 0,81; Holm
+$p = 0{,}011$) y la coherencia respiratoria no baja (8 de 14; Holm $p = 1$); 36 de 36
+configuraciones en la dirección de H1. Con la respiración real el efecto aparece en los 5
+registros con apnea. Figura central: mapa nocturno de acoplamiento con las apneas
+superpuestas, en un registro A y uno C.}
+
+% Ejemplo de figura (generarla desde el repo y guardarla en informe/figuras/):
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=\linewidth]{mapa_nocturno.pdf}
+%   \caption{...}
+%   \label{fig:mapa}
+% \end{figure}
+
+\subsection{Estimación honesta en desarrollo}
+\label{sec:res-anidada}
+
+\pendiente{Validación cruzada anidada (notebook 12): con toda la elección repetida sin ver a
+los sujetos de afuera, F da área bajo la curva 0,851 \ic{0,760}{0,916}, sensibilidad 0,84,
+especificidad 0,75 y acierto por registro 0,81; los cinco grupos eligen la misma F; optimismo
+de 0,024. La referencia era más optimista (0,81 → 0,73). El detector estima un 48,5~\% de
+minutos con apnea contra el 39,8~\% anotado. Noches A contra el resto: 83~\% (notebook 13).}
+
+\subsection{Evaluación en test}
+\label{sec:res-test}
+
+\begin{table}[htbp]
+  \centering
+  \caption{H2 en test (20 registros, 10 sujetos), corrido una sola vez sobre
+           \texttt{congelado-test}. Intervalo al 95~\% con 10\,000 remuestreos de sujetos;
+           $p$ bilateral corregido por Holm.}
+  \label{tab:test}
+  \small
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    Medida & F & Referencia (VLF) & Diferencia (IC 95~\%) & $p$ de Holm \\
+    \midrule
+    M1: área bajo la curva por minuto & \falta & \falta & \falta & \falta \\
+    M2: acierto por registro          & \falta & \falta & \falta & \falta \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\pendiente{Resultados de \texttt{notebooks/99\_test.ipynb}: decisión de H2 por medida;
+fracción de minutos que quedan afuera; sensibilidad, especificidad y exactitud por minuto;
+matriz A/B/C y A contra el resto; Bland--Altman de los minutos de apnea por hora; Spearman
+contra el índice de apnea-hipopnea; réplica de H1; análisis de sensibilidad con todos los
+minutos.}
+
+% =====================================================================
+\section{Discusión}
+\label{sec:discusion}
+
+\pendiente{Qué aporta F: se nota sobre todo al estimar cuánta apnea tiene cada noche.
+Limitaciones: sobreestima la apnea total (48,5~\% contra 39,8~\%), lo que deja las noches de
+control como B; los falsos negativos se concentran en episodios largos de dos sujetos (S09 y
+S02); los falsos positivos caen cerca de los episodios y en minutos con señal perdida; la
+ventana de 4~min mezcla minutos vecinos; la regla del 20~\% no se verificó con datos; test
+tiene 10 sujetos y poca potencia. Comparación con el Challenge 2000.}
+
+% =====================================================================
+\section{Conclusiones}
+\label{sec:conclusiones}
+
+\pendiente{Tres o cuatro oraciones: H1, H2 con los números de test, qué quedó de cada tema
+obligatorio dentro del detector y la limitación principal.}
+
+\label{fin-cuerpo}
+
+% =====================================================================
+\printbibliography[heading=bibintoc, title={Referencias}]
+
+% =====================================================================
+\clearpage
+\appendix
+\label{inicio-anexo}
+
+\section{Detalles de métodos y resultados}
+\label{anx:detalles}
+
+\pendiente{Revisión manual de las 50 discrepancias del detector propio
+(\texttt{docs/revision\_qrs\_50.csv}: 21 errores del detector, 18 de las marcas de la base y
+11 dudosos); figuras de cada etapa obligatoria.}
+
+\label{fin-anexo}
+
+\end{document}
