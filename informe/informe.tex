@@ -548,13 +548,154 @@ F sobreestima la apnea, como en desarrollo: las 5 noches C quedan como B. \textb
 % =====================================================================
 \section{Discusión}
 \label{sec:discusion}
+Los resultados de desarrollo indicaron que la información conjunta
+RR--EDR podía aportar a la detección de apnea, pero esa ventaja no se
+sostuvo en test. En la validación cruzada anidada, F obtuvo un área
+bajo la curva de 0,851 frente a 0,729 de la referencia, mientras que
+en test los valores fueron 0,785 y 0,793, respectivamente. Tampoco
+se observó una ventaja clara en el acierto por registro. Por lo tanto,
+los resultados finales no permiten afirmar que incorporar el EDR
+mejore la detección respecto del análisis del RR. Los intervalos
+amplios impiden concluir equivalencia, pero la falta de superioridad
+no puede atribuirse únicamente al tamaño de la muestra: las
+diferencias puntuales en test también fueron pequeñas.
 
-\pendiente{Qué aporta F: se nota sobre todo al estimar cuánta apnea tiene cada noche.
-Limitaciones: sobreestima la apnea total (48,5~\% contra 39,8~\%), lo que deja las noches de
-control como B; los falsos negativos se concentran en episodios largos de dos sujetos (S09 y
-S02); los falsos positivos caen cerca de los episodios y en minutos con señal perdida; la
-ventana de 4~min mezcla minutos vecinos; la regla del 20~\% no se verificó con datos; test
-tiene 10 sujetos y poca potencia. Comparación con el Challenge 2000.}
+La interpretación de H1 requiere la misma cautela. En desarrollo,
+el aumento del cociente de coherencias fue compatible con la
+aparición de un acoplamiento lento durante la apnea, sin una
+disminución estadísticamente detectable de la coherencia respiratoria.
+Sin embargo, esta última observación no demuestra que el acoplamiento
+respiratorio se conserve. Además, H1 no se replicó en test: el cambio
+tuvo la dirección esperada en solo cuatro de ocho sujetos con las
+bandas del CPC publicado. Esto limita la generalización del
+comportamiento observado en desarrollo. También debe reconocerse
+que la formulación de H1 se modificó después de analizar esos datos:
+se pasó de proponer un desplazamiento del acoplamiento hacia
+frecuencias menores a plantear la aparición de un componente lento
+adicional. La reformulación permite describir mejor lo observado,
+pero su respaldo en desarrollo tiene un componente exploratorio
+y necesita confirmación independiente.
+
+Por otra parte, el resultado de H1 y la utilidad de F responden
+preguntas diferentes. H1 estudia un cociente de coherencias, mientras
+que el detector final utiliza potencia cruzada sin ponderarla por
+coherencia. Que esta última no mejorara la clasificación indica
+que, entre las alternativas evaluadas, su incorporación no aportó
+desempeño adicional. No demuestra que la coherencia carezca de
+interés fisiológico ni que F mida por sí sola una relación causal
+entre respiración y ritmo cardíaco. Al conservar una medida de
+potencia sin normalización por noche, también se retienen diferencias
+de amplitud entre registros. Estas podrían influir en la aplicación
+de un umbral común, aunque este trabajo no permite separar su
+contribución de la asociada con la apnea.
+
+La separación por sujetos, la exclusión de grabaciones duplicadas
+y el uso de test una sola vez redujeron el riesgo de evaluar el
+método sobre información utilizada para elegirlo. No obstante,
+la validación anidada tampoco elimina todo el optimismo del
+desarrollo. Dentro de cada grupo se repitió la selección de
+features, posprocesamiento y umbral, pero algunas decisiones
+previas, como la incorporación de la banda de apnea y la regla
+de selección, se habían definido observando el conjunto completo.
+Además, la regla de empate se reemplazó por una de no inferioridad
+después de una primera corrida. Estos cambios fueron documentados,
+pero su documentación no elimina la adaptación a los datos.
+La estabilidad de F en los cinco grupos muestra consistencia
+dentro de desarrollo, sin garantizar su generalización a otros
+sujetos. A esto se suma que la identidad de las personas se infirió
+a partir de sus perfiles y de la comparación de señales, en lugar
+de contar con identificadores confirmados.
+
+Las etapas de preprocesamiento también deben interpretarse según
+el alcance de su evaluación. El filtro pasabanda se eligió a partir
+de una especificación obtenida sin etiquetas y mantuvo el desempeño
+del detector. En cambio, el detector QRS propio y Wiener no
+cumplieron el criterio de no inferioridad en el acierto por registro.
+Esto justifica no incorporarlos según la regla fijada, pero no
+demuestra que sean inferiores ni que carezcan de utilidad para
+otros objetivos. El margen de 0,02 fue una tolerancia metodológica,
+sin una justificación clínica específica, y su uso en medidas
+distintas no supone consecuencias equivalentes. La evaluación
+conjunta por minuto y por registro evitó adoptar etapas solo por
+una mejora local, aunque también hizo depender su aceptación de
+la precisión de ambas estimaciones.
+
+En particular, el detector final conserva las marcas QRS de la
+base, por lo que su desempeño no representa todavía el de un
+sistema autónomo que recibe únicamente el ECG. La revisión manual
+de discrepancias mostró errores tanto del detector propio como
+de las marcas de referencia, además de casos dudosos. Por eso,
+las métricas de detección de latidos no deben interpretarse como
+si la referencia fuera perfecta. Del mismo modo, la mejora del
+refinamiento parabólico en la prueba de dos fases respalda una
+menor sensibilidad a la posición de muestreo, pero no establece
+el error absoluto del pico R frente a una referencia independiente
+de mayor frecuencia de muestreo.
+
+La ventana de 240~s permitió estimar las componentes lentas de
+interés, a costa de una menor resolución temporal. Aunque se
+produce una decisión por minuto, cada valor de F incorpora
+información de minutos vecinos. En desarrollo, el 27~\% de los
+falsos positivos se ubicó a uno o dos minutos de una apnea;
+al excluir los bordes de los episodios, la especificidad aumentó
+de 0,748 a 0,796. Esto es compatible con un efecto de mezcla
+temporal, pero no explica todos los errores. Los falsos negativos
+se concentraron principalmente en el interior de episodios largos
+y en pocos sujetos, lo que sugiere que el umbral común no representa
+de igual manera a todas las personas. Además, la ventana centrada
+y el filtrado ida y vuelta utilizan muestras futuras: la
+implementación evaluada corresponde a un análisis fuera de línea
+y requeriría modificaciones para funcionar en tiempo real.
+
+El tratamiento de la calidad constituye otra limitación.
+Los límites de corrección del RR y la exclusión de minutos con
+más del 20~\% de intervalos corregidos no se justificaron mediante
+una evaluación específica de esas tolerancias. En test quedó
+afuera el 12,3~\% de los minutos con etiqueta, concentrado
+principalmente en dos registros. En consecuencia, el desempeño
+principal describe los minutos que cumplen las condiciones de
+evaluación y no toda la grabación. El análisis con todos los
+minutos no modificó las conclusiones, aunque completar decisiones
+inválidas con la del minuto válido más cercano no demuestra que
+el detector funcione correctamente en esos segmentos. En
+desarrollo también se observó una alta tasa de falsos positivos
+cuando la ventana contenía señal perdida. Aunque estos casos
+representaron una fracción pequeña del total, muestran que la
+interpolación puede introducir variaciones lentas que se confundan
+con la información buscada.
+
+La elección del umbral de Youden favoreció un equilibrio entre
+sensibilidad y especificidad, pero no garantizó una estimación
+precisa de la cantidad de apnea por noche. En test, F alcanzó
+una sensibilidad de 0,790 y una especificidad de 0,642, con un
+sesgo de $+7{,}3$ minutos de apnea por hora y límites de acuerdo
+amplios. Las cinco noches de control se clasificaron como B.
+Esto muestra por qué una correlación positiva entre las fracciones
+estimadas y anotadas no equivale a concordancia: el detector puede
+ordenar razonablemente los registros y sobreestimar sus valores.
+La clasificación A contra el resto simplificó el resultado, pero
+fue incorporada después de observar los problemas de la matriz
+A/B/C en desarrollo y debe mantenerse como análisis secundario.
+Tampoco la correlación con el AHI permite afirmar que se estime
+la gravedad clínica, ya que el detector cuenta minutos afectados,
+mientras que el AHI cuenta eventos por hora de sueño.
+
+Los resultados publicados por \textcite{penzel2002} y
+\textcite{dechazal2003}, con exactitudes por minuto superiores al
+90~\%, muestran que existe información útil para detectar apnea
+en el ECG. Sin embargo, no constituyen una comparación directa
+con este trabajo, porque difieren los clasificadores, las
+particiones y las condiciones de evaluación. La propuesta basada
+en una feature y un umbral facilita describir la decisión, pero
+esa simplicidad no asegura una mejor generalización. En este
+caso, su aporte principal fue permitir analizar de manera
+explícita qué información se conserva y dónde falla el criterio.
+Una continuación debería evaluar la estabilidad del umbral entre
+personas, justificar las reglas de calidad e integrar la detección
+QRS propia, utilizando nuevos datos o una nueva evaluación
+separada. Modificar esas decisiones a partir de los resultados
+actuales y volver a medirlas sobre el mismo test dejaría de ser
+una validación independiente.
 
 % =====================================================================
 \section{Conclusiones}
