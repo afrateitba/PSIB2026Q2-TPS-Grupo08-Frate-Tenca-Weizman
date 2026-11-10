@@ -178,15 +178,6 @@ realiza sobre sujetos reservados para test. La propuesta se plantea como
 un análisis de la información contenida en el ECG y no como un reemplazo
 de la polisomnografía.
 
-\subsection{Estado del arte}
-\label{sec:estado}
-
-\pendiente{La base y el Challenge 2000 \parencite{penzel2000,goldberger2000}: los mejores
-métodos llegaron a cerca del 90~\% de exactitud por minuto con aprendizaje automático. El
-acoplamiento cardiopulmonar de \textcite{thomas2005}. Qué es nuevo acá (lo pidió la
-devolución): sumar al RR la respiración derivada del ECG en la banda del ciclo de apnea, con
-un punto de corte estadístico y sin aprendizaje automático.}
-
 \subsection{Objetivos e hipótesis}
 \label{sec:objetivos}
 
@@ -454,9 +445,9 @@ comportamiento observado no depende únicamente de la construcción
 del EDR. Estos resultados corresponden a desarrollo; su réplica
 en sujetos reservados se presenta en la evaluación en test.
 
-\begin{figure}[htbp]
+\begin{figure}[!htb]
   \centering
-  \includegraphics[width=\linewidth]{imagena03.png}
+  \includegraphics[width=0.85\linewidth]{imagena03.png}
   \caption{Mapas nocturnos de coherencia del registro a03
   (categoría A) y c02 (control). Se compara la serie RR
   con el EDR (izquierda) y con la respiración torácica
@@ -707,20 +698,13 @@ particiones y las condiciones de evaluación. La propuesta basada
 en una feature y un umbral facilita describir la decisión, pero
 esa simplicidad no asegura una mejor generalización. En este
 caso, su aporte principal fue permitir analizar de manera
-explícita qué información se conserva y dónde falla el criterio.
-Una continuación debería evaluar la estabilidad del umbral entre
-personas, justificar las reglas de calidad e integrar la detección
-QRS propia, utilizando nuevos datos o una nueva evaluación
-separada. Modificar esas decisiones a partir de los resultados
-actuales y volver a medirlas sobre el mismo test dejaría de ser
-una validación independiente.
+explícita qué información se conserva y dónde falla el criterio. Una continuación debería abordar cada limitación con datos nuevos o una evaluación separada: evaluar F en una cohorte independiente con más sujetos, para tener potencia suficiente; estudiar la estabilidad del umbral entre personas y una calibración por noche que corrija la sobreestimación; justificar con datos las reglas de calidad del RR; corregir en el detector QRS propio la confusión con ondas T empinadas y su arranque sobre tramos con artefacto, para poder prescindir de las marcas de la base; y adaptar la ventana y el filtrado a un esquema causal si se busca un uso en tiempo real.
 
 % =====================================================================
 \section{Conclusiones}
 \label{sec:conclusiones}
 
-\pendiente{Tres o cuatro oraciones: H1, H2 con los números de test, qué quedó de cada tema
-obligatorio dentro del detector y la limitación principal.}
+H1 se sostuvo en desarrollo: durante la apnea aumentó la coherencia lenta entre RR y EDR en 11 de 14 sujetos, sin una disminución detectable de la respiratoria, pero no se replicó en test (4 de 8 sujetos). H2 no se confirmó: en test, F obtuvo un área bajo la curva de 0,785 frente a 0,793 de la referencia y un acierto por registro de 0,634 frente a 0,613, sin diferencias significativas. De los temas obligatorios, el detector final conserva el filtro pasabanda diseñado a partir de los datos, el refinamiento del pico R, la segmentación en ventanas de 240~s y la potencia espectral con Lomb como referencia; el detector QRS propio y el filtro de Wiener se evaluaron y no se incorporaron por no cumplir la no inferioridad en el acierto por registro. La principal limitación es el tamaño de test: con 10 sujetos los intervalos son demasiado amplios para afirmar superioridad o equivalencia. Para resolverlo, el paso siguiente es evaluar el criterio en una cohorte independiente y más grande, con un detector de latidos propio y reglas de calidad justificadas con datos.
 
 \label{fin-cuerpo}
 
@@ -735,10 +719,26 @@ obligatorio dentro del detector y la limitación principal.}
 \section{Detalles de métodos y resultados}
 \label{anx:detalles}
 
-\pendiente{Revisión manual de las 50 discrepancias del detector propio
-(\texttt{docs/revision\_qrs\_50.csv}: 21 errores del detector, 18 de las marcas de la base y
-11 dudosos); figuras de cada etapa obligatoria.}
+\subsection*{Revisión manual de las discrepancias del detector propio}
 
-\label{fin-anexo}
+Se sortearon 50 discrepancias entre el detector propio y las marcas de la base (semilla 2026, antes de mirarlas) y se clasificaron viendo 10~s de ECG alrededor de cada una (\texttt{docs/revision\_qrs\_50.csv}). La muestra está dominada por x17 (14 de 50), porque se sorteó sobre todas las discrepancias.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Clasificación de las 50 discrepancias revisadas.}
+  \label{tab:revision}
+  \small
+  \begin{tabularx}{\textwidth}{@{}lcX@{}}
+    \toprule
+    Clase & Casos & Patrón principal \\
+    \midrule
+    Error del detector & 21 & Detección adicional al final de una onda T empinada (x17, x12); oscilaciones rápidas al inicio del registro (c01, x04, c09). \\
+    Error de las marcas de la base & 18 & QRS claros sin marca, a menudo negativos o bifásicos. \\
+    Dudoso & 11 & Artefacto o ruido que impide decidir. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Sin los dudosos, el detector explica 21 de 39 discrepancias: una diferencia con las marcas de la base no es necesariamente un error del detector.
 
 \end{document}
