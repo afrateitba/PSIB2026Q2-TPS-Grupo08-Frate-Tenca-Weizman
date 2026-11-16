@@ -99,7 +99,7 @@ Se evaluó una sola vez en `05`, con el notebook registrado sin ejecutar antes d
 - **Confianza por movimiento:** no separa de forma clara en test.
 - **Dónde falla:** los errores son por noche entera. Hay noches con apnea subestimadas (a11, a06, x15) y controles sobreestimados (c08).
 
-Detalle en `notebooks/05_test.ipynb` (sección 6) y en `docs/resultados_test.json`.
+Detalle en `notebooks/05_test.ipynb` (sección 6) y en `docs/resultados_test.json`. El análisis posterior de por qué falla en algunas noches está en `notebooks/06_posterior_test.ipynb`: es descriptivo y no cambia estos resultados.
 
 ## Alcance
 
@@ -130,3 +130,5 @@ Detalle en `notebooks/05_test.ipynb` (sección 6) y en `docs/resultados_test.jso
 11. **Los minutos de una misma noche no son independientes** (los episodios duran una mediana de 6 minutos). Por eso los intervalos de confianza se calculan remuestreando sujetos, no minutos.
 12. **El nivel de la EDR también acompaña a la edad y al IMC** (en desarrollo, ρ ≈ 0,4–0,5 en los minutos normales), que a su vez van con la cantidad de apnea. No se puede separar si la parte (b) de la hipótesis refleja la apnea o el tipo de persona que la tiene; test tiene un IMC mayor que desarrollo.
 13. **La hipótesis se reformuló después de analizar desarrollo.** C salió de mirar qué mide bien cada señal en esos mismos registros. Lo atenúa que C casi no tiene parámetros (un peso elegido por validación cruzada por personas, que resultó 1, y una mediana sin etiquetas), pero solo test dice si generaliza.
+14. **El método supone ritmo sinusal.** En test, una persona (c04 y x29) tiene un ritmo muy irregular. Los latidos se detectan bien, pero la limpieza del RR corrige el 36–41 % de los intervalos y se excluyen la mayoría de sus minutos (`06`, sección 3). Con una arritmia sostenida, la serie RR no refleja la modulación por la apnea.
+15. **Los errores son por persona o por noche.** Dependen de dónde queda la vara de cada noche: el nivel de la EDR que no corresponde a su cantidad de apnea, o el nivel general del RR de la persona (`04` sección 11, `06` sección 2). En test el error de cada noche sigue a esas dos cantidades (ρ = 0,67 y 0,75).
