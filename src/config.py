@@ -78,3 +78,9 @@ QRS_TEMPLATE_CORR_MIN = 0.5    # en esa ventana, correlación mínima con la for
 QRS_HF_CUTOFF = 20.0           # Hz: la onda T casi no tiene energía por encima
 QRS_HF_RATIO_MIN = 0.3         # en esa ventana, energía > 20 Hz mínima respecto del QRS anterior
 QRS_TEMPLATE_N = 8             # latidos con que se arma la forma de referencia
+
+# --- EDR (notebooks/03_edr_wiener.ipynb) -----------------------------------
+# Área del QRS sobre el ECG filtrado con Wiener, sin latidos ectópicos ni atípicos.
+EDR_EXCLUDE_ECTOPIC = True     # descarta los latidos que la limpieza del RR corrige
+EDR_HAMPEL = True              # descarta los latidos atípicos (filtro de Hampel)
+EDR_WIENER = True              # mide el QRS sobre el ECG filtrado con Wiener

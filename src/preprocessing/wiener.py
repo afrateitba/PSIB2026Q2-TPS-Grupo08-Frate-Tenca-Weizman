@@ -127,3 +127,13 @@ def wiener_filter(ecg, f, s_s, s_n, fs):
     filtered = fftconvolve(padded, coefficients, mode="same")
 
     return filtered[margin:-margin]
+
+
+def wiener_from_beats(ecg, t_r, fs, pre=0.25, post=0.40):
+    """Wiener del registro estimado con sus propios latidos y aplicado al ECG.
+
+    Recorta las realizaciones alrededor de cada pico R (`t_r` en segundos),
+    estima Ss (promedio) y Sn (residuo) y aplica H = Ss / (Ss + Sn).
+    """
+    f, s_s, s_n = estimate_psds(extract_realizations(ecg, np.asarray(t_r) * fs, fs, pre, post), fs)
+    return wiener_filter(ecg, f, s_s, s_n, fs)

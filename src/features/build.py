@@ -13,14 +13,15 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from ..config import ECG_FILTER, RAW_DIR
+from ..config import ECG_FILTER, EDR_EXCLUDE_ECTOPIC, EDR_HAMPEL, EDR_WIENER, RAW_DIR
 from ..data import load_apnea_labels, load_ecg, load_qrs
 from ..preprocessing.filters import apply_zero_phase, design_bandpass
 from ..qrs.beats import record_beats
 from ..qrs.pan_tompkins import r_peaks_from_marks
 from ..qrs.rr_clean import clean_rr, minute_quality
 from .coupling import coherence_bands, resample_uniform
-from .edr import EDR_METHODS, compute_edr, qrs_reference
+from ..preprocessing.wiener import wiener_from_beats
+from .edr import EDR_METHODS, beat_edr, compute_edr, qrs_reference
 from .hrv_time import hrv_time_features
 from .lomb import HRV_BANDS, band_powers, lomb_psd
 from .windows import centered_windows
@@ -39,7 +40,9 @@ def record_series(rec: str, raw_dir: Path = RAW_DIR, fs_u: float = 2.0,
     edr.compute_edr, y "combined": promedio del área y la deriva, cada una
     estandarizada sobre la noche (sin etiquetas). `filt`: pasabanda del ECG
     (corte bajo, corte alto, orden). `refine`: refinamiento parabólico del
-    pico R (4.1). `beats`: de dónde salen los latidos para el RR y la EDR,
+    pico R (4.1). La EDR sale de beat_edr con las opciones de config (EDR_*):
+    área del QRS con Wiener, sin ectópicos ni atípicos. `beats`: de dónde
+    salen los latidos para el RR y la EDR,
     "pt" (detector propio mejorado, el del pipeline), "pt_clasico" o "marks"
     (marcas .qrs de la base); ver notebooks/02_filtro_y_latidos.ipynb.
     """
@@ -60,7 +63,13 @@ def record_series(rec: str, raw_dir: Path = RAW_DIR, fs_u: float = 2.0,
         base |= {"area", "baseline"}
     grids = {"rr": resample_uniform(t_rr, rr, fs_u)}
     for m in sorted(base):
-        grids[m] = resample_uniform(*compute_edr(ecg, qrs, fs, m, filt), fs_u)
+        if beats == "marks":                     # EDR de la primera versión, para comparar
+            grids[m] = resample_uniform(*compute_edr(ecg, qrs, fs, m, filt), fs_u)
+        else:                                    # EDR elegida en notebooks/03_edr_wiener.ipynb
+            pre = (lambda s_: wiener_from_beats(s_, t_r, fs)) if EDR_WIENER else None
+            exc = np.r_[False, corrected] if EDR_EXCLUDE_ECTOPIC else None
+            grids[m] = resample_uniform(*beat_edr(ecg, t_r, fs, m, filt, exclude=exc, hampel=EDR_HAMPEL,
+                                                  prefilter=pre), fs_u)
     t0 = max(g[0][0] for g in grids.values())
     t1 = min(g[0][-1] for g in grids.values())
     cut = {k: g[1][(g[0] >= t0) & (g[0] <= t1)] for k, g in grids.items()}
