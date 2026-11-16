@@ -24,12 +24,29 @@ Cada objetivo es un paso del trabajo, tiene un resultado medible y un notebook d
 
 **Cómo se pone a prueba** (definido antes de mirar test):
 
-- **Feature.** F = logaritmo de la potencia cruzada RR–EDR promediada en la banda, estimada por Welch en una ventana de 240 s centrada en cada minuto. Es la misma ventana para todo el trabajo.
+- **Feature.** F = logaritmo de la potencia cruzada RR–EDR promediada en la banda, estimada por Welch en una ventana de 240 s centrada en cada minuto. Es la misma ventana para todo el trabajo. La EDR es **relativa**: el área de cada latido dividida por el tamaño típico del QRS de su registro (ver cambios abajo).
 - **Predicción 1: el fenómeno existe dentro de cada noche.** En los registros de desarrollo con los dos tipos de minuto, F es mayor en los minutos con apnea que en los normales del mismo registro: AUC dentro de la noche mayor que 0,5 en la mayoría de los registros. Se mide por registro para que no influya que una persona tenga más apnea o más variabilidad que otra.
 - **Predicción 2: alcanza para detectar.** Con el umbral fijado en desarrollo, en test el AUC por minuto de F es mayor que 0,5 y su intervalo de confianza al 95 % (bootstrap por sujeto) no incluye 0,5. Se informan sensibilidad, especificidad y exactitud con ese umbral.
 - **H se sostiene** si se cumplen las dos predicciones. Si se cumple solo la primera, el fenómeno existe pero no alcanza para detectar con un umbral.
 
 **Pregunta secundaria (descriptiva, no es una hipótesis):** ¿la EDR aporta información sobre la apnea que no está en la serie RR sola? Se compara F con la potencia del RR solo en la misma banda y la misma ventana. La exploración (`01`) muestra que el RR solo ya tiene un contraste grande entre apnea y normal; por eso la respuesta no se da por supuesta. Si en desarrollo la feature cambiara, el cambio se escribe acá antes de correr test.
+
+## Cambios hechos en desarrollo, antes de abrir test
+
+| Cambio | Motivo | Dónde |
+|---|---|---|
+| La EDR se mide sobre los latidos del detector propio, con Wiener y sin latidos ectópicos ni atípicos | Mejora la detección dentro de la noche respecto de la primera versión sin empeorar el parecido con la respiración | `03`, sección 6 |
+| La EDR es relativa: área con signo / mediana del área sin signo del QRS del registro | Sin etiquetas: la oscilación respiratoria de la EDR en mV·ms crece con el tamaño del QRS (ρ = 0,70) y en forma relativa deja de depender de él (ρ ≈ 0). Con etiquetas: con la EDR en mV·ms, dos personas con QRS chico quedaban casi sin minutos detectados | `03`, sección 7; `04`, sección 8 |
+
+## Lo que queda fijo para test (`04`, sección 9)
+
+- **Preprocesamiento:** `02` y `03` tal como están en `src/` (configuración en `src/config.py`).
+- **Feature:** F como arriba. **Umbral:** el de Youden con todos los minutos de desarrollo, F > −1,900.
+- **Minutos evaluados:** con etiqueta y con 20 % o menos de RR corregidos.
+- **Predicción 1:** AUC dentro de la noche de F > 0,5 en los registros de test con al menos 20 minutos de cada tipo.
+- **Predicción 2:** AUC con todos los minutos de test > 0,5, con intervalo de confianza al 95 % por bootstrap de personas; sensibilidad, especificidad y exactitud con el umbral fijo.
+- **Pregunta secundaria:** F contra RR solo (Welch), dentro de la noche y con todos los minutos, descriptivo.
+- **Por noche (secundario):** fracción estimada contra real, ρ de Spearman.
 
 ## Alcance
 

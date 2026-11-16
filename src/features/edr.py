@@ -191,7 +191,8 @@ def hampel_outliers(values: np.ndarray, k: int = 11, n_sigmas: float = 3.0) -> n
 
 def beat_edr(ecg: np.ndarray, t_r: np.ndarray, fs: float, method: str = "area",
              filt: tuple = ECG_FILTER, exclude: np.ndarray | None = None,
-             hampel: bool = False, prefilter=None) -> tuple[np.ndarray, np.ndarray]:
+             hampel: bool = False, prefilter=None, relative: bool = False,
+             return_scale: bool = False):
     """(t, edr) a partir de los tiempos de los picos R `t_r` (s).
 
     method: "area" (área con signo del QRS en ±60 ms, sobre el ECG filtrado),
@@ -202,6 +203,13 @@ def beat_edr(ecg: np.ndarray, t_r: np.ndarray, fs: float, method: str = "area",
     limpieza del RR). hampel: descarta además los atípicos (hampel_outliers).
     prefilter: función que se aplica al ECG filtrado antes de medir el QRS
     (por ejemplo, un filtro de Wiener).
+    relative (solo "area"): divide el área de cada latido por el tamaño típico
+    del QRS del registro, la mediana del área sin signo (∫|QRS|). Así la EDR
+    no depende del tamaño del QRS, que cambia entre personas por la anatomía
+    y la posición de los electrodos (notebooks/03_edr_wiener.ipynb, sección 7).
+    No se usa la mediana del área con signo: en un QRS con R y S la parte
+    positiva y la negativa se cancelan y esa mediana no mide el tamaño.
+    return_scale: devuelve también esa escala (NaN si relative es False).
     """
     if method not in BEAT_METHODS:
         raise ValueError(f"método desconocido: {method} (opciones: {BEAT_METHODS})")
@@ -214,10 +222,12 @@ def beat_edr(ecg: np.ndarray, t_r: np.ndarray, fs: float, method: str = "area",
         x = prefilter(x)
     _, sign = qrs_reference(x, centers, fs)
     vals = {}
+    size = np.full(len(centers), np.nan)
     if method in ("area", "amplitude", "combined"):
         beats, ok = beat_matrix(x, centers, fs, 0.06)
         v = np.full(len(centers), np.nan)
         v[ok] = edr_area(beats, sign, fs) if method != "amplitude" else edr_amplitude(beats, sign)
+        size[ok] = np.abs(beats).sum(axis=1) / fs
         vals["qrs"] = v
     if method in ("baseline", "combined"):
         b, ok = edr_baseline(ecg, centers, fs, (-0.10, -0.05))
@@ -235,4 +245,12 @@ def beat_edr(ecg: np.ndarray, t_r: np.ndarray, fs: float, method: str = "area",
         values = (z(vals["qrs"]) + z(vals["baseline"])) / 2
     else:
         values = next(iter(vals.values()))
+    scale = np.nan
+    if relative:
+        if method != "area":
+            raise ValueError("relative solo está definido para method='area'")
+        scale = float(np.median(size[keep]))
+        values = values / scale
+    if return_scale:
+        return centers[keep] / fs, values[keep], scale
     return centers[keep] / fs, values[keep]

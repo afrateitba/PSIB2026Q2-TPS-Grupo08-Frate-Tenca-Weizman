@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from ..config import ECG_FILTER, EDR_EXCLUDE_ECTOPIC, EDR_HAMPEL, EDR_WIENER, RAW_DIR
+from ..config import ECG_FILTER, EDR_EXCLUDE_ECTOPIC, EDR_HAMPEL, EDR_RELATIVE, EDR_WIENER, RAW_DIR
 from ..data import load_apnea_labels, load_ecg, load_qrs
 from ..preprocessing.filters import apply_zero_phase, design_bandpass
 from ..qrs.beats import record_beats
@@ -41,7 +41,9 @@ def record_series(rec: str, raw_dir: Path = RAW_DIR, fs_u: float = 2.0,
     estandarizada sobre la noche (sin etiquetas). `filt`: pasabanda del ECG
     (corte bajo, corte alto, orden). `refine`: refinamiento parabólico del
     pico R (4.1). La EDR sale de beat_edr con las opciones de config (EDR_*):
-    área del QRS con Wiener, sin ectópicos ni atípicos. `beats`: de dónde
+    área del QRS con Wiener, sin ectópicos ni atípicos, dividida por el tamaño
+    típico del QRS del registro (mediana del área sin signo; se devuelve en
+    edr_scale). `beats`: de dónde
     salen los latidos para el RR y la EDR,
     "pt" (detector propio mejorado, el del pipeline), "pt_clasico" o "marks"
     (marcas .qrs de la base); ver notebooks/02_filtro_y_latidos.ipynb.
@@ -62,14 +64,17 @@ def record_series(rec: str, raw_dir: Path = RAW_DIR, fs_u: float = 2.0,
     if "combined" in methods:
         base |= {"area", "baseline"}
     grids = {"rr": resample_uniform(t_rr, rr, fs_u)}
+    scales = {}
     for m in sorted(base):
         if beats == "marks":                     # EDR de la primera versión, para comparar
             grids[m] = resample_uniform(*compute_edr(ecg, qrs, fs, m, filt), fs_u)
         else:                                    # EDR elegida en notebooks/03_edr_wiener.ipynb
             pre = (lambda s_: wiener_from_beats(s_, t_r, fs)) if EDR_WIENER else None
             exc = np.r_[False, corrected] if EDR_EXCLUDE_ECTOPIC else None
-            grids[m] = resample_uniform(*beat_edr(ecg, t_r, fs, m, filt, exclude=exc, hampel=EDR_HAMPEL,
-                                                  prefilter=pre), fs_u)
+            rel = EDR_RELATIVE and m == "area"     # EDR relativa al tamaño del QRS (notebook 03)
+            t_e, v_e, scales[m] = beat_edr(ecg, t_r, fs, m, filt, exclude=exc, hampel=EDR_HAMPEL,
+                                           prefilter=pre, relative=rel, return_scale=True)
+            grids[m] = resample_uniform(t_e, v_e, fs_u)
     t0 = max(g[0][0] for g in grids.values())
     t1 = min(g[0][-1] for g in grids.values())
     cut = {k: g[1][(g[0] >= t0) & (g[0] <= t1)] for k, g in grids.items()}
@@ -80,7 +85,7 @@ def record_series(rec: str, raw_dir: Path = RAW_DIR, fs_u: float = 2.0,
         edrs["combined"] = (z(cut["area"]) + z(cut["baseline"])) / 2
     return {"t": t, "rr": cut["rr"], "edr": edrs[edr_method], "edrs": edrs, "fs": fs_u,
             "sign": sign, "t_rr": t_rr, "rr_beats": rr, "corrected": corrected,
-            "edr_method": edr_method, "beats": beats}
+            "edr_method": edr_method, "beats": beats, "edr_scale": scales.get(edr_method, np.nan)}
 
 
 def minute_coupling(t: np.ndarray, x: np.ndarray, y: np.ndarray, fs: float,

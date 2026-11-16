@@ -84,3 +84,4 @@ QRS_TEMPLATE_N = 8             # latidos con que se arma la forma de referencia
 EDR_EXCLUDE_ECTOPIC = True     # descarta los latidos que la limpieza del RR corrige
 EDR_HAMPEL = True              # descarta los latidos atípicos (filtro de Hampel)
 EDR_WIENER = True              # mide el QRS sobre el ECG filtrado con Wiener
+EDR_RELATIVE = True            # divide el área por el tamaño típico del QRS (mediana del área sin signo; notebook 03, sección 7)

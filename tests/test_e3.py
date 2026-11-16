@@ -264,3 +264,15 @@ def test_real_record_tables():
     hrv = record_hrv_table("a03", 300, series=s)
     assert {"apnea", "lf_hf", "sdnn", "rmssd", "label"} <= set(hrv.columns)
     assert hrv.apnea.notna().mean() > 0.95
+
+
+@pytest.mark.skipif(not (RAW_DIR / "a03.dat").exists(), reason="faltan los datos")
+def test_edr_relativa_no_depende_de_la_escala_del_ecg():
+    from src.data import load_ecg
+    from src.features.edr import beat_edr
+    from src.qrs.beats import record_beats
+    ecg, fs = load_ecg("a03")
+    t_r = record_beats("a03")["t_r"][:3000]
+    _, v1, s1 = beat_edr(ecg, t_r, fs, relative=True, return_scale=True)
+    _, v2, s2 = beat_edr(3 * ecg, t_r, fs, relative=True, return_scale=True)
+    assert np.isclose(s2, 3 * s1) and np.allclose(v1, v2)
