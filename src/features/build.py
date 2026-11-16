@@ -1,7 +1,7 @@
 """Arma las series RR y EDR de un registro y sus tablas de features por minuto.
 
 Une los pasos del pipeline para no repetirlos en cada notebook:
-ECG -> pasabanda -> picos R refinados -> RR limpio  \
+ECG -> pasabanda -> latidos (detector propio) -> picos R refinados -> RR limpio  \
                                                     -> remuestreo a 2 Hz -> coherencia por minuto
 ECG -> EDR (área del QRS, deriva o combinado; E1)   /
 RR limpio -> Lomb y HRV temporal por minuto (referencia de H2)
@@ -16,6 +16,7 @@ import pandas as pd
 from ..config import ECG_FILTER, RAW_DIR
 from ..data import load_apnea_labels, load_ecg, load_qrs
 from ..preprocessing.filters import apply_zero_phase, design_bandpass
+from ..qrs.beats import record_beats
 from ..qrs.pan_tompkins import r_peaks_from_marks
 from ..qrs.rr_clean import clean_rr, minute_quality
 from .coupling import coherence_bands, resample_uniform
@@ -29,7 +30,7 @@ ESTIMATORS = ("welch3", "welch7", "multitaper")
 
 def record_series(rec: str, raw_dir: Path = RAW_DIR, fs_u: float = 2.0,
                   edr_method: str = "area", edr_methods: tuple = (),
-                  filt: tuple = ECG_FILTER, refine: bool = True) -> dict:
+                  filt: tuple = ECG_FILTER, refine: bool = True, beats: str = "pt") -> dict:
     """RR limpio y EDR de un registro, remuestreados a `fs_u` en una grilla común.
 
     Devuelve t, rr, edr (el de `edr_method`), edrs ({método: serie} para
@@ -38,13 +39,20 @@ def record_series(rec: str, raw_dir: Path = RAW_DIR, fs_u: float = 2.0,
     edr.compute_edr, y "combined": promedio del área y la deriva, cada una
     estandarizada sobre la noche (sin etiquetas). `filt`: pasabanda del ECG
     (corte bajo, corte alto, orden). `refine`: refinamiento parabólico del
-    pico R (4.1).
+    pico R (4.1). `beats`: de dónde salen los latidos para el RR y la EDR,
+    "pt" (detector propio mejorado, el del pipeline), "pt_clasico" o "marks"
+    (marcas .qrs de la base); ver notebooks/02_filtro_y_latidos.ipynb.
     """
     ecg, fs = load_ecg(rec, raw_dir)
-    qrs = load_qrs(rec, raw_dir)
     x = apply_zero_phase(ecg, design_bandpass(fs, *filt))
-    off, sign = qrs_reference(x, qrs, fs)
-    t_r, _ = r_peaks_from_marks(x, qrs, fs, off, sign, refine=refine)
+    if beats == "marks":
+        qrs = load_qrs(rec, raw_dir)
+        off, sign = qrs_reference(x, qrs, fs)
+        t_r, _ = r_peaks_from_marks(x, qrs, fs, off, sign, refine=refine)
+    else:
+        b = record_beats(rec, beats, raw_dir, filt, refine)
+        t_r, qrs = b["t_r"], b["samples"]
+        sign = qrs_reference(x, qrs, fs)[1]
     t_rr, rr, corrected = clean_rr(t_r)
     methods = list(dict.fromkeys((edr_method,) + tuple(edr_methods)))
     base = {m for m in methods if m in EDR_METHODS}
@@ -63,7 +71,7 @@ def record_series(rec: str, raw_dir: Path = RAW_DIR, fs_u: float = 2.0,
         edrs["combined"] = (z(cut["area"]) + z(cut["baseline"])) / 2
     return {"t": t, "rr": cut["rr"], "edr": edrs[edr_method], "edrs": edrs, "fs": fs_u,
             "sign": sign, "t_rr": t_rr, "rr_beats": rr, "corrected": corrected,
-            "edr_method": edr_method}
+            "edr_method": edr_method, "beats": beats}
 
 
 def minute_coupling(t: np.ndarray, x: np.ndarray, y: np.ndarray, fs: float,
