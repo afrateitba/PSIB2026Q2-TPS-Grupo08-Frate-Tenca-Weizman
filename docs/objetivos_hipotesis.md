@@ -64,13 +64,13 @@ Cada señal se usa para lo que mide bien (`04`, sección 6): el RR ubica la apne
 | Cambio | Motivo | Dónde |
 |---|---|---|
 | La EDR se mide sobre los latidos del detector propio, con Wiener y sin latidos ectópicos ni atípicos | Mejora la detección dentro de la noche respecto de la primera versión sin empeorar el parecido con la respiración | `03`, sección 6 |
-| La EDR es relativa: área con signo / mediana del área sin signo del QRS del registro | Sin etiquetas: la oscilación respiratoria de la EDR en mV·ms crece con el tamaño del QRS (ρ = 0,70) y en forma relativa deja de depender de él (ρ ≈ 0). Con etiquetas: con la EDR en mV·ms, dos personas con QRS chico quedaban casi sin minutos detectados | `03`, sección 7; `04`, sección 9 |
+| La EDR es relativa: área con signo / mediana del área sin signo del QRS del registro | Sin etiquetas: la oscilación respiratoria de la EDR en mV·ms crece con el tamaño del QRS (ρ = 0,70) y en forma relativa deja de depender de él (ρ ≈ 0). Con etiquetas: con la EDR en mV·ms, dos personas con QRS chico quedaban casi sin minutos detectados | `03`, sección 7; `04`, sección 13 |
 | La feature pasa de F (potencia cruzada RR–EDR) a C (potencia del RR de cada minuto + nivel nocturno de la EDR), y la hipótesis se reescribe | F resultó casi el promedio de las potencias del RR y de la EDR (r = 0,985): sumaba la EDR minuto a minuto y dentro de la noche quedaba peor que el RR solo (AUC 0,88 contra 0,92). C usa el RR para ubicar la apnea dentro de la noche y la EDR solo para el nivel de cada noche. Se probó también restarle al RR su mediana de la noche (variante G) y no mejoró (AUC con todos los minutos 0,921 contra 0,931 de C, sin diferencia), así que se eligió la versión más simple. En validación cruzada por personas, C: sensibilidad 0,81, especificidad 0,85, exactitud 0,836, AUC 0,907, AUC dentro de la noche 0,92, controles con 7 % de minutos marcados (F: 0,86 / 0,79 / 0,820 / 0,903 / 0,88 / 17 %). A cambio, C ordena las noches algo peor que F (ρ por noche 0,80 contra 0,87) | `04`, secciones 6 y 7 |
 
 ## Lo que queda fijo para test
 
 - **Preprocesamiento:** `02` y `03` tal como están en `src/` (configuración en `src/config.py`).
-- **Feature:** C como en las definiciones, con los parámetros de desarrollo (`04`, sección 12; archivo `docs/parametros_test.json`, que es el que lee el notebook de test):
+- **Feature:** C como en las definiciones, con los parámetros de desarrollo (`04`, sección 14; archivo `docs/parametros_test.json`, que es el que lee el notebook de test):
 
   | Parámetro | Valor |
   |---|---|
