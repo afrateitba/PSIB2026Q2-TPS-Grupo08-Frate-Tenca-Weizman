@@ -4,7 +4,7 @@ Documento de referencia para el informe, la presentación y los notebooks. Respo
 
 ## Objetivo general
 
-Desarrollar y evaluar un método de procesamiento de señales que detecte, **minuto a minuto**, la presencia de apnea del sueño a partir de un **ECG de una derivación**, usando la variación conjunta de la frecuencia cardíaca y de la respiración derivada del ECG, con una única feature y un umbral (sin aprendizaje automático).
+Desarrollar y evaluar un método de procesamiento de señales que detecte, **minuto a minuto**, la presencia de apnea del sueño a partir de un **ECG de una derivación**, combinando la variabilidad de la frecuencia cardíaca (serie RR) y la respiración derivada del ECG (EDR) en una única feature con un umbral (sin aprendizaje automático).
 
 ## Objetivos específicos
 
@@ -15,21 +15,49 @@ Cada objetivo es un paso del trabajo, tiene un resultado medible y un notebook d
 | 1 | Caracterizar la base Apnea-ECG: etiquetas, categorías, calidad y artefactos de las señales en tiempo y frecuencia | Requisitos del preprocesamiento justificados con figuras y medidas por registro | `01` |
 | 2 | Diseñar un filtro a partir del espectro del ECG y obtener la serie RR con un detector de QRS propio | Filtro que cumple una especificación sacada de los datos; detector validado contra las marcas de la base y con revisión manual | `02` |
 | 3 | Obtener la respiración derivada del ECG (EDR) y medir cuánto se parece a la respiración registrada; evaluar si el filtro de Wiener la mejora | Coherencia EDR–respiración en la banda respiratoria y en la banda del ciclo de apnea, para cada variante | `03` |
-| 4 | Identificar en qué banda de frecuencias la apnea modifica la serie RR y la EDR, y construir con ella una feature por minuto | Banda medida en desarrollo; feature definida con una ventana única | `01`, `04` |
+| 4 | Identificar en qué banda de frecuencias la apnea modifica la serie RR y la EDR, qué información aporta cada señal, y construir con eso una feature por minuto | Banda medida en desarrollo; aporte de cada señal medido dentro de la noche y entre noches; feature definida con una ventana única | `01`, `04` |
 | 5 | Fijar el umbral de decisión en desarrollo y evaluar el detector una única vez en los sujetos de test | Sensibilidad, especificidad, AUC por minuto y error por noche, con intervalos de confianza por sujeto | `04` |
 
 ## Hipótesis
 
-**H.** Durante la apnea, la frecuencia cardíaca y la respiración oscilan juntas al ritmo del ciclo apnea–recuperación (períodos de ~20 a 100 s). Por eso, **en los minutos con apnea la potencia cruzada entre la serie RR y la EDR en la banda de 0,01 a 0,05 Hz es mayor que en los minutos normales, y alcanza para clasificar cada minuto con un único umbral**.
+### Enunciado
 
-**Cómo se pone a prueba** (definido antes de mirar test):
+**H.** En la apnea obstructiva, cada episodio sigue un ciclo de pausa respiratoria y recuperación que dura entre 20 y 100 s: la frecuencia cardíaca baja durante la pausa y se acelera al reanudarse la respiración, y la mecánica del tórax cambia con el mismo ritmo. Ese ciclo aumenta la potencia de la serie RR y de la EDR en la banda de **0,01 a 0,05 Hz**. Se espera que:
 
-- **Feature.** F = logaritmo de la potencia cruzada RR–EDR promediada en la banda, estimada por Welch en una ventana de 240 s centrada en cada minuto. Es la misma ventana para todo el trabajo. La EDR es **relativa**: el área de cada latido dividida por el tamaño típico del QRS de su registro (ver cambios abajo).
-- **Predicción 1: el fenómeno existe dentro de cada noche.** En los registros de desarrollo con los dos tipos de minuto, F es mayor en los minutos con apnea que en los normales del mismo registro: AUC dentro de la noche mayor que 0,5 en la mayoría de los registros. Se mide por registro para que no influya que una persona tenga más apnea o más variabilidad que otra.
-- **Predicción 2: alcanza para detectar.** Con el umbral fijado en desarrollo, en test el AUC por minuto de F es mayor que 0,5 y su intervalo de confianza al 95 % (bootstrap por sujeto) no incluye 0,5. Se informan sensibilidad, especificidad y exactitud con ese umbral.
-- **H se sostiene** si se cumplen las dos predicciones. Si se cumple solo la primera, el fenómeno existe pero no alcanza para detectar con un umbral.
+- **(a) Dentro de cada noche**, la potencia del RR en esa banda sea **mayor en los minutos con apnea que lo habitual en esa misma noche**.
+- **(b) Entre noches**, el **nivel nocturno de la potencia de la EDR** en esa banda sea **mayor cuanto más apnea tiene la noche**.
+- **(c) Combinando (a) y (b)** en una única feature, G, un **único umbral fijado en desarrollo** permita clasificar cada minuto de personas nuevas como apnea o normal.
 
-**Pregunta secundaria (descriptiva, no es una hipótesis):** ¿la EDR aporta información sobre la apnea que no está en la serie RR sola? Se compara F con la potencia del RR solo en la misma banda y la misma ventana. La exploración (`01`) muestra que el RR solo ya tiene un contraste grande entre apnea y normal; por eso la respuesta no se da por supuesta. Si en desarrollo la feature cambiara, el cambio se escribe acá antes de correr test.
+Cada señal se usa para lo que mide bien (`04`, sección 6): el RR ubica la apnea dentro de la noche, pero su nivel general cambia entre personas sin relación con la apnea; la EDR separa peor los minutos, pero su nivel nocturno acompaña a la cantidad de apnea.
+
+### Definiciones operativas
+
+| Término | Definición |
+|---|---|
+| Serie RR | Intervalos entre picos R del detector propio (`02`), con la limpieza del RR, interpolados a 2 Hz |
+| EDR | Área con signo del QRS (±60 ms) sobre el ECG filtrado con Wiener, sin latidos ectópicos ni atípicos, dividida por el tamaño típico del QRS del registro (mediana del área sin signo), interpolada a 2 Hz (`03`) |
+| Ventana de un minuto | 240 s centrados en el minuto |
+| Potencia en la banda, P(m) | log₁₀ de la densidad espectral de potencia promediada en 0,01–0,05 Hz, estimada por Welch (3 segmentos de 120 s, Hann, 50 % de solapamiento) en la ventana del minuto m; P_RR para la serie RR y P_EDR para la EDR |
+| Nivel habitual de la noche | Mediana de P en todas las ventanas de esa noche. No usa etiquetas: se calcula igual en test |
+| Feature | **G(m) = [P_RR(m) − mediana_noche(P_RR) − μ₁] / σ₁ + w · [mediana_noche(P_EDR) − μ₂] / σ₂**, con μ y σ medidos en los minutos de desarrollo y w = 1,5 elegido por validación cruzada por personas en desarrollo (`04`) |
+| Decisión | Un minuto es apnea si G(m) supera el umbral de Youden de desarrollo |
+| Minutos evaluados | Con etiqueta y con 20 % o menos de RR corregidos |
+
+### Predicciones y criterio (fijados antes de abrir test)
+
+| Predicción | Qué se mide en test | Se cumple si |
+|---|---|---|
+| **P1, dentro de la noche** (parte a) | AUC dentro de la noche de P_RR − mediana_noche(P_RR) en cada registro con al menos 20 minutos de cada tipo | la media de esos AUC es mayor que 0,5 y su intervalo de confianza al 95 % (bootstrap por persona) no incluye 0,5 |
+| **P2, entre noches** (parte b) | Correlación de Spearman entre mediana_noche(P_EDR) y el % de minutos con apnea de cada registro de test | ρ > 0 y su intervalo al 95 % (bootstrap por persona) no incluye 0 |
+| **P3, detección** (parte c) | AUC de G con todos los minutos de test; sensibilidad, especificidad y exactitud con el umbral fijo | AUC > 0,5 con intervalo al 95 % (bootstrap por persona) que no incluye 0,5 |
+
+**H se sostiene** si se cumplen las tres predicciones. Si se cumplen P1 y P2 pero no P3, cada señal muestra el efecto esperado pero su combinación no alcanza para detectar con un umbral. Si falla P2, la EDR no aporta lo que se esperaba entre noches y G se reduce, en la práctica, al RR solo.
+
+### Preguntas secundarias (descriptivas, no son hipótesis)
+
+1. **¿G mejora a las alternativas?** Se compara G con F (la potencia cruzada RR–EDR de la primera versión) y con el RR solo, dentro de la noche y con todos los minutos.
+2. **¿Sirve la confianza?** Exactitud del detector en los minutos con poco y con mucho movimiento (`04`).
+3. **Por noche:** fracción de minutos estimada contra la real (ρ de Spearman) y minutos marcados en los controles.
 
 ## Cambios hechos en desarrollo, antes de abrir test
 
@@ -37,16 +65,14 @@ Cada objetivo es un paso del trabajo, tiene un resultado medible y un notebook d
 |---|---|---|
 | La EDR se mide sobre los latidos del detector propio, con Wiener y sin latidos ectópicos ni atípicos | Mejora la detección dentro de la noche respecto de la primera versión sin empeorar el parecido con la respiración | `03`, sección 6 |
 | La EDR es relativa: área con signo / mediana del área sin signo del QRS del registro | Sin etiquetas: la oscilación respiratoria de la EDR en mV·ms crece con el tamaño del QRS (ρ = 0,70) y en forma relativa deja de depender de él (ρ ≈ 0). Con etiquetas: con la EDR en mV·ms, dos personas con QRS chico quedaban casi sin minutos detectados | `03`, sección 7; `04`, sección 9 |
+| La feature pasa de F (potencia cruzada RR–EDR) a G (RR respecto de su noche + nivel nocturno de la EDR), y la hipótesis se reescribe | F resultó casi el promedio de las potencias del RR y de la EDR (r = 0,985): sumaba la EDR minuto a minuto y dentro de la noche quedaba peor que el RR solo (AUC 0,88 contra 0,92). G usa el RR para ubicar la apnea dentro de la noche y la EDR para el nivel de cada noche. En validación cruzada por personas: AUC dentro de la noche 0,92 (F 0,88), AUC con todos los minutos 0,91 (F 0,90), controles con 12 % de minutos marcados (F 17 %) | `04`, secciones 6 y 7 |
 
-## Lo que queda fijo para test (`04`, sección 10)
+## Lo que queda fijo para test
 
 - **Preprocesamiento:** `02` y `03` tal como están en `src/` (configuración en `src/config.py`).
-- **Feature:** F como arriba. **Umbral:** el de Youden con todos los minutos de desarrollo, F > −1,900.
-- **Minutos evaluados:** con etiqueta y con 20 % o menos de RR corregidos.
-- **Predicción 1:** AUC dentro de la noche de F > 0,5 en los registros de test con al menos 20 minutos de cada tipo.
-- **Predicción 2:** AUC con todos los minutos de test > 0,5, con intervalo de confianza al 95 % por bootstrap de personas; sensibilidad, especificidad y exactitud con el umbral fijo.
-- **Pregunta secundaria:** F contra RR solo (Welch), dentro de la noche y con todos los minutos, descriptivo.
-- **Por noche (secundario):** fracción estimada contra real, ρ de Spearman.
+- **Feature:** G como en las definiciones, con w = 1,5. **Parámetros (μ₁, σ₁, μ₂, σ₂) y umbral:** los de desarrollo, que se calculan y se copian acá al rehacer `04`.
+- **Minutos evaluados, predicciones y preguntas secundarias:** como arriba.
+- Test se corre **una sola vez**, con un notebook que solo lee estos valores.
 
 ## Alcance
 
@@ -75,3 +101,5 @@ Cada objetivo es un paso del trabajo, tiene un resultado medible y un notebook d
 9. **Test chico: 20 registros de 10 personas.** Los intervalos de confianza son anchos: un resultado no significativo no demuestra que no haya efecto. Además, test quedó con algo menos de hombres y con un índice de masa corporal mayor que desarrollo (31 contra 27; no se controló al partir).
 10. **Test ya se usó en la primera entrega.** La evaluación del recuperatorio no es ciega en sentido estricto. Para que no influya, todas las decisiones nuevas se toman solo con desarrollo, se escriben antes de correr test y test se corre una sola vez al final.
 11. **Los minutos de una misma noche no son independientes** (los episodios duran una mediana de 6 minutos). Por eso los intervalos de confianza se calculan remuestreando sujetos, no minutos.
+12. **El nivel de la EDR también acompaña a la edad y al IMC** (en desarrollo, ρ ≈ 0,4–0,5 en los minutos normales), que a su vez van con la cantidad de apnea. No se puede separar si la parte (b) de la hipótesis refleja la apnea o el tipo de persona que la tiene; test tiene un IMC mayor que desarrollo.
+13. **La hipótesis se reformuló después de analizar desarrollo.** G salió de mirar qué mide bien cada señal en esos mismos registros. Lo atenúa que G casi no tiene parámetros (un peso elegido por validación cruzada por personas y medianas sin etiquetas), pero solo test dice si generaliza.
