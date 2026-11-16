@@ -1,13 +1,10 @@
-"""Latidos de un registro: marcas de la base, detector propio o el mejor de los dos.
+"""Latidos de un registro: detector propio (por defecto) o marcas de la base.
 
-Las marcas .qrs de la base son automáticas y no están auditadas. En algunos
-registros se saltean latidos (el RR aparece al doble); el detector propio
-(Pan-Tompkins) los encuentra, pero en otros marca también la onda T. Los dos
-errores dejan intervalos RR imposibles, que la limpieza del RR corrige: un
-latido perdido deja un RR largo y uno de más, dos cortos. Por eso la fracción
-de RR corregidos mide los errores de detección sin usar etiquetas, y con
-source="auto" se usa, en cada registro, la fuente que deja menos RR
-corregidos. Se justifica en notebooks/02_filtro_y_latidos.ipynb.
+Las marcas .qrs de la base son automáticas y no están auditadas: en algunos
+registros se saltean latidos. El detector propio (Pan-Tompkins con las
+mejoras de notebooks/02_filtro_y_latidos.ipynb) deja menos RR imposibles que
+las marcas en los registros de desarrollo y de test, y es el que se usa. Las
+marcas quedan disponibles para comparar.
 """
 from __future__ import annotations
 
@@ -22,38 +19,28 @@ from ..preprocessing.filters import apply_zero_phase, design_bandpass
 from .pan_tompkins import detect_r_peaks, r_peaks_from_marks, refine_peaks_parabolic
 from .rr_clean import clean_rr
 
-SOURCES = ("marks", "pt", "auto")
+SOURCES = ("pt", "pt_clasico", "marks")
 
 
-def _peaks_pt(x: np.ndarray, fs: float, refine: bool) -> np.ndarray:
-    k = detect_r_peaks(x, fs)
-    if not refine:
-        return k / fs
-    return refine_peaks_parabolic(x, k)[0] / fs
-
-
-def record_beats(rec: str, source: str = "auto", raw_dir: Path = RAW_DIR,
+def record_beats(rec: str, source: str = "pt", raw_dir: Path = RAW_DIR,
                  filt: tuple = ECG_FILTER, refine: bool = True) -> dict:
-    """Tiempos de los picos R (s) de un registro y la fuente usada.
+    """Tiempos de los picos R (s) de un registro.
 
-    source: "marks" (marcas de la base), "pt" (detector propio) o "auto" (la
-    de menos RR corregidos). Devuelve t_r, samples (índices enteros, para
-    calcular la EDR), source y la fracción de RR corregidos de cada fuente
-    calculada (corr_marks, corr_pt).
+    source: "pt" (detector propio mejorado), "pt_clasico" (Pan-Tompkins sin
+    las mejoras) o "marks" (marcas de la base). Devuelve t_r, samples
+    (índices enteros, para calcular la EDR), source, fs y la fracción de RR
+    corregidos (corr).
     """
     if source not in SOURCES:
         raise ValueError(f"fuente desconocida: {source} (opciones: {SOURCES})")
     ecg, fs = load_ecg(rec, raw_dir)
     x = apply_zero_phase(ecg, design_bandpass(fs, *filt))
-    out = {}
-    if source in ("marks", "auto"):
+    if source == "marks":
         qrs = load_qrs(rec, raw_dir)
         off, sign = qrs_reference(x, qrs, fs)
-        out["marks"] = r_peaks_from_marks(x, qrs, fs, off, sign, refine=refine)[0]
-    if source in ("pt", "auto"):
-        out["pt"] = _peaks_pt(x, fs, refine)
-    corr = {k: float(clean_rr(t)[2].mean()) for k, t in out.items()}
-    chosen = min(corr, key=corr.get) if source == "auto" else source
-    t_r = out[chosen]
-    return {"t_r": t_r, "samples": np.unique(np.rint(t_r * fs).astype(int)), "source": chosen,
-            "fs": fs, **{f"corr_{k}": v for k, v in corr.items()}}
+        t_r = r_peaks_from_marks(x, qrs, fs, off, sign, refine=refine)[0]
+    else:
+        k = detect_r_peaks(x, fs, improved=(source == "pt"))
+        t_r = refine_peaks_parabolic(x, k)[0] / fs if refine else k / fs
+    return {"t_r": t_r, "samples": np.unique(np.rint(t_r * fs).astype(int)), "source": source,
+            "fs": fs, "corr": float(clean_rr(t_r)[2].mean())}

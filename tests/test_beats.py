@@ -10,8 +10,8 @@ def test_fuente_desconocida():
 
 
 @pytest.mark.skipif(not (RAW_DIR / "a02.dat").exists(), reason="faltan los datos")
-def test_auto_elige_la_fuente_con_menos_rr_corregidos():
-    b = record_beats("a02", "auto")
-    assert b["source"] == min(("marks", "pt"), key=lambda k: b[f"corr_{k}"])
-    # En a02 las marcas de la base pierden latidos: el detector propio deja menos RR corregidos.
-    assert b["source"] == "pt"
+def test_detector_propio_recupera_latidos_que_la_base_pierde():
+    # En a02 las marcas de la base se saltean latidos: el RR queda al doble y se corrige.
+    propio, base = record_beats("a02", "pt"), record_beats("a02", "marks")
+    assert len(propio["t_r"]) > len(base["t_r"])
+    assert propio["corr"] < base["corr"] / 5

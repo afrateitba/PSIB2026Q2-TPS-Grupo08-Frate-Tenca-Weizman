@@ -95,13 +95,28 @@ def _x17_like(dur=600.0, seed=SEED, early=None):
     return x, np.round(t_r * FS).astype(int)
 
 
-@pytest.mark.xfail(strict=True, reason="Limitación conocida: una onda T empinada (como en x17) tiene "
-                   "más de la mitad de la pendiente del QRS y la regla clásica no la descarta.")
 def test_tall_t_wave_not_counted():
-    """Con ondas T altas y empinadas (como x17), no debería contar la T como otro latido."""
+    """Con ondas T altas y empinadas (como x17), la versión mejorada no cuenta la T como otro latido."""
     x, true_r = _x17_like()
     m = validate_against_reference(detect_r_peaks(x, FS), true_r, FS, tol=0.03)
     assert m["Se"] >= 0.99 and m["VPP"] >= 0.99
+
+
+def test_tall_t_wave_classic_fails():
+    """El algoritmo clásico sí la cuenta: la T tiene más de la mitad de la pendiente del QRS."""
+    x, true_r = _x17_like()
+    m = validate_against_reference(detect_r_peaks(x, FS, improved=False), true_r, FS, tol=0.03)
+    assert m["VPP"] < 0.99
+
+
+def test_no_detections_without_ecg():
+    """En un tramo sin ECG (oscilación regular de 7 Hz, como al principio de c09) no hay latidos."""
+    t = np.arange(0, 60, 1 / FS)
+    x = 0.04 * np.sin(2 * np.pi * 7.3 * t)
+    x[3000:] += _x17_like()[0][:3000] * 5          # después, ECG de verdad
+    det = detect_r_peaks(x, FS)
+    assert np.sum(det < 2900) <= 1
+    assert np.sum(det >= 3000) > 0
 
 
 def test_premature_beat_still_detected():

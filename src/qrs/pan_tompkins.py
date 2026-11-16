@@ -11,10 +11,12 @@ usando las .qrs y este detector queda como validación. Se y VPP contra las
 from __future__ import annotations
 
 import numpy as np
-from scipy.signal import find_peaks
+from scipy.signal import butter, find_peaks, peak_prominences, sosfiltfilt
 
-from ..config import (QRS_BAND, QRS_INTEGRATION_S, QRS_LOCATE_S, QRS_REFRACTORY_S,
-                      QRS_SEARCHBACK, QRS_SLOPE_WIN_S, QRS_TOLERANCE_S, QRS_TWAVE_S)
+from ..config import (QRS_BAND, QRS_FLOOR_FRAC, QRS_HF_CUTOFF, QRS_HF_RATIO_MIN,
+                      QRS_INTEGRATION_S, QRS_LOCATE_S, QRS_PROMINENCE_MIN, QRS_REFRACTORY_S,
+                      QRS_SEARCHBACK, QRS_SLOPE_WIN_S, QRS_TEMPLATE_CORR_MIN, QRS_TEMPLATE_N,
+                      QRS_TOLERANCE_S, QRS_TWAVE_RR_FRAC, QRS_TWAVE_S)
 from ..preprocessing.filters import apply_zero_phase, design_bandpass
 
 
@@ -40,7 +42,22 @@ def _learn(mwi: np.ndarray, start: int, fs: float) -> tuple[float, float]:
     return w.max() / 3, w.mean() / 2
 
 
-def _classify(mwi: np.ndarray, d: np.ndarray, fs: float) -> np.ndarray:
+def high_freq_energy(ecg: np.ndarray, fs: float, fc: float = QRS_HF_CUTOFF,
+                     half: float = 0.05) -> np.ndarray:
+    """Energía por encima de `fc` Hz en una ventana de ±`half` s alrededor de cada muestra.
+
+    El QRS es rápido y tiene energía por encima de 20 Hz; la onda T es lenta y
+    casi no tiene. Sirve para separarlos cuando la T deja en la señal
+    integrada un pulso tan grande como el del QRS.
+    """
+    e = sosfiltfilt(butter(2, fc, "high", fs=fs, output="sos"), np.asarray(ecg, float)) ** 2
+    n = int(round(half * fs))
+    return np.convolve(e, np.ones(2 * n + 1), mode="same")
+
+
+def _classify(mwi: np.ndarray, d: np.ndarray, fs: float, bp: np.ndarray | None = None,
+              hf: np.ndarray | None = None, improved: bool = False,
+              floor: float = 0.0) -> np.ndarray:
     """Umbrales adaptativos, búsqueda hacia atrás y descarte de ondas T.
 
     Devuelve los índices de los picos de la señal integrada que son QRS.
@@ -50,22 +67,57 @@ def _classify(mwi: np.ndarray, d: np.ndarray, fs: float) -> np.ndarray:
     amplitud del ECG), los umbrales se vuelven a aprender con los 2 s que
     siguen, igual que al principio del registro. Sin esto el detector puede
     quedar ciego durante minutos.
+
+    Con `improved=True` (necesita `bp` y `hf`) se agregan las mejoras de
+    notebooks/02_filtro_y_latidos.ipynb:
+    - Un candidato solo puede ser QRS si es un pulso aislado de la señal
+      integrada (prominencia relativa ≥ QRS_PROMINENCE_MIN) y supera el piso
+      `floor`. Sin esto, en tramos sin ECG (oscilaciones regulares o ruido) el
+      umbral se adapta al ruido y se marca un latido cada 0,2-0,3 s.
+    - La ventana de onda T crece con el RR (QRS_TWAVE_RR_FRAC): con ritmo
+      lento la T termina después de los 360 ms fijos.
+    - Dentro de esa ventana, además de la pendiente, el candidato se descarta
+      si su forma no se parece a la de los últimos QRS (correlación con la
+      mediana de QRS_TEMPLATE_N latidos) o si tiene poca energía por encima
+      de 20 Hz respecto del QRS anterior.
     """
     cand, _ = find_peaks(mwi, distance=max(1, int(round(QRS_REFRACTORY_S * fs))))
     if len(cand) == 0:
         return np.array([], dtype=int)
+    if improved:
+        rel = peak_prominences(mwi, cand, wlen=int(2 * fs))[0] / np.maximum(mwi[cand], 1e-12)
+        eligible = (rel >= QRS_PROMINENCE_MIN) & (mwi[cand] >= floor)
+    else:
+        eligible = np.ones(len(cand), dtype=bool)
     spki, npki = _learn(mwi, 0, fs)
     h = int(round(QRS_SLOPE_WIN_S * fs))
+    w = int(round(0.1 * fs))
     twave = QRS_TWAVE_S * fs
 
     def slope(k):
         return np.abs(d[max(k - h, 0):k + h + 1]).max()
 
+    templates: list = []
+
+    def remember(k):
+        if improved and w <= k < len(bp) - w:
+            templates.append(bp[k - w:k + w + 1])
+            if len(templates) > QRS_TEMPLATE_N:
+                templates.pop(0)
+
+    def looks_like_t(k):
+        if not improved:
+            return False
+        if len(templates) >= 3 and w <= k < len(bp) - w:
+            if np.corrcoef(bp[k - w:k + w + 1], np.median(templates, axis=0))[0, 1] < QRS_TEMPLATE_CORR_MIN:
+                return True
+        return last_hf is not None and hf[k] < QRS_HF_RATIO_MIN * last_hf
+
     # nmax: el pico de ruido más alto desde el último QRS. Alcanza con ese para
     # la búsqueda hacia atrás, y guardar solo ese hace que cada paso cueste lo
     # mismo aunque pasen minutos sin latidos.
-    qrs, rr, nmax, last_slope = [], [], None, None
-    for k in cand:
+    qrs, rr, nmax, last_slope, last_hf = [], [], None, None, None
+    for i, k in enumerate(cand):
         thr = npki + 0.25 * (spki - npki)
         # Búsqueda hacia atrás: hueco mayor que 1,66 RR medios -> latido perdido.
         if rr and nmax is not None and k - qrs[-1] > QRS_SEARCHBACK * np.mean(rr[-8:]):
@@ -74,14 +126,19 @@ def _classify(mwi: np.ndarray, d: np.ndarray, fs: float) -> np.ndarray:
                 rr.append(j - qrs[-1])
                 qrs.append(j)
                 last_slope = slope(j)
+                remember(j)
+                if improved:
+                    last_hf = hf[j]
                 spki = 0.25 * mwi[j] + 0.75 * spki
             else:
                 spki, npki = _learn(mwi, k, fs)
             thr = npki + 0.25 * (spki - npki)
-        if mwi[k] > thr:
+        if mwi[k] > thr and eligible[i]:
             s = slope(k)
-            # Onda T: muy cerca del QRS anterior y con menos de la mitad de su pendiente.
-            if qrs and k - qrs[-1] < twave and s < 0.5 * last_slope:
+            win = max(twave, QRS_TWAVE_RR_FRAC * np.mean(rr[-8:])) if (improved and rr) else twave
+            # Onda T: muy cerca del QRS anterior y con menos de la mitad de su pendiente
+            # (o, en la versión mejorada, con otra forma o sin energía rápida).
+            if qrs and k - qrs[-1] < win and (s < 0.5 * last_slope or looks_like_t(k)):
                 npki = 0.125 * mwi[k] + 0.875 * npki
                 if nmax is None or mwi[k] > mwi[nmax]:
                     nmax = k
@@ -90,6 +147,9 @@ def _classify(mwi: np.ndarray, d: np.ndarray, fs: float) -> np.ndarray:
                 rr.append(k - qrs[-1])
             qrs.append(k)
             last_slope = s
+            remember(k)
+            if improved:
+                last_hf = hf[k]
             spki = 0.125 * mwi[k] + 0.875 * spki
             nmax = None
         else:
@@ -99,17 +159,29 @@ def _classify(mwi: np.ndarray, d: np.ndarray, fs: float) -> np.ndarray:
     return np.array(qrs, dtype=int)
 
 
-def detect_r_peaks(ecg: np.ndarray, fs: float) -> np.ndarray:
+def detect_r_peaks(ecg: np.ndarray, fs: float, improved: bool = True) -> np.ndarray:
     """Índices de muestra de los picos R (umbral adaptativo).
 
     No supone la polaridad del R: el cuadrado de la derivada es igual para un R
     positivo que para uno invertido. Para ubicar el R se mide la polaridad del
     registro como el signo mediano de la deflexión dominante alrededor de cada
     QRS, y en cada latido se toma el extremo con ese signo a ±QRS_LOCATE_S.
+
+    `improved=False` es el algoritmo clásico de Pan y Tompkins (1985). La
+    versión mejorada (ver _classify) corre dos pasadas: la primera estima la
+    energía típica de los QRS del registro y la segunda usa una fracción de
+    ella (QRS_FLOOR_FRAC) como piso.
     """
     ecg = np.asarray(ecg, float)
-    _, d, mwi = pan_tompkins_signals(ecg, fs)
-    q = _classify(mwi, d, fs)
+    bp, d, mwi = pan_tompkins_signals(ecg, fs)
+    if improved:
+        hf = high_freq_energy(ecg, fs)
+        q = _classify(mwi, d, fs, bp, hf, improved=True)
+        if len(q):
+            q = _classify(mwi, d, fs, bp, hf, improved=True,
+                          floor=QRS_FLOOR_FRAC * float(np.median(mwi[q])))
+    else:
+        q = _classify(mwi, d, fs)
     h = int(round(QRS_LOCATE_S * fs))
     q = q[(q >= h) & (q < len(ecg) - h)]
     if len(q) == 0:

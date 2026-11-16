@@ -68,3 +68,13 @@ QRS_SLOPE_WIN_S = 0.075        # ventana para medir la pendiente máxima
 QRS_SEARCHBACK = 1.66          # hueco (en RR medios) que dispara la búsqueda hacia atrás
 QRS_LOCATE_S = 0.080           # búsqueda del pico R alrededor del QRS detectado
 QRS_TOLERANCE_S = 0.10         # tolerancia para emparejar con las .qrs
+
+# Mejoras del detector propio (notebooks/02_filtro_y_latidos.ipynb). Cada una
+# corrige un error que se vio en los registros de desarrollo.
+QRS_PROMINENCE_MIN = 0.5       # un QRS es un pulso aislado: prominencia / altura en la señal integrada
+QRS_FLOOR_FRAC = 0.05          # piso: fracción de la energía mediana de los QRS del registro
+QRS_TWAVE_RR_FRAC = 0.5        # la ventana de onda T crece con el RR: máx(QRS_TWAVE_S, 0,5 RR medio)
+QRS_TEMPLATE_CORR_MIN = 0.5    # en esa ventana, correlación mínima con la forma de los últimos QRS
+QRS_HF_CUTOFF = 20.0           # Hz: la onda T casi no tiene energía por encima
+QRS_HF_RATIO_MIN = 0.3         # en esa ventana, energía > 20 Hz mínima respecto del QRS anterior
+QRS_TEMPLATE_N = 8             # latidos con que se arma la forma de referencia
