@@ -1,11 +1,9 @@
 """Segmentación en minutos y ventanas centradas.
 
-Consigna: segmentación de señales.  Esquema v2 §4.6.
-Bloque: Espectral (Integrante 3).
-
-Unidad de decisión: 1 minuto (el minuto m abarca [60 m, 60 m + 60) s). Para
-las features espectrales se usa una ventana más larga centrada en cada minuto;
-su largo se elige con datos (E3).
+Unidad de decisión: 1 minuto (el minuto m abarca [60 m, 60 m + 60) s), porque
+las etiquetas de la base son por minuto. Las features espectrales se calculan
+en una ventana de 240 s centrada en cada minuto (src/features/detector.py;
+justificación en notebooks/01 sección 7 y 04 secciones 1 y 15).
 """
 import numpy as np
 

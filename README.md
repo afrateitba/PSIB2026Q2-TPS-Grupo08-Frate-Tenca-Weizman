@@ -65,7 +65,19 @@ Para ejecutar un notebook con sus salidas (en orden, `01` a `04`):
 jupyter nbconvert --to notebook --execute --inplace notebooks/02_filtro_y_latidos.ipynb
 ```
 
-Las figuras se guardan en `informe/figuras/`. En Windows, `jupyter` tiene que ser el del `.venv`; si la consola falla con los acentos, usar `python -X utf8`.
+## Interfaz gráfica
+
+```bash
+streamlit run app/visor.py
+```
+
+Se abre en el navegador un visor que aplica a una noche el detector tal como quedó fijado en desarrollo:
+- **La noche**: C de cada minuto con el umbral y el término de la EDR, las tiras de etiqueta, decisión y confianza, y la sensibilidad, especificidad y exactitud de esa noche.
+- **Un minuto**: se elige con el deslizador, o saltando entre los minutos mal clasificados. Muestra el ECG con los picos R, la serie RR y la EDR en su ventana de 240 s, sus espectros con la banda, y el cálculo de C paso a paso.
+
+Muestra solo los registros de desarrollo. Los de test quedan ocultos hasta la evaluación final; después se pueden ver con `VISOR_INCLUIR_TEST=1 streamlit run app/visor.py`. Cada noche tarda unos segundos en procesarse la primera vez.
+
+Las figuras de los notebooks se guardan en `informe/figuras/`. En Windows, `jupyter` tiene que ser el del `.venv`; si la consola falla con los acentos, usar `python -X utf8`.
 
 ## Código
 
@@ -88,6 +100,7 @@ Las constantes (rutas, filtro, parámetros del detector de QRS y de la EDR) est�
 | Periodograma de Lomb (comparación) | `src/features/lomb.py` | `04` |
 | **Detector**: tabla por minuto, C, umbral y confianza | `src/features/detector.py` | `04` |
 | Figuras | `src/viz/plots.py` | todos |
+| Interfaz gráfica | `app/visor.py` (pantalla), `src/viz/visor_data.py` (datos) | — |
 
 **Primera versión.** Lo que no usa el pipeline actual quedó como historia del trabajo, marcado en el encabezado de cada módulo:
 - los notebooks de `notebooks/v1/`;

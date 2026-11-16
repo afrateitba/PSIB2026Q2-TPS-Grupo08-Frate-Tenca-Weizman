@@ -7,3 +7,5 @@ requests>=2.31
 pyarrow>=14.0
 pytest>=7.4
 jupyter>=1.0
+streamlit>=1.40
+plotly>=5.20

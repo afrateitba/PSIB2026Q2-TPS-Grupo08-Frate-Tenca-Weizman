@@ -43,15 +43,17 @@ CONFIANZA = ("alta", "media", "baja")
 F_LOMB = np.arange(0.01, 0.0501, 0.0025)
 
 
-def minute_table(rec: str, raw_dir: Path = RAW_DIR, lomb: bool = False) -> pd.DataFrame:
+def minute_table(rec: str, raw_dir: Path = RAW_DIR, lomb: bool = False,
+                 series: dict | None = None) -> pd.DataFrame:
     """Una fila por minuto con ventana completa: etiqueta, calidad, P_RR, P_EDR, F y movimiento.
 
     label: 1 apnea, 0 normal, -1 sin etiqueta. q: fracción de RR corregidos
     en el minuto. No usa las etiquetas para nada más que copiarlas. Con
     lomb=True agrega P_RR_lomb: la potencia del RR en la banda con el
     periodograma de Lomb sobre los latidos, sin interpolar (para comparar).
+    `series` permite pasar el resultado de record_series(rec) si ya se calculó.
     """
-    s = record_series(rec, raw_dir)
+    s = series if series is not None else record_series(rec, raw_dir)
     lab = load_apnea_labels(rec, raw_dir)
     q = minute_quality(s["t_rr"], s["corrected"], len(lab))
     ecg, fs = load_ecg(rec, raw_dir)

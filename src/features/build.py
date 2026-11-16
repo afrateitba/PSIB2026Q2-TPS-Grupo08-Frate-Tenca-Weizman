@@ -84,7 +84,7 @@ def record_series(rec: str, raw_dir: Path = RAW_DIR, fs_u: float = 2.0,
     if "combined" in methods:
         edrs["combined"] = (z(cut["area"]) + z(cut["baseline"])) / 2
     return {"t": t, "rr": cut["rr"], "edr": edrs[edr_method], "edrs": edrs, "fs": fs_u,
-            "sign": sign, "t_rr": t_rr, "rr_beats": rr, "corrected": corrected,
+            "sign": sign, "t_r": t_r, "t_rr": t_rr, "rr_beats": rr, "corrected": corrected,
             "edr_method": edr_method, "beats": beats, "edr_scale": scales.get(edr_method, np.nan)}
 
 

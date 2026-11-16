@@ -70,7 +70,7 @@ Cada observación de la devolución (nota 3, recuperatorio), dónde se trabajó 
 
 | Observación | Estado |
 |---|---|
-| No hay interfaz | Pendiente: un visor de registros con ECG, RR, EDR, C, la decisión, la confianza y las etiquetas |
+| No hay interfaz | Resuelto: `app/visor.py` (`streamlit run app/visor.py`). Para una noche muestra C con el umbral, la decisión, la confianza y las etiquetas. Para cada minuto muestra el ECG con los picos R, la serie RR y la EDR en su ventana, los espectros con la banda y el cálculo de C. Permite saltar entre los minutos mal clasificados. Solo muestra registros de desarrollo |
 
 ## Informe y código
 
@@ -103,6 +103,5 @@ Cada observación de la devolución (nota 3, recuperatorio), dónde se trabajó 
 ## Resumen de lo que falta
 
 1. **Notebook `05`**: evaluar test una sola vez, con `docs/parametros_test.json`, y responder P1–P3. Se corre al final, con la confirmación del grupo.
-2. **Interfaz gráfica.**
-3. **Informe**: marco teórico (apnea, EDR, acoplamiento), estado del arte con referencias recientes, objetivos, métodos siguiendo `01`–`04`, resultados con figuras y conclusiones según P1–P3.
-4. **Presentación y defensa**: diapositiva de fisiología de la apnea, reparto entre los tres, tiempo ensayado y guía de estudio.
+2. **Informe**: marco teórico (apnea, EDR, acoplamiento), estado del arte con referencias recientes, objetivos, métodos siguiendo `01`–`04`, resultados con figuras y conclusiones según P1–P3.
+3. **Presentación y defensa**: diapositiva de fisiología de la apnea, reparto entre los tres, tiempo ensayado y guía de estudio.
