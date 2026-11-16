@@ -1,4 +1,6 @@
-"""Post-procesado de una feature por minuto: normalización por registro y suavizado.
+"""PRIMERA VERSIÓN (notebooks/v1): el pipeline actual (notebooks 01-04) no usa este módulo.
+
+Post-procesado de una feature por minuto: normalización por registro y suavizado.
 
 Las dos operaciones usan solo la propia noche del registro y nunca las
 etiquetas, así que se aplican igual en desarrollo y en test. Cuál conviene

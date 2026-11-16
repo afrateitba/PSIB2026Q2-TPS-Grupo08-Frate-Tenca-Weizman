@@ -1,4 +1,6 @@
-"""Candidatas de E3a (acoplamiento) y E4 (HRV) como columnas de una tabla ancha.
+"""PRIMERA VERSIÓN (notebooks/v1): el pipeline actual (notebooks 01-04) no usa este módulo.
+
+Candidatas de E3a (acoplamiento) y E4 (HRV) como columnas de una tabla ancha.
 
 Cada candidata es una forma de convertir las columnas por minuto (coherencia,
 potencia cruzada, HRV) en un único número F. La tabla ancha tiene un renglón

@@ -1,4 +1,6 @@
-"""Tests estadísticos.  Esquema v2 §5.
+"""PRIMERA VERSIÓN (notebooks/v1): el pipeline actual (notebooks 01-04) no usa este módulo.
+
+Tests estadísticos.  Esquema v2 §5.
 Bloque: los tres.
 
 Unidad de inferencia principal: el sujeto (minutos de un mismo registro no

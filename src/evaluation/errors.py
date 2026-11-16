@@ -1,4 +1,6 @@
-"""Diagnóstico de errores del detector, minuto a minuto.  Notebook 14.
+"""PRIMERA VERSIÓN (notebooks/v1): el pipeline actual (notebooks 01-04) no usa este módulo.
+
+Diagnóstico de errores del detector, minuto a minuto.  Notebook 14.
 
 Descriptivo: no elige ni cambia nada del pipeline. Trabaja sobre las
 predicciones de los sujetos de afuera de la validación anidada (notebook 12)

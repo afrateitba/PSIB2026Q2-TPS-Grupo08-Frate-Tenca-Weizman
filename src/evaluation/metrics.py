@@ -1,4 +1,6 @@
-"""Medidas para la evaluación en test (una sola vez).  plan_test.md §6.
+"""PRIMERA VERSIÓN (notebooks/v1): el pipeline actual (notebooks 01-04) no usa este módulo.
+
+Medidas para la evaluación en test (una sola vez).  plan_test.md §6.
  
 Las dos funciones reciben valores ya calculados: qué minutos se evalúan y con
 qué umbral lo decide el notebook (plan_test.md §4). Se usan igual con F y con

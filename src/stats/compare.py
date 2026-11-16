@@ -1,4 +1,6 @@
-"""Comparación de features candidatas con AUC y bootstrap por sujeto.  E3 y E4.
+"""PRIMERA VERSIÓN (notebooks/v1): el pipeline actual (notebooks 01-04) no usa este módulo.
+
+Comparación de features candidatas con AUC y bootstrap por sujeto.  E3 y E4.
 
 El detector final usa un único umbral para todos, así que la métrica es el
 AUC con todos los minutos juntos. Los minutos de una misma persona no son

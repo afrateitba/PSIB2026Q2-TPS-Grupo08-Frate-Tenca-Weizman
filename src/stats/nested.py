@@ -1,4 +1,6 @@
-"""Validación cruzada anidada de toda la elección del detector.  Notebook 12.
+"""PRIMERA VERSIÓN (notebooks/v1): el pipeline actual (notebooks 01-04) no usa este módulo.
+
+Validación cruzada anidada de toda la elección del detector.  Notebook 12.
 
 En cada grupo de sujetos se repite, solo con los sujetos de entrenamiento:
 1. la elección de la feature (E3a): no inferioridad -> acierto por registro ->

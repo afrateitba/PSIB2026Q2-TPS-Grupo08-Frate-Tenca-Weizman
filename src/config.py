@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
 RAW_DIR = DATA_DIR / "raw"          # no se versiona (ver .gitignore)
 SPLIT_CSV = DATA_DIR / "split.csv"  # se versiona una sola vez
-RESULTS_DIR = ROOT / "results"
+RESULTS_DIR = ROOT / "results"   # primera versión (cachés de notebooks/v1)
 
 # --- Base de datos -------------------------------------------------------
 PHYSIONET_URL = "https://physionet.org/files/apnea-ecg/1.0.0/"
@@ -46,10 +46,11 @@ MAX_APNEA_DIFF = 0.02
 
 # --- Filtro del ECG ------------------------------------------------------
 # Pasabanda Butterworth (corte bajo Hz, corte alto Hz, orden), aplicado ida y
-# vuelta. Justificado en notebooks/07_filtro.ipynb.
+# vuelta. Justificado en notebooks/02_filtro_y_latidos.ipynb, sección 1.
 ECG_FILTER = (0.5, 45.0, 3)
 
-# --- Bandas espectrales (Hz) ---------------------------------------------
+# --- Bandas de HRV (Hz). Primera versión: el pipeline actual usa la banda
+# 0,01-0,05 Hz de src/features/detector.py (BAND), medida en notebook 01.
 BANDS = {
     "VLF": (0.01, 0.04),
     "LF": (0.04, 0.15),
@@ -59,7 +60,7 @@ BANDS = {
 
 # --- Detección de QRS (Pan-Tompkins a 100 Hz) -----------------------------
 # Valores clásicos de Pan y Tompkins (1985), en segundos para que no dependan
-# de fs. Supuestos de la literatura: se verifican en notebooks/08_qrs.ipynb.
+# de fs. Se verifican en notebooks/02_filtro_y_latidos.ipynb, sección 2.
 QRS_BAND = (5.0, 15.0, 2)      # pasabanda (Hz, Hz, orden), ida y vuelta
 QRS_INTEGRATION_S = 0.150      # ventana de integración
 QRS_REFRACTORY_S = 0.200       # período refractario entre dos QRS

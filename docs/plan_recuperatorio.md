@@ -2,13 +2,15 @@
 
 La devolución (nota 3) no cuestiona que el análisis esté mal hecho: dice que no se entiende. Hay muchas decisiones sin mostrar las señales que las respaldan, no hay un hilo que una métodos y resultados, y el alcance es demasiado grande. El pedido explícito es **limitar el alcance a una sola hipótesis y construirla paso a paso**, justificando cada decisión con un análisis cualitativo (figuras) y cuantitativo de las señales, y con bibliografía.
 
+El estado de cada observación de la devolución está en [`revision_devolucion.md`](revision_devolucion.md), y cada decisión con su justificación, en [`decisiones.md`](decisiones.md).
+
 ## 0. Regla de trabajo
 
-Durante el desarrollo **solo se usan los 47 registros de desarrollo**. Test no se toca —ni señales, ni etiquetas, ni para verificar— hasta la evaluación final, que se corre una sola vez con todo fijado. De test solo se muestran cuántos registros de cada categoría tiene, para explicar la partición.
+Durante el desarrollo **solo se usan los 47 registros de desarrollo**. Test no se toca —ni señales, ni etiquetas, ni para verificar— hasta la evaluación final, que se corre una sola vez con todo fijado. De test solo se usan los datos con los que se armó la partición (categoría, cantidad de minutos con apnea y perfil de cada registro), para explicarla y verificarla.
 
 ## 1. Hipótesis única y objetivos
 
-Están en [`objetivos_hipotesis.md`](objetivos_hipotesis.md): objetivo general, objetivos específicos (uno por notebook), la hipótesis con sus dos predicciones y el criterio para sostenerla, el alcance y las limitaciones.
+Están en [`objetivos_hipotesis.md`](objetivos_hipotesis.md): objetivo general, objetivos específicos (uno por notebook), la hipótesis con sus tres predicciones y el criterio para sostenerla, el alcance y las limitaciones.
 
 Sale del informe: H1 de la primera versión (coherencia y cociente de coherencias), la validación cruzada anidada, las reglas de no inferioridad, Holm, rango-biserial y los desvíos declarados. Quedan en `notebooks/v1/` como historia del trabajo.
 

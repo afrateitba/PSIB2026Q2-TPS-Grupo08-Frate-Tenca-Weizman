@@ -1,32 +1,53 @@
-# PSIB2026Q2-TPS — Grupo 08 — Frate Tenca Weizman
+# PSIB2026Q2-TPS — Grupo 08 — Frate, Tenca, Weizman
 
-**Acoplamiento cardiopulmonar derivado del ECG como criterio de detección de apnea del sueño**
+**Detección de apnea del sueño minuto a minuto con un ECG de una derivación**
 
-Trabajo práctico de señales de Procesamiento de Señales e Imágenes Biomédicas (ITBA, 2026 Q2).
+Trabajo práctico de señales de Procesamiento de Señales e Imágenes Biomédicas (ITBA, 2026 Q2). Versión del recuperatorio.
 
-## Objetivo
+## Objetivo e hipótesis
 
-Determinar, minuto a minuto y usando solo el ECG, si hay apnea del sueño. El criterio de decisión sale de análisis estadístico y puntos de corte; no se usa aprendizaje automático.
+Detectar, minuto a minuto y solo con el ECG, si hay apnea del sueño. Se usa una feature y un umbral, sin aprendizaje automático. El detalle está en [`docs/objetivos_hipotesis.md`](docs/objetivos_hipotesis.md).
 
-- **H1:** durante la apnea aparece un acoplamiento lento (0,01–0,1 Hz) entre la serie RR y el EDR (respiración derivada del ECG), dentro de cada sujeto; el acoplamiento respiratorio no desaparece. Se sostiene en desarrollo (`notebooks/03_E2_h1.ipynb`).
-- **H2:** la feature conjunta F detecta la apnea mejor que la mejor feature de HRV (potencia VLF del RR con Lomb). Se prueba en test con el plan de `docs/plan_test.md`.
+**Hipótesis H.** El ciclo de pausa y recuperación de cada apnea (20–100 s) aumenta la potencia de la serie RR y de la respiración derivada del ECG (EDR) en la banda de 0,01–0,05 Hz. De ahí salen tres predicciones:
+- **(a)** Dentro de cada noche, la potencia del RR es mayor en los minutos con apnea.
+- **(b)** Entre noches, el nivel nocturno de la potencia de la EDR crece con la cantidad de apnea.
+- **(c)** Con la feature C = potencia del RR del minuto + nivel nocturno de la EDR, ambos estandarizados, un único umbral fijado en desarrollo clasifica los minutos de personas nuevas.
 
-**Detector:** F = log de la potencia cruzada RR–EDR promediada en 0,01–0,05 Hz, en una ventana de 4 min centrada en cada minuto, con el EDR por área del QRS. Un minuto es apnea si F supera un umbral de Youden fijado en desarrollo.
+## El pipeline, paso por paso
 
-**Documentos:**
-- [`docs/esquema_v3.md`](docs/esquema_v3.md): pipeline vigente, qué se decidió y con qué datos, criterios de trabajo y lo que falta.
-- [`docs/plan_test.md`](docs/plan_test.md): cómo y cuándo se evalúa en test.
-- [`informe/informe.tex`](informe/informe.tex): el informe en LaTeX, con la bibliografía en `informe/referencias.bib` y las figuras en `informe/figuras/`. Se compila desde `informe/` con `latexmk -pdf informe.tex` (pdflatex y biber); también funciona en Overleaf.
+Cada notebook es un paso, usa lo que dejó el anterior y termina con una tabla de lo que se lleva el siguiente. Todo se desarrolla con los registros de desarrollo. **Test no se usó para nada**: se evalúa una sola vez, al final.
+
+| Notebook | Qué hace | Qué deja |
+|---|---|---|
+| [`01_base_y_exploracion`](notebooks/01_base_y_exploracion.ipynb) | Base de datos, categorías A/B/C, partición por persona (cada decisión verificada), etiquetas, señales en tiempo y frecuencia, artefactos, qué cambia con la apnea | Requisitos del filtro; la banda 0,01–0,05 Hz, medida en los datos |
+| [`02_filtro_y_latidos`](notebooks/02_filtro_y_latidos.ipynb) | Filtro 0,5–45 Hz diseñado con una especificación medida, detector de QRS propio (Pan-Tompkins con cinco mejoras), refinamiento del pico R, limpieza de la serie RR | Serie RR limpia |
+| [`03_edr_wiener`](notebooks/03_edr_wiener.ipynb) | Por qué el QRS cambia con la respiración, medidas posibles, EDR contra la respiración real y durante la apnea, latidos como realizaciones y filtro de Wiener, elección de la variante, EDR relativa | EDR: área del QRS sobre el ECG filtrado con Wiener, sin ectópicos ni atípicos, relativa al tamaño del QRS |
+| [`04_feature_y_detector`](notebooks/04_feature_y_detector.ipynb) | Métricas y niveles de análisis, qué mide cada señal, la feature C y su peso por validación cruzada, otras combinaciones, umbral de Youden, resultados por noche, dónde falla, confianza según el movimiento, robustez | Parámetros congelados en [`docs/parametros_test.json`](docs/parametros_test.json) |
+| `05_test` (pendiente) | Evaluación única en test con los parámetros congelados: predicciones (a), (b) y (c) | Resultado final |
+
+**Detector final.** Para cada minuto se toma una ventana de 240 s centrada en él. En esa ventana se estiman por Welch (3 × 120 s, Hann) la potencia del RR y la de la EDR en 0,01–0,05 Hz:
+
+C(m) = (P_RR(m) − μ₁)/σ₁ + w · (mediana de P_EDR en la noche − μ₂)/σ₂, con w = 1.
+
+El minuto es apnea si C > 0,489 (umbral de Youden). La confianza (alta, media o baja) depende del movimiento en la ventana.
+
+## Documentos
+
+- [`docs/objetivos_hipotesis.md`](docs/objetivos_hipotesis.md): objetivo general, objetivos específicos, hipótesis, predicciones, parámetros fijados, alcance y limitaciones.
+- [`docs/decisiones.md`](docs/decisiones.md): cada ventana, umbral y parámetro, con su justificación (datos, bibliografía o física) y dónde se muestra.
+- [`docs/revision_devolucion.md`](docs/revision_devolucion.md): cada observación de la devolución, dónde se resolvió y qué falta.
+- [`docs/plan_recuperatorio.md`](docs/plan_recuperatorio.md): plan de trabajo y regla de no tocar test.
+- [`docs/parametros_test.json`](docs/parametros_test.json): lo que queda fijo para test.
+- `docs/v1/`: documentos de la primera versión, como historia del trabajo.
 
 ## Datos
 
-[Apnea-ECG Database](https://physionet.org/content/apnea-ecg/1.0.0/) (PhysioNet; Penzel et al., 2000): 70 registros nocturnos, ECG a 100 Hz con conversor de 12 bits, una etiqueta apnea/normal por minuto. Las señales respiratorias de 8 registros se usan solo para validar.
+[Apnea-ECG Database](https://physionet.org/content/apnea-ecg/1.0.0/) (PhysioNet; Penzel et al., 2000). Tiene 70 registros nocturnos de ECG a 100 Hz con conversor de 12 bits y una etiqueta apnea/normal por minuto. Las señales respiratorias de 8 registros se usan solo para validar la EDR.
 
-- Hay tres pares de registros que son la misma grabación: c05/c06 (documentado por PhysioNet), x22/x35 y x33/x34 (encontrados comparando las señales, `src/duplicates.py`). Se excluyen c05, x22 y x33; quedan 67 registros de 29 sujetos.
-- Partición 70/30 por sujeto (`data/split.csv`): desarrollo 47 registros (19 sujetos), test 20 registros (10 sujetos). Está estratificada por categoría A/B/C y balanceada en minutos de apnea, con semilla fija. Los sujetos se infieren del perfil de cada registro (edad, sexo, altura, peso) y de las grabaciones duplicadas (`notebooks/01_verificacion_sujetos.ipynb`).
-- Los sujetos con registros con respiración van siempre a desarrollo.
+- Tres pares de registros son la misma grabación: c05/c06 (documentado por PhysioNet), x22/x35 y x33/x34. Se excluyen c05, x22 y x33, y quedan 67 registros de 29 personas.
+- La partición es por persona (`data/split.csv`). Desarrollo tiene 47 registros de 19 personas y test 20 registros de 10 personas. Está estratificada por categoría y balanceada en minutos de apnea, con semilla 2026. Las personas con respiración registrada van a desarrollo.
 
-## Instalación
+## Instalación y uso
 
 ```bash
 python -m venv .venv
@@ -38,53 +59,45 @@ pytest
 
 `data/split.csv` ya está versionado: `scripts/make_split.py` no se vuelve a correr.
 
-Para ejecutar un notebook con sus salidas:
+Para ejecutar un notebook con sus salidas (en orden, `01` a `04`):
 
 ```bash
-jupyter nbconvert --to notebook --execute --inplace notebooks/07_filtro.ipynb
+jupyter nbconvert --to notebook --execute --inplace notebooks/02_filtro_y_latidos.ipynb
 ```
 
-En Windows, `jupyter` tiene que ser el del `.venv` (agregar `.venv/Scripts` al PATH). Si la consola falla con los acentos, usar `python -X utf8`. Las verificaciones de las etapas toman los minutos de evaluación de la caché `results/e3/`, que no se versiona y se genera corriendo `notebooks/04_E3a_features.ipynb` (tarda bastante).
+Las figuras se guardan en `informe/figuras/`. En Windows, `jupyter` tiene que ser el del `.venv`; si la consola falla con los acentos, usar `python -X utf8`.
 
-## Notebooks
+## Código
 
-| Notebook | Etapa | Resultado |
+Las constantes (rutas, filtro, parámetros del detector de QRS y de la EDR) están en `src/config.py`, con el notebook que justifica cada una.
+
+| Etapa (consigna) | Módulo | Notebook |
 |---|---|---|
-| `00_adquisicion` | 4.1 | 12 bits; el refinamiento parabólico del pico R se queda; calidad por registro; minutos con apnea contra AHI |
-| `01_verificacion_sujetos` | partición | 3 grabaciones duplicadas; 67 registros de 29 sujetos |
-| `02_E1_edr` | E1 | EDR por área del QRS (empatado con la deriva; lo resuelve E3) |
-| `03_E2_h1` | E2 | H1 se sostiene, como un acoplamiento lento que se agrega |
-| `04_E3a_features` | E3a / E4 | F = potencia cruzada RR–EDR en 0,01–0,05 Hz; HRV de referencia: VLF con Lomb |
-| `05_E3a_descomposicion` | control | la coherencia no aporta para detectar |
-| `06_E3b_postprocesado` | E3b | sin normalizar ni suavizar; ventana de 4 min |
-| `07_filtro` | 4.2 | pasabanda 0,5–45 Hz, orden 3 |
+| Lectura de la base | `src/data.py` | `01` |
+| Duplicados y partición por persona | `src/duplicates.py`, `src/split.py` | `01` |
+| Calidad de la señal (saturación, tramos planos) | `src/preprocessing/quality.py` | `01` |
+| Filtro convencional | `src/preprocessing/filters.py` | `02` |
+| Detección de QRS | `src/qrs/pan_tompkins.py`, `src/qrs/beats.py` | `02` |
+| Cuantización y refinamiento del pico R | `src/qrs/quantization.py`, `src/qrs/pan_tompkins.py` | `02` |
+| Limpieza de la serie RR | `src/qrs/rr_clean.py` | `02` |
+| Realizaciones y filtro de Wiener | `src/preprocessing/wiener.py` | `03` |
+| EDR | `src/features/edr.py` | `03` |
+| Series por registro (RR y EDR a 2 Hz) | `src/features/build.py` | `03`, `04` |
+| Segmentación (ventana centrada) | `src/features/windows.py` | `01`, `04` |
+| Espectros de Welch y espectro cruzado | `src/features/coupling.py` | `01`, `03`, `04` |
+| Periodograma de Lomb (comparación) | `src/features/lomb.py` | `04` |
+| **Detector**: tabla por minuto, C, umbral y confianza | `src/features/detector.py` | `04` |
+| Figuras | `src/viz/plots.py` | todos |
 
-Pendiente (ver `docs/esquema_v3.md`, sección 8): 4.3 detección QRS propia, 4.4 Wiener, política de minutos malos, umbrales, validación cruzada anidada y test.
+**Primera versión.** Lo que no usa el pipeline actual quedó como historia del trabajo, marcado en el encabezado de cada módulo:
+- los notebooks de `notebooks/v1/`;
+- los paquetes `src/evaluation/` y `src/stats/`;
+- los módulos `src/features/hrv_time.py`, `postprocess.py` y `variants.py`;
+- sus tests.
 
-## Estructura
+## Reglas de trabajo
 
-| Tema de la consigna | Módulo |
-|---|---|
-| Adquisición | `src/data.py`, `src/preprocessing/quality.py`, `src/qrs/quantization.py` |
-| Filtros convencionales | `src/preprocessing/filters.py` |
-| Recorte en realizaciones + filtros óptimos | `src/preprocessing/wiener.py` |
-| Detección QRS | `src/qrs/pan_tompkins.py`, `src/qrs/rr_clean.py` |
-| Segmentación | `src/features/windows.py` |
-| HRV | `src/features/hrv_time.py` |
-| Periodograma de Lomb | `src/features/lomb.py` |
-| Acoplamiento (aporte) | `src/features/edr.py`, `src/features/coupling.py`, `src/features/build.py`, `src/features/variants.py` |
-| Análisis estadístico | `src/stats/` |
-| Evaluación | `src/evaluation/metrics.py` |
-| Figuras | `src/viz/plots.py`, `notebooks/` |
-
-Las constantes del proyecto (rutas, filtro, bandas, semilla) están en `src/config.py`. Los resultados intermedios y las figuras van a `results/` y no se versionan.
-
-## Flujo de trabajo
-
-Los criterios completos están en `docs/esquema_v3.md`, sección 7. En resumen:
-
-- Toda decisión se toma con datos de desarrollo y con reglas escritas en el notebook **antes** de correrlo. Si una regla cambia después de ver los datos, se declara como desvío.
-- Una etapa obligatoria se adopta si F es no inferior a la versión vigente (δ = 0,02 en AUC por minuto y en acierto por registro).
-- Una rama por bloque, integrada a `main` por pull request revisado por otro integrante. Commits chicos: primero las funciones con sus tests, y después el notebook con la decisión. `pytest` tiene que pasar antes de cada commit.
+- Toda decisión se toma con los registros de desarrollo y se justifica con un análisis de las señales: una figura y un número.
+- El 30 % de test no se mira (ni señales, ni etiquetas, ni resultados) hasta la evaluación final, que se corre una sola vez con los parámetros de `docs/parametros_test.json`.
+- `pytest` tiene que pasar antes de cada commit.
 - `data/split.csv` no se modifica.
-- El 30 % de test no se toca hasta la etiqueta `congelado-test`, y se usa una única vez (`docs/plan_test.md`).

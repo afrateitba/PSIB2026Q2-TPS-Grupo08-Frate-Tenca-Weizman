@@ -1,4 +1,6 @@
-"""HRV en el dominio temporal.
+"""PRIMERA VERSIÓN (notebooks/v1): el pipeline actual (notebooks 01-04) no usa este módulo.
+
+HRV en el dominio temporal.
 
 Consigna: análisis de HRV.  Esquema v2 §4.7.
 Bloque: Espectral (Integrante 3).

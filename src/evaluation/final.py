@@ -1,4 +1,6 @@
-"""Funciones de la evaluación final en test.  plan_test.md §4 a §6.
+"""PRIMERA VERSIÓN (notebooks/v1): el pipeline actual (notebooks 01-04) no usa este módulo.
+
+Funciones de la evaluación final en test.  plan_test.md §4 a §6.
 
 - `fill_from_nearest`: análisis de sensibilidad con todos los minutos (§4).
 - `h2_bootstrap`: H2 con M1 y M2, diferencia F - referencia, IC y p (§5).

@@ -1,12 +1,11 @@
-"""Detección de QRS: Pan-Tompkins adaptado a 100 Hz.
+"""Detección de QRS: Pan-Tompkins adaptado a 100 Hz, con cinco mejoras.
 
-Consigna: detección de complejo QRS.  Esquema v3 §4.3.
-Bloque: Latidos.
-
-Criterio de adopción (esquema v3 §7.4): si F calculada con este detector es
-no inferior a F calculada con las .qrs de la base, se adopta. Si no, se siguen
-usando las .qrs y este detector queda como validación. Se y VPP contra las
-.qrs se reportan, pero no deciden.
+Pan y Tompkins (1985), con las etapas lineales centradas (sin retardo). Las
+mejoras (pulso aislado, piso de energía, ventana de onda T según el ritmo,
+forma y energía por encima de 20 Hz) corrigen los errores que se vieron en
+los registros de desarrollo. Justificación, ablación y sensibilidad de los
+umbrales: notebooks/02_filtro_y_latidos.ipynb, sección 2. Es el detector
+que usa todo el pipeline (src/qrs/beats.py, fuente "pt").
 """
 from __future__ import annotations
 

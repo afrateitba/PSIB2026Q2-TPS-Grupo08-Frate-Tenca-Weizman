@@ -1,4 +1,6 @@
-"""Puntos de corte por ROC e índice de Youden (solo con desarrollo).  Esquema v2 §5."""
+"""PRIMERA VERSIÓN (notebooks/v1): el pipeline actual (notebooks 01-04) no usa este módulo.
+
+Puntos de corte por ROC e índice de Youden (solo con desarrollo).  Esquema v2 §5."""
 import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
