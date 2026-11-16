@@ -2,6 +2,10 @@
 
 La devolución (nota 3) no cuestiona que el análisis esté mal hecho: dice que no se entiende. Hay muchas decisiones sin mostrar las señales que las respaldan, no hay un hilo que una métodos y resultados, y el alcance es demasiado grande. El pedido explícito es **limitar el alcance a una sola hipótesis y construirla paso a paso**, justificando cada decisión con un análisis cualitativo (figuras) y cuantitativo de las señales, y con bibliografía.
 
+## 0. Regla de trabajo
+
+Durante el desarrollo **solo se usan los 47 registros de desarrollo**. Test no se toca —ni señales, ni etiquetas, ni para verificar— hasta la evaluación final, que se corre una sola vez con todo fijado. De test solo se muestran cuántos registros de cada categoría tiene, para explicar la partición.
+
 ## 1. Hipótesis única y objetivos
 
 **Hipótesis.** Durante la apnea, la frecuencia cardíaca y la respiración oscilan juntas al ritmo del ciclo apnea–recuperación. Por eso, en los minutos con apnea, la potencia que comparten la serie RR y la respiración derivada del ECG (EDR) en la banda lenta (0,01–0,05 Hz) es mayor que en los minutos normales, y alcanza para clasificar cada minuto con un único umbral.
