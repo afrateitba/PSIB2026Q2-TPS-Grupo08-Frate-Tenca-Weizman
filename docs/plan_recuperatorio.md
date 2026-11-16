@@ -8,19 +8,9 @@ Durante el desarrollo **solo se usan los 47 registros de desarrollo**. Test no s
 
 ## 1. Hipótesis única y objetivos
 
-**Hipótesis.** Durante la apnea, la frecuencia cardíaca y la respiración oscilan juntas al ritmo del ciclo apnea–recuperación. Por eso, en los minutos con apnea, la potencia que comparten la serie RR y la respiración derivada del ECG (EDR) en la banda lenta (0,01–0,05 Hz) es mayor que en los minutos normales, y alcanza para clasificar cada minuto con un único umbral.
+Están en [`objetivos_hipotesis.md`](objetivos_hipotesis.md): objetivo general, objetivos específicos (uno por notebook), la hipótesis con sus dos predicciones y el criterio para sostenerla, el alcance y las limitaciones.
 
-**Objetivo general.** Detectar la apnea minuto a minuto a partir de un ECG de una derivación, con procesamiento de señales y un umbral, sin aprendizaje automático.
-
-**Objetivos específicos** (cada uno es un paso del informe y un notebook):
-
-1. Explorar las señales de la base (tiempo y frecuencia, artefactos) para diseñar el preprocesamiento.
-2. Obtener los latidos y la serie RR: filtro, detector propio comparado con las marcas de la base y limpieza del RR.
-3. Obtener la respiración a partir del ECG (EDR) y validarla contra la respiración registrada; evaluar si el filtro de Wiener la mejora.
-4. Mostrar cómo cambian RR y EDR durante la apnea, en el tiempo y en frecuencia, y de ahí definir la banda y la feature.
-5. Elegir el umbral en desarrollo y evaluar el detector por minuto y por registro.
-
-Sale del informe: H1 (coherencia y cociente de coherencias), la validación cruzada anidada, las reglas de no inferioridad, Holm, rango-biserial y los desvíos declarados. Quedan en `notebooks/v1/` como historia del trabajo.
+Sale del informe: H1 de la primera versión (coherencia y cociente de coherencias), la validación cruzada anidada, las reglas de no inferioridad, Holm, rango-biserial y los desvíos declarados. Quedan en `notebooks/v1/` como historia del trabajo.
 
 ## 2. Decisiones que se unifican
 
