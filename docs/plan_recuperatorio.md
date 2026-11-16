@@ -1,0 +1,67 @@
+# Plan para el recuperatorio
+
+La devolución (nota 3) no cuestiona que el análisis esté mal hecho: dice que no se entiende. Hay muchas decisiones sin mostrar las señales que las respaldan, no hay un hilo que una métodos y resultados, y el alcance es demasiado grande. El pedido explícito es **limitar el alcance a una sola hipótesis y construirla paso a paso**, justificando cada decisión con un análisis cualitativo (figuras) y cuantitativo de las señales, y con bibliografía.
+
+## 1. Hipótesis única y objetivos
+
+**Hipótesis.** Durante la apnea, la frecuencia cardíaca y la respiración oscilan juntas al ritmo del ciclo apnea–recuperación. Por eso, en los minutos con apnea, la potencia que comparten la serie RR y la respiración derivada del ECG (EDR) en la banda lenta (0,01–0,05 Hz) es mayor que en los minutos normales, y alcanza para clasificar cada minuto con un único umbral.
+
+**Objetivo general.** Detectar la apnea minuto a minuto a partir de un ECG de una derivación, con procesamiento de señales y un umbral, sin aprendizaje automático.
+
+**Objetivos específicos** (cada uno es un paso del informe y un notebook):
+
+1. Explorar las señales de la base (tiempo y frecuencia, artefactos) para diseñar el preprocesamiento.
+2. Obtener los latidos y la serie RR: filtro, detector propio comparado con las marcas de la base y limpieza del RR.
+3. Obtener la respiración a partir del ECG (EDR) y validarla contra la respiración registrada; evaluar si el filtro de Wiener la mejora.
+4. Mostrar cómo cambian RR y EDR durante la apnea, en el tiempo y en frecuencia, y de ahí definir la banda y la feature.
+5. Elegir el umbral en desarrollo y evaluar el detector por minuto y por registro.
+
+Sale del informe: H1 (coherencia y cociente de coherencias), la validación cruzada anidada, las reglas de no inferioridad, Holm, rango-biserial y los desvíos declarados. Quedan en `notebooks/v1/` como historia del trabajo.
+
+## 2. Decisiones que se unifican
+
+| Tema | Antes | Ahora |
+|---|---|---|
+| Ventana de análisis | 100, 120, 180, 240 y 512 s según la sección | **240 s** centrada en cada minuto, para todas las features |
+| Feature de comparación (solo RR) | Lomb en 0,01–0,04 Hz y 180 s, elegida con datos | Lomb en **la misma banda y la misma ventana** que F |
+| Qué se ajusta en desarrollo | feature, posprocesamiento, umbral | **solo el umbral**; banda y ventana salen del análisis de las señales |
+| Niveles de análisis | mezclados | **minuto** (decisión), **registro** (noche), **sujeto** (intervalos de confianza) — se dice en cada resultado |
+
+La ventana de 240 s tiene una justificación física: para resolver 0,01 Hz hace falta un segmento de más de 100 s (un ciclo completo); Welch con 3 segmentos de 120 s solapados al 50 % ocupa 240 s. Las realizaciones de Wiener (−250 a +400 ms alrededor del pico R) no son una ventana de análisis sino un latido, y se aclara así.
+
+## 3. Cada observación y su respuesta
+
+| Observación | Respuesta | Dónde |
+|---|---|---|
+| Presentación sin fisiología de la apnea ni diagnóstico | Diapositiva de apnea obstructiva, polisomnografía, AHI y por qué se ve en el ECG (bradicardia–taquicardia cíclica, modulación respiratoria del QRS) | informe §1, presentación |
+| EDR y acoplamiento sin explicar | EDR: qué es, por qué el QRS cambia con la respiración, cómo se calcula, figura contra la respiración real. Potencia cruzada: definición, cómo se estima (Welch), qué significa | informe §1–2, nb `03` y `04` |
+| Estado del arte viejo | Agregar trabajos de 2015 en adelante (verificar cada cita antes de usarla) | informe §1 |
+| Objetivos confundidos con hipótesis | Objetivo general + específicos (sección 1 de este plan) | informe §1 |
+| Categorías A/B/C sin explicar; partición confusa | Definición de PhysioNet de cada categoría; partición por sujeto explicada paso a paso, con figura | nb `01` |
+| Filtro sin espectro que lo respalde | Espectro medio del ECG y de los latidos con las frecuencias de corte marcadas; ECG antes y después | nb `02` |
+| Falta exploración sistemática de los registros | Ejemplos en tiempo de registros limpios y con artefactos, espectrograma, calidad por registro | nb `01` |
+| Refinamiento del pico R a 100 Hz sin análisis | Figura de un latido muestreado con el vértice de la parábola; distribución de la corrección; efecto en el RR | nb `02` |
+| Tolerancia de ±100 ms e interpolación sin analizar | Distribución de las diferencias detector–marca (muestra que la tolerancia no cambia el resultado); casos de error con figura; ejemplos de RR corregidos | nb `02` |
+| Wiener sin motivo ni relación con el EDR | El EDR depende de la forma del QRS; Wiener busca limpiar el QRS sin cambiar su amplitud. Se evalúa con la coherencia EDR–respiración | nb `03` |
+| EDR vs deriva de línea de base sin análisis | Comparación con figura y números contra la respiración real | nb `03` |
+| Remuestreo a 2 Hz sin justificar | La potencia cruzada necesita las dos señales en una grilla común; 2 Hz cubre hasta 1 Hz, por encima de la respiración (≤ 0,4 Hz) | nb `04` |
+| De dónde sale F | Espectro medio de RR y EDR en minutos con y sin apnea: la diferencia está en 0,01–0,05 Hz | nb `04` |
+| Referencia HRV sin paper y con otra ventana | Lomb (Task Force 1996; Laguna et al. 1998) en la misma banda y ventana | nb `04` |
+| ¿Por qué Youden? | Sin costo distinto para falsos positivos y negativos, maximiza sensibilidad + especificidad; cita Youden 1950 y Fluss et al. 2005 | nb `04` |
+| ¿Una sola feature alcanza? | Distribuciones de F con y sin apnea, curva ROC, comparación contra RR solo y EDR solo | nb `04` |
+| Métricas sin explicar | Tabla con cada métrica: qué mide y cómo se calcula | informe §2 |
+| Sin gráficos de resultados | F a lo largo de la noche con las etiquetas, ROC, fracción estimada vs real por registro, matriz de confusión | nb `04` |
+| No queda claro qué se ajusta en train | Solo el umbral; se dice explícitamente | informe §2 |
+| Sin interfaz gráfica | Visor de registros (ECG, RR, EDR, espectrograma, F y etiquetas) | `app/` |
+| Código difícil de seguir | Notebooks nuevos lineales `01`–`04`; los anteriores pasan a `notebooks/v1/` | `notebooks/` |
+| Entrega tarde; PowerPoint cambiado después de entregar | Entregar a tiempo y no tocar nada después | — |
+| Tiempo de defensa excedido; poca participación de Leah | Ensayar con cronómetro; repartir bloques; Leah puede presentar en inglés | guía de presentación |
+
+## 4. Notebooks nuevos
+
+| Notebook | Contenido |
+|---|---|
+| `01_base_y_exploracion` | Base, categorías, etiquetas, partición; señales en tiempo y frecuencia, artefactos, calidad |
+| `02_filtro_y_latidos` | Filtro con su espectro; detector propio contra las marcas; refinamiento; serie RR y su limpieza |
+| `03_realizaciones_wiener_edr` | Latidos como realizaciones, Wiener, EDR contra respiración real |
+| `04_feature_y_detector` | RR y EDR durante la apnea, espectros, potencia cruzada, umbral y evaluación |
