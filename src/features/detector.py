@@ -26,26 +26,30 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from scipy.signal import butter, sosfiltfilt
+from scipy.signal import butter, detrend, sosfiltfilt
 
 from ..config import RAW_DIR
 from ..data import load_apnea_labels, load_ecg
 from ..qrs.rr_clean import minute_quality
 from .build import record_series
 from .coupling import welch_spectra
+from .lomb import lomb_psd
 from .windows import centered_windows
 
 BAND = (0.01, 0.05)
 WINDOW_S = 240
 FS_U = 2.0
 CONFIANZA = ("alta", "media", "baja")
+F_LOMB = np.arange(0.01, 0.0501, 0.0025)
 
 
-def minute_table(rec: str, raw_dir: Path = RAW_DIR) -> pd.DataFrame:
+def minute_table(rec: str, raw_dir: Path = RAW_DIR, lomb: bool = False) -> pd.DataFrame:
     """Una fila por minuto con ventana completa: etiqueta, calidad, P_RR, P_EDR, F y movimiento.
 
     label: 1 apnea, 0 normal, -1 sin etiqueta. q: fracción de RR corregidos
-    en el minuto. No usa las etiquetas para nada más que copiarlas.
+    en el minuto. No usa las etiquetas para nada más que copiarlas. Con
+    lomb=True agrega P_RR_lomb: la potencia del RR en la banda con el
+    periodograma de Lomb sobre los latidos, sin interpolar (para comparar).
     """
     s = record_series(rec, raw_dir)
     lab = load_apnea_labels(rec, raw_dir)
@@ -63,7 +67,12 @@ def minute_table(rec: str, raw_dir: Path = RAW_DIR) -> pd.DataFrame:
             continue
         f, sxx, syy, sxy = welch_spectra(x, y, FS_U, n // 2)
         b = (f >= BAND[0] - 1e-9) & (f <= BAND[1] + 1e-9)
-        filas.append({"record": rec, "minute": int(m), "label": int(lab[m]), "q": float(q[m]),
+        fila_lomb = {}
+        if lomb:
+            sel = (s["t_rr"] >= a) & (s["t_rr"] < a + WINDOW_S)
+            fila_lomb["P_RR_lomb"] = (float(np.log10(lomb_psd(s["t_rr"][sel], detrend(s["rr_beats"][sel]), F_LOMB).mean()))
+                                      if sel.sum() > 20 else np.nan)
+        filas.append({**fila_lomb, "record": rec, "minute": int(m), "label": int(lab[m]), "q": float(q[m]),
                       "P_RR": float(np.log10(sxx[b].mean())), "P_EDR": float(np.log10(syy[b].mean())),
                       "F": float(np.log10(np.abs(sxy[b]).mean())),
                       "mov": float(np.var(lento[int(a * fs):int((a + WINDOW_S) * fs)])),

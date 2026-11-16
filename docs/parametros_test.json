@@ -1,0 +1,20 @@
+{
+  "feature": "C(m) = (P_RR(m) - mu1)/s1 + w * (mediana_noche(P_EDR) - mu2)/s2",
+  "mu1": -1.4915729639776574,
+  "s1": 0.5902302539907761,
+  "mu2": -2.1968125649714527,
+  "s2": 0.6360237250552897,
+  "w": 1.0,
+  "umbral": 0.4892473148877837,
+  "cortes_confianza_mov_rel": [
+    -0.0006714851856341618,
+    0.702342604285502
+  ],
+  "banda_hz": [
+    0.01,
+    0.05
+  ],
+  "ventana_s": 240,
+  "minutos_evaluados": "label >= 0 y q <= 0.2",
+  "fijado_con": "47 registros de desarrollo (notebooks/04_feature_y_detector.ipynb)"
+}
