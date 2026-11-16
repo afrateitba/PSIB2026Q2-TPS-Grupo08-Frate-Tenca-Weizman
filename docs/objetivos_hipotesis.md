@@ -84,6 +84,23 @@ Cada señal se usa para lo que mide bien (`04`, sección 6): el RR ubica la apne
 - **Minutos evaluados, predicciones y preguntas secundarias:** como arriba.
 - Test se corre **una sola vez**, con un notebook que solo lee estos valores.
 
+## Resultado en test
+
+Se evaluó una sola vez en `05`, con el notebook registrado sin ejecutar antes de abrir test (commit `414d3e0`). **Se cumplen las tres predicciones, así que H se sostiene.**
+
+| Predicción | Test | IC 95 % (bootstrap por persona) |
+|---|---|---|
+| P1 · AUC dentro de la noche de P_RR (media, 13 noches de 7 personas) | 0,869 | 0,827 a 0,930 |
+| P2 · ρ entre el nivel nocturno de la EDR y el % de apnea (20 noches) | 0,658 | 0,117 a 0,786 |
+| P3 · AUC de C con todos los minutos | 0,849 | 0,688 a 0,938 |
+
+- **Con el umbral fijo:** sensibilidad 0,709, especificidad 0,834 y exactitud 0,780. En desarrollo, con validación cruzada, eran 0,814, 0,851 y 0,836.
+- **C contra F y el RR solo:** C tiene mayor especificidad que las dos y marca menos minutos en los controles; esas diferencias son significativas. En exactitud y AUC no hay diferencia demostrable.
+- **Confianza por movimiento:** no separa de forma clara en test.
+- **Dónde falla:** los errores son por noche entera. Hay noches con apnea subestimadas (a11, a06, x15) y controles sobreestimados (c08).
+
+Detalle en `notebooks/05_test.ipynb` (sección 6) y en `docs/resultados_test.json`.
+
 ## Alcance
 
 - Se detecta **apnea o hipopnea por minuto**, como las etiquetas de la base. No se distingue apnea de hipopnea ni obstructiva de central.

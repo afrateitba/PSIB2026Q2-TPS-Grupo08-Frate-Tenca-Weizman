@@ -1,0 +1,118 @@
+{
+  "registros": 20,
+  "personas": 10,
+  "minutos_evaluados": 8844,
+  "predicciones": {
+    "P1 · AUC dentro de la noche del RR (media)": {
+      "valor": 0.868820503547969,
+      "ic95": "0.827 a 0.930",
+      "se_cumple": true
+    },
+    "P2 · ρ entre el nivel EDR de la noche y el % de apnea": {
+      "valor": 0.6581178933445088,
+      "ic95": "0.117 a 0.786",
+      "se_cumple": true
+    },
+    "P3 · AUC de C con todos los minutos": {
+      "valor": 0.8485806876743897,
+      "ic95": "0.688 a 0.938",
+      "se_cumple": true
+    }
+  },
+  "H_se_sostiene": true,
+  "clasificacion_C": {
+    "sensibilidad": {
+      "valor": 0.7087912087912088,
+      "ic95": "0.323 a 0.887"
+    },
+    "especificidad": {
+      "valor": 0.8343289526085225,
+      "ic95": "0.720 a 0.944"
+    },
+    "exactitud": {
+      "valor": 0.7800768882858435,
+      "ic95": "0.706 a 0.867"
+    }
+  },
+  "comparacion": {
+    "C": {
+      "sensibilidad": 0.7087912087912088,
+      "especificidad": 0.8343289526085225,
+      "exactitud": 0.7800768882858435,
+      "AUC (todos los minutos)": 0.8485806876743897,
+      "AUC dentro de la noche (media)": 0.868820503547969,
+      "ρ por noche": 0.7262409912216176,
+      "% marcado en controles": 11.203599550056243
+    },
+    "F": {
+      "sensibilidad": 0.7639979068550498,
+      "especificidad": 0.7626443647949024,
+      "exactitud": 0.7632293080054274,
+      "AUC (todos los minutos)": 0.8299545318234515,
+      "AUC dentro de la noche (media)": 0.8421506445755553,
+      "ρ por noche": 0.7049106793391872,
+      "% marcado en controles": 21.60131305723913
+    },
+    "RR solo": {
+      "sensibilidad": 0.7417582417582418,
+      "especificidad": 0.6983273596176822,
+      "exactitud": 0.7170963364993216,
+      "AUC (todos los minutos)": 0.8067945310648844,
+      "AUC dentro de la noche (media)": 0.868820503547969,
+      "ρ por noche": 0.576607879031198,
+      "% marcado en controles": 34.13545333909182
+    }
+  },
+  "diferencias": {
+    "C − F": {
+      "sensibilidad": "-0.055 (-0.212 a +0.025)",
+      "especificidad": "+0.072 (+0.025 a +0.106)*",
+      "exactitud": "+0.017 (-0.029 a +0.072)",
+      "AUC (todos los minutos)": "+0.019 (-0.045 a +0.066)",
+      "AUC dentro de la noche (media)": "+0.027 (-0.003 a +0.063)",
+      "ρ por noche": "+0.021 (-0.080 a +0.154)",
+      "% marcado en controles": "-10.398 (-13.249 a -8.316)*"
+    },
+    "C − RR solo": {
+      "sensibilidad": "-0.033 (-0.166 a +0.012)",
+      "especificidad": "+0.136 (+0.018 a +0.232)*",
+      "exactitud": "+0.063 (-0.007 a +0.164)",
+      "AUC (todos los minutos)": "+0.042 (-0.036 a +0.111)",
+      "AUC dentro de la noche (media)": "0 (idénticas)",
+      "ρ por noche": "+0.150 (-0.059 a +0.469)",
+      "% marcado en controles": "-22.932 (-30.661 a -16.235)*"
+    }
+  },
+  "confianza": [
+    {
+      "confianza": "alta",
+      "% de minutos (test)": 50.41836273179556,
+      "exactitud (desarrollo)": 0.8760758826629194,
+      "exactitud (test)": 0.793675712043059,
+      "IC 95 % (test)": "0.723 a 0.876"
+    },
+    {
+      "confianza": "media",
+      "% de minutos (test)": 33.83084577114428,
+      "exactitud (desarrollo)": 0.8422266139657444,
+      "exactitud (test)": 0.7677139037433155,
+      "IC 95 % (test)": "0.677 a 0.863"
+    },
+    {
+      "confianza": "baja",
+      "% de minutos (test)": 15.750791497060154,
+      "exactitud (desarrollo)": 0.8015803336259877,
+      "exactitud (test)": 0.7631012203876526,
+      "IC 95 % (test)": "0.673 a 0.864"
+    }
+  ],
+  "rho_por_noche": {
+    "valor": 0.7262409912216176,
+    "ic95": "0.051 a 0.900"
+  },
+  "umbrales_desarrollo": {
+    "C": 0.4892473148877837,
+    "F": -1.9003664226709769,
+    "RR solo": -1.414108011390642
+  }
+}

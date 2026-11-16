@@ -23,7 +23,7 @@ Cada notebook es un paso, usa lo que dejó el anterior y termina con una tabla d
 | [`02_filtro_y_latidos`](notebooks/02_filtro_y_latidos.ipynb) | Filtro 0,5–45 Hz diseñado con una especificación medida, detector de QRS propio (Pan-Tompkins con cinco mejoras), refinamiento del pico R, limpieza de la serie RR | Serie RR limpia |
 | [`03_edr_wiener`](notebooks/03_edr_wiener.ipynb) | Por qué el QRS cambia con la respiración, medidas posibles, EDR contra la respiración real y durante la apnea, latidos como realizaciones y filtro de Wiener, elección de la variante, EDR relativa | EDR: área del QRS sobre el ECG filtrado con Wiener, sin ectópicos ni atípicos, relativa al tamaño del QRS |
 | [`04_feature_y_detector`](notebooks/04_feature_y_detector.ipynb) | Métricas y niveles de análisis, qué mide cada señal, la feature C y su peso por validación cruzada, otras combinaciones, umbral de Youden, resultados por noche, dónde falla, confianza según el movimiento, robustez | Parámetros congelados en [`docs/parametros_test.json`](docs/parametros_test.json) |
-| `05_test` (pendiente) | Evaluación única en test con los parámetros congelados: predicciones (a), (b) y (c) | Resultado final |
+| [`05_test`](notebooks/05_test.ipynb) | Evaluación única en test (20 registros, 10 personas) con los parámetros congelados: predicciones P1–P3, C contra F y RR, confianza y resultados por noche | **H se sostiene**: P1 0,87, P2 0,66, P3 0,85, los tres con IC que cumplen el criterio. Exactitud 0,78. Resultados en [`docs/resultados_test.json`](docs/resultados_test.json) |
 
 **Detector final.** Para cada minuto se toma una ventana de 240 s centrada en él. En esa ventana se estiman por Welch (3 × 120 s, Hann) la potencia del RR y la de la EDR en 0,01–0,05 Hz:
 

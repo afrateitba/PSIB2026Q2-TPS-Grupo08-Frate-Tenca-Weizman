@@ -58,13 +58,13 @@ Cada observación de la devolución (nota 3, recuperatorio), dónde se trabajó 
 | **b) La Tabla 2 no es adecuada; las afirmaciones no tienen respaldo** | Cada resultado de `04` tiene su tabla con intervalos de confianza por bootstrap de personas y su figura. Las comparaciones son pareadas (por ejemplo, C contra cada alternativa en §8) | Resuelto. Falta rehacer la tabla de resultados del informe |
 | No hay tablas ni visualizaciones para interpretar los resultados; no se introducen las técnicas de evaluación | Ver arriba, y la sección "Cómo se evalúa" de `04` | Resuelto. Falta en informe |
 | No queda claro el nivel de cada análisis (ventana, señal, sujeto, grupo, base) | `04`, sección "Cómo se evalúa": tabla de niveles (minuto, noche, persona, categoría, base) y en qué resultados aparece cada uno. `04` §5 muestra por qué el resultado cambia según el nivel | Resuelto |
-| No queda claro qué se ajusta en train y qué se evalúa en test | `04`, "Cómo se evalúa": tabla de qué se ajusta, cómo y con qué datos. `04` §14 y `docs/parametros_test.json`: los parámetros congelados (μ, σ, w, umbral y cortes de confianza). Test no se usó para nada; se evalúa una sola vez en `05` | Resuelto. Falta `05` |
+| No queda claro qué se ajusta en train y qué se evalúa en test | `04`, "Cómo se evalúa": tabla de qué se ajusta, cómo y con qué datos. `04` §14 y `docs/parametros_test.json`: los parámetros congelados (μ, σ, w, umbral y cortes de confianza). Test no se usó para nada hasta `05`, que se corrió una sola vez después de registrar el notebook sin ejecutar (commit `414d3e0`) | Resuelto |
 
 ## 4. Conclusiones
 
 | Observación | Dónde se trabajó | Estado |
 |---|---|---|
-| No hay un hilo entre los resultados | Los notebooks siguen un solo camino: `01` explora y mide la banda; `02` obtiene la serie RR; `03` la EDR; `04` arma C, la evalúa y fija los parámetros. Cada notebook termina con una tabla de lo que se lleva el siguiente. La hipótesis H tiene predicciones P1–P3 que se verifican en `04` §14 y se van a probar en `05` | Resuelto en el repositorio. Falta en informe: conclusiones que respondan P1–P3 con los resultados de test |
+| No hay un hilo entre los resultados | Los notebooks siguen un solo camino: `01` explora y mide la banda; `02` obtiene la serie RR; `03` la EDR; `04` arma C, la evalúa y fija los parámetros. Cada notebook termina con una tabla de lo que se lleva el siguiente. La hipótesis H tiene predicciones P1–P3 que se verifican en `04` §14 y se prueban en `05`: las tres se cumplen en test | Resuelto en el repositorio. Falta en informe: conclusiones que respondan P1–P3 con los resultados de test (`05` §6) |
 
 ## 5. Interfaz gráfica
 
@@ -102,6 +102,5 @@ Cada observación de la devolución (nota 3, recuperatorio), dónde se trabajó 
 
 ## Resumen de lo que falta
 
-1. **Notebook `05`**: evaluar test una sola vez, con `docs/parametros_test.json`, y responder P1–P3. Se corre al final, con la confirmación del grupo.
-2. **Informe**: marco teórico (apnea, EDR, acoplamiento), estado del arte con referencias recientes, objetivos, métodos siguiendo `01`–`04`, resultados con figuras y conclusiones según P1–P3.
-3. **Presentación y defensa**: diapositiva de fisiología de la apnea, reparto entre los tres, tiempo ensayado y guía de estudio.
+1. **Informe**: marco teórico (apnea, EDR, acoplamiento), estado del arte con referencias recientes, objetivos, métodos siguiendo `01`–`04`, resultados con figuras y conclusiones según P1–P3.
+2. **Presentación y defensa**: diapositiva de fisiología de la apnea, reparto entre los tres, tiempo ensayado y guía de estudio.
