@@ -164,3 +164,75 @@ def validate_edr(edr_u: np.ndarray, resp_u: np.ndarray, fs: float,
         if np.isfinite(a).all() and np.isfinite(b).all():
             out[i] = weighted_coherence(a, b, fs, nseg, fmin)
     return out
+
+
+# --- EDR a partir de los latidos del detector propio (notebook 03) -----------
+BEAT_METHODS = ("area", "amplitude", "baseline", "combined")
+
+
+def hampel_outliers(values: np.ndarray, k: int = 11, n_sigmas: float = 3.0) -> np.ndarray:
+    """Latidos atípicos según el filtro de Hampel, con un piso para el desvío.
+
+    Un valor es atípico si se aparta de la mediana de sus `k` vecinos más de
+    `n_sigmas` desvíos robustos (1,4826 × la mediana de los desvíos absolutos
+    en la ventana). En una oscilación suave y limpia ese desvío local se hace
+    casi cero en las crestas, y el filtro marcaría las crestas como atípicas;
+    por eso el desvío no puede bajar del nivel de ruido de la serie, estimado
+    con las diferencias entre latidos consecutivos (1,4826 × mediana |Δx| / √2).
+    """
+    import pandas as pd
+    s = pd.Series(np.asarray(values, float))
+    med = s.rolling(k, center=True, min_periods=1).median()
+    resid = (s - med).abs()
+    local = 1.4826 * resid.rolling(k, center=True, min_periods=1).median()
+    floor = 1.4826 * float(np.median(np.abs(np.diff(s.to_numpy())))) / np.sqrt(2)
+    return (resid > n_sigmas * np.maximum(local, floor)).to_numpy()
+
+
+def beat_edr(ecg: np.ndarray, t_r: np.ndarray, fs: float, method: str = "area",
+             filt: tuple = ECG_FILTER, exclude: np.ndarray | None = None,
+             hampel: bool = False, prefilter=None) -> tuple[np.ndarray, np.ndarray]:
+    """(t, edr) a partir de los tiempos de los picos R `t_r` (s).
+
+    method: "area" (área con signo del QRS en ±60 ms, sobre el ECG filtrado),
+    "amplitude" (amplitud del pico dominante), "baseline" (mediana del segmento
+    PR del ECG crudo) o "combined" (promedio del área y la deriva, cada una
+    estandarizada sobre la noche).
+    exclude: latidos a descartar (por ejemplo, los ectópicos que marca la
+    limpieza del RR). hampel: descarta además los atípicos (hampel_outliers).
+    prefilter: función que se aplica al ECG filtrado antes de medir el QRS
+    (por ejemplo, un filtro de Wiener).
+    """
+    if method not in BEAT_METHODS:
+        raise ValueError(f"método desconocido: {method} (opciones: {BEAT_METHODS})")
+    centers = np.unique(np.rint(np.asarray(t_r) * fs).astype(int))
+    keep = rr_in_range(centers / fs)
+    if exclude is not None:
+        keep &= ~np.asarray(exclude, bool)[:len(centers)]
+    x = apply_zero_phase(ecg, design_bandpass(fs, *filt))
+    if prefilter is not None:
+        x = prefilter(x)
+    _, sign = qrs_reference(x, centers, fs)
+    vals = {}
+    if method in ("area", "amplitude", "combined"):
+        beats, ok = beat_matrix(x, centers, fs, 0.06)
+        v = np.full(len(centers), np.nan)
+        v[ok] = edr_area(beats, sign, fs) if method != "amplitude" else edr_amplitude(beats, sign)
+        vals["qrs"] = v
+    if method in ("baseline", "combined"):
+        b, ok = edr_baseline(ecg, centers, fs, (-0.10, -0.05))
+        v = np.full(len(centers), np.nan)
+        v[ok] = b
+        vals["baseline"] = v
+    keep &= np.all([np.isfinite(v) for v in vals.values()], axis=0)
+    if hampel:
+        for v in vals.values():
+            bad = np.zeros(len(centers), bool)
+            bad[keep] = hampel_outliers(v[keep])
+            keep &= ~bad
+    if method == "combined":
+        z = lambda v: (v - np.mean(v[keep])) / np.std(v[keep])
+        values = (z(vals["qrs"]) + z(vals["baseline"])) / 2
+    else:
+        values = next(iter(vals.values()))
+    return centers[keep] / fs, values[keep]

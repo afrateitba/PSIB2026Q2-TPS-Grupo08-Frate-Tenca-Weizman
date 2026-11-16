@@ -43,8 +43,8 @@ Cada objetivo es un paso del trabajo, tiene un resultado medible y un notebook d
 
 1. **Tamaño y composición.** 70 registros, 67 sin las grabaciones duplicadas, de 29 personas; 57 de los 67 registros son de hombres. Los resultados pueden no generalizar a mujeres ni a otras poblaciones.
 2. **Una sola derivación de ECG a 100 Hz y 12 bits.** El pico R queda cuantizado a 10 ms (se corrige con interpolación) y la EDR depende de dónde quedaron los electrodos, que no se puede controlar.
-3. **Etiquetas por minuto de un solo experto.** No dicen dónde empieza ni termina cada evento. En las grabaciones duplicadas las etiquetas difieren en 1 a 3 minutos: hay ruido en la referencia.
-4. **Sujetos inferidos.** La base no identifica a las personas; se agruparon por perfil (edad, sexo, altura, peso) y por parecido del latido. Un error de agrupación podría poner a una persona en desarrollo y en test.
+3. **Etiquetas por minuto de un solo experto.** No dicen dónde empieza ni termina cada evento. En las grabaciones duplicadas, las etiquetas de una misma señal difieren en 1 o 2 minutos: hay ruido en la referencia.
+4. **Personas inferidas.** La base no identifica a las personas; se agruparon por perfil (edad, sexo, altura, peso) y por parecido del latido. Un error de agrupación podría poner a una persona en desarrollo y en test.
 
 **Del método**
 
@@ -55,6 +55,6 @@ Cada objetivo es un paso del trabajo, tiene un resultado medible y un notebook d
 
 **De la evaluación**
 
-9. **Test chico: 20 registros de 10 personas.** Los intervalos de confianza son anchos: un resultado no significativo no demuestra que no haya efecto.
+9. **Test chico: 20 registros de 10 personas.** Los intervalos de confianza son anchos: un resultado no significativo no demuestra que no haya efecto. Además, test quedó con algo menos de hombres y con un índice de masa corporal mayor que desarrollo (31 contra 27; no se controló al partir).
 10. **Test ya se usó en la primera entrega.** La evaluación del recuperatorio no es ciega en sentido estricto. Para que no influya, todas las decisiones nuevas se toman solo con desarrollo, se escriben antes de correr test y test se corre una sola vez al final.
 11. **Los minutos de una misma noche no son independientes** (los episodios duran una mediana de 6 minutos). Por eso los intervalos de confianza se calculan remuestreando sujetos, no minutos.

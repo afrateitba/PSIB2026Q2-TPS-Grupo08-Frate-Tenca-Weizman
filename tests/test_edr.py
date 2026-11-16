@@ -117,3 +117,24 @@ def test_weighted_coherence():
     con_nan[300] = np.nan                           # cae en la segunda ventana
     w = validate_edr(np.concatenate([same, same]), con_nan, 2.0)
     assert np.isnan(w[1]) and np.isfinite(w[[0, 2, 3]]).all()
+
+
+def test_hampel_marca_picos_aislados_y_no_la_variacion_lenta():
+    from src.features.edr import hampel_outliers
+    x = np.sin(2 * np.pi * np.arange(300) / 60)        # variación lenta
+    x[[50, 200]] += 5                                  # dos latidos atípicos
+    out = hampel_outliers(x)
+    assert out[50] and out[200] and out.sum() == 2
+
+
+def test_beat_edr_excluye_latidos_marcados():
+    from src.features.edr import beat_edr
+    fs = 100.0
+    t_r = np.arange(1, 60, 0.8)
+    ecg = np.zeros(int(61 * fs))
+    for k in np.rint(t_r * fs).astype(int):
+        ecg[k - 3:k + 4] += np.hanning(7)
+    excl = np.zeros(len(t_r), bool); excl[10] = True
+    t_all, _ = beat_edr(ecg, t_r, fs, "area")
+    t_ex, _ = beat_edr(ecg, t_r, fs, "area", exclude=excl)
+    assert len(t_ex) == len(t_all) - 1 and not np.any(np.isclose(t_ex, t_r[10]))
