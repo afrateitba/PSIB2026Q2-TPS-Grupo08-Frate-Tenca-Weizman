@@ -36,9 +36,9 @@ Cada objetivo es un paso del trabajo, tiene un resultado medible y un notebook d
 | Cambio | Motivo | Dónde |
 |---|---|---|
 | La EDR se mide sobre los latidos del detector propio, con Wiener y sin latidos ectópicos ni atípicos | Mejora la detección dentro de la noche respecto de la primera versión sin empeorar el parecido con la respiración | `03`, sección 6 |
-| La EDR es relativa: área con signo / mediana del área sin signo del QRS del registro | Sin etiquetas: la oscilación respiratoria de la EDR en mV·ms crece con el tamaño del QRS (ρ = 0,70) y en forma relativa deja de depender de él (ρ ≈ 0). Con etiquetas: con la EDR en mV·ms, dos personas con QRS chico quedaban casi sin minutos detectados | `03`, sección 7; `04`, sección 8 |
+| La EDR es relativa: área con signo / mediana del área sin signo del QRS del registro | Sin etiquetas: la oscilación respiratoria de la EDR en mV·ms crece con el tamaño del QRS (ρ = 0,70) y en forma relativa deja de depender de él (ρ ≈ 0). Con etiquetas: con la EDR en mV·ms, dos personas con QRS chico quedaban casi sin minutos detectados | `03`, sección 7; `04`, sección 9 |
 
-## Lo que queda fijo para test (`04`, sección 9)
+## Lo que queda fijo para test (`04`, sección 10)
 
 - **Preprocesamiento:** `02` y `03` tal como están en `src/` (configuración en `src/config.py`).
 - **Feature:** F como arriba. **Umbral:** el de Youden con todos los minutos de desarrollo, F > −1,900.
