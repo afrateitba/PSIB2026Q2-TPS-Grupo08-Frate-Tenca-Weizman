@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 from src.config import RAW_DIR
-from src.features.detector import (add_night_terms, confidence, fit_g, g_score, minute_table,
+from src.features.detector import (add_night_terms, c_score, confidence, fit_c, minute_table,
                                    youden_threshold)
 
 
@@ -19,17 +19,17 @@ def _tabla():
     return add_night_terms(pd.DataFrame(filas))
 
 
-def test_g_dentro_de_la_noche_ordena_como_el_rr():
+def test_c_dentro_de_la_noche_ordena_como_el_rr():
     t = _tabla()
-    g = g_score(t, fit_g(t, 1.5))
-    for _, gr in t.assign(g=g).groupby("record"):
-        assert np.corrcoef(gr.g, gr.RR_dev)[0, 1] > 0.999      # el término de la EDR es constante en la noche
+    c = c_score(t, fit_c(t, 1.0))
+    for _, gr in t.assign(c=c).groupby("record"):
+        assert np.corrcoef(gr.c, gr.P_RR)[0, 1] > 0.999       # el término de la EDR es constante en la noche
 
 
-def test_g_corre_la_noche_segun_la_edr():
+def test_c_corre_la_noche_segun_la_edr():
     t = _tabla()
-    g = t.assign(g=g_score(t, fit_g(t, 1.5)))
-    assert g[g.record == "r2"].g.median() > g[g.record == "r1"].g.median()
+    c = t.assign(c=c_score(t, fit_c(t, 1.0)))
+    assert c[c.record == "r2"].c.median() > c[c.record == "r1"].c.median()
 
 
 def test_youden_separa_clases_disjuntas():

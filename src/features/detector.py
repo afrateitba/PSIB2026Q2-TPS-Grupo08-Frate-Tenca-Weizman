@@ -1,4 +1,4 @@
-"""Detector de apnea por minuto: feature G, umbral y confianza.
+"""Detector de apnea por minuto: feature combinada C, umbral y confianza.
 
 Hipótesis y definiciones: docs/objetivos_hipotesis.md. Justificación con datos:
 notebooks/04_feature_y_detector.ipynb.
@@ -11,11 +11,13 @@ Para cada minuto m (ventana de 240 s centrada en él):
 - mov(m): varianza del ECG crudo por debajo de 0,5 Hz en la ventana
   (movimiento); mov_rel es su log10 respecto de la mediana del registro.
 
-G combina cada señal en lo que mide bien:
-    G(m) = (P_RR(m) - mediana_noche(P_RR) - mu1) / s1
-           + w * (mediana_noche(P_EDR) - mu2) / s2
-El primer término ubica la apnea dentro de la noche; el segundo es el mismo
-para toda la noche y dice cuánta apnea tiene. Las medianas no usan etiquetas.
+La feature combinada C usa cada señal en lo que mide bien:
+    C(m) = (P_RR(m) - mu1) / s1 + w * (mediana_noche(P_EDR) - mu2) / s2
+El primer término ubica la apnea dentro de la noche (es el que cambia de un
+minuto a otro); el segundo es el mismo para toda la noche y dice cuánta
+apnea tiene, corrigiendo el nivel general del RR, que cambia entre personas.
+La mediana no usa etiquetas. Se probó también centrar el RR en su noche
+(restarle su mediana) y no mejoró (notebook 04).
 """
 from __future__ import annotations
 
@@ -88,16 +90,21 @@ def evaluable(tab: pd.DataFrame) -> pd.Series:
     return (tab["label"] >= 0) & (tab["q"] <= 0.2)
 
 
-def fit_g(tab: pd.DataFrame, w: float) -> dict:
-    """Parámetros de estandarización de G con los minutos evaluables de `tab`."""
+def fit_c(tab: pd.DataFrame, w: float, rr: str = "P_RR") -> dict:
+    """Parámetros de estandarización de C con los minutos evaluables de `tab`.
+
+    `rr`: columna del término del RR ("P_RR"; "RR_dev" para la variante
+    centrada en la noche, que se usa solo para comparar).
+    """
     e = tab[evaluable(tab)]
-    return {"mu1": float(e["RR_dev"].mean()), "s1": float(e["RR_dev"].std()),
-            "mu2": float(e["EDR_noche"].mean()), "s2": float(e["EDR_noche"].std()), "w": float(w)}
+    return {"mu1": float(e[rr].mean()), "s1": float(e[rr].std()), "mu2": float(e["EDR_noche"].mean()),
+            "s2": float(e["EDR_noche"].std()), "w": float(w), "rr": rr}
 
 
-def g_score(tab: pd.DataFrame, p: dict) -> pd.Series:
-    """G de cada minuto con los parámetros `p` (los de fit_g)."""
-    return (tab["RR_dev"] - p["mu1"]) / p["s1"] + p["w"] * (tab["EDR_noche"] - p["mu2"]) / p["s2"]
+def c_score(tab: pd.DataFrame, p: dict) -> pd.Series:
+    """C de cada minuto con los parámetros `p` (los de fit_c)."""
+    rr = p.get("rr", "P_RR")
+    return (tab[rr] - p["mu1"]) / p["s1"] + p["w"] * (tab["EDR_noche"] - p["mu2"]) / p["s2"]
 
 
 def youden_threshold(x: np.ndarray, y: np.ndarray) -> float:
