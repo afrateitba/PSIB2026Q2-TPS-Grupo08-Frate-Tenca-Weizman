@@ -67,8 +67,8 @@ Hay **una sola ventana de análisis**: 240 s centrada en cada minuto. Se usa igu
 | Tolerancia de comparación | 100 ms | Cuando dos fuentes coinciden lo hacen a < 30 ms; entre 30 y 150 ms la sensibilidad y el VPP cambian < 1 punto. La norma ANSI/AAMI EC57 usa 150 ms | Datos + bibliografía |
 | Refinamiento del pico R | Parábola de 3 puntos | A 100 Hz el pico cae en una grilla de 10 ms (±5 ms de error). La prueba de dos fases a 50 Hz baja el desacuerdo de ~10 a 2,5 ms | Datos |
 | RR posibles | 0,3–2 s | 200 a 30 latidos por minuto: fuera de ese rango no es un ritmo posible durante el sueño | Fisiología |
-| RR atípico | > 20 % de la mediana de 11 vecinos | Separa el cuerpo de la distribución (casi todo dentro de ±10 %) de las colas de errores (+100 %, −50 %, −80 %). No corrige más en los minutos con apnea (0,27 % contra 0,23 %), y una regla más laxa no detecta mejor | Datos |
-| Reemplazo | Interpolación lineal | Pocos latidos seguidos; conserva la variación lenta | Datos |
+| RR atípico | > 20 % de la mediana de 11 vecinos | Criterio estándar de la variabilidad cardíaca (Malik y Camm, 1995; Clifford et al., 2002). En estos datos separa el cuerpo de la distribución (casi todo dentro de ±10 %) de las colas de errores (+100 %, −50 %, −80 %), no corrige más en los minutos con apnea (0,27 % contra 0,23 %), y entre 10 % y 40 % la detección no cambia; más estricta solo corrige y excluye más | Bibliografía + datos |
+| Reemplazo | Interpolación lineal | Welch necesita una serie continua. Interpolar puede sesgar el espectro si se corrigen muchos latidos (Lippman et al., 1994); acá se corrige el 0,36 % y se excluyen los minutos con más del 20 % | Bibliografía + datos |
 | Minuto excluido | > 20 % de RR corregidos | Ahí la serie es más interpolación que dato | Datos + convención |
 
 ### EDR y filtro de Wiener (`03`)
@@ -121,12 +121,15 @@ El spline cúbico da una curva suave, con derivada continua. Interpolar en forma
 - Efron, B. y Tibshirani, R. J. (1993). *An Introduction to the Bootstrap*. Chapman & Hall.
 - Fluss, R., Faraggi, D. y Reiser, B. (2005). Estimation of the Youden index and its associated cutoff point. *Biometrical Journal*, 47(4), 458–472.
 - Guilleminault, C., Connolly, S., Winkle, R., Melvin, K. y Tilkian, A. (1984). Cyclical variation of the heart rate in sleep apnoea syndrome. *The Lancet*, 323(8369), 126–131.
+- Clifford, G. D., McSharry, P. E. y Tarassenko, L. (2002). Characterizing artefact in the normal human 24-hour RR time series to aid identification and artificial replication of circadian variations in human beat to beat heart rate using a simple threshold. *Computers in Cardiology*, 29, 129–132.
 - Hampel, F. R. (1974). The influence curve and its role in robust estimation. *Journal of the American Statistical Association*, 69(346), 383–393.
 - Habibzadeh, F., Habibzadeh, P. y Yadollahie, M. (2016). On determining the most appropriate test cut-off value: the case of tests with continuous results. *Biochemia Medica*, 26(3), 297–307.
 - Hanley, J. A. y McNeil, B. J. (1982). The meaning and use of the area under a receiver operating characteristic (ROC) curve. *Radiology*, 143(1), 29–36.
 - Kligfield, P. et al. (2007). Recommendations for the standardization and interpretation of the electrocardiogram: Part I. *Circulation*, 115(10), 1306–1324.
 - Laguna, P., Moody, G. B. y Mark, R. G. (1998). Power spectral density of unevenly sampled data by least-square analysis. *IEEE Transactions on Biomedical Engineering*, 45(6), 698–715.
 - Lomb, N. R. (1976). Least-squares frequency analysis of unequally spaced data. *Astrophysics and Space Science*, 39, 447–462.
+- Lippman, N., Stein, K. M. y Lerman, B. B. (1994). Comparison of methods for removal of ectopy in measurement of heart rate variability. *American Journal of Physiology*, 267(1), H411–H418.
+- Malik, M. y Camm, A. J. (eds.) (1995). *Heart Rate Variability*. Futura.
 - Metz, C. E. (1978). Basic principles of ROC analysis. *Seminars in Nuclear Medicine*, 8(4), 283–298.
 - Moody, G. B., Mark, R. G., Zoccola, A. y Mantero, S. (1985). Derivation of respiratory signals from multi-lead ECGs. *Computers in Cardiology*, 12, 113–116.
 - Pan, J. y Tompkins, W. J. (1985). A real-time QRS detection algorithm. *IEEE Transactions on Biomedical Engineering*, 32(3), 230–236.
