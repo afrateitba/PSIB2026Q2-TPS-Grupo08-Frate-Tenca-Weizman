@@ -94,8 +94,8 @@ Cada observación de la devolución (nota 3, recuperatorio), dónde se trabajó 
 | Limitar el alcance a una sola hipótesis | Una hipótesis H, con tres partes y tres predicciones (`objetivos_hipotesis.md`) |
 | Construirla en forma escalonada y clara | `01` → `02` → `03` → `04`, cada paso usa lo anterior |
 | Justificar cada decisión con análisis cualitativo y cuantitativo de las señales | Cada decisión tiene figura y número en su notebook; resumen en `decisiones.md` |
-| Fundamentar los umbrales en bibliografía | `decisiones.md` separa lo que viene de la bibliografía, lo que sale de los datos y lo que es física. Los umbrales propios tienen sensibilidad medida |
-| Consistencia en las ventanas | Una sola ventana de análisis, 240 s, con robustez verificada (`04` §15) |
+| Fundamentar los umbrales en bibliografía | `decisiones.md` y `auditoria_decisiones.md`: las 88 decisiones con su justificación (86 justificadas con datos, bibliografía o física; 2 limitaciones declaradas). Cada umbral propio tiene su sensibilidad medida, y cada cita tiene DOI o página oficial verificados (`referencias.md`) |
+| Consistencia en las ventanas | Una sola ventana de análisis, 240 s, con robustez verificada (`04` §15). Todas las constantes (ventana, banda, grilla, reglas del RR, mínimo de minutos) están en un solo lugar y `tests/test_consistencia.py` falla si un notebook las vuelve a escribir a mano |
 | Explicar las técnicas y métricas fuera de lo visto en clase | EDR (`03` §1–2), espectro cruzado y coherencia (`03` §3, `04` §1), Lomb (`04` §1), métricas (`04`, "Cómo se evalúa") |
 | Visualizar las señales y sus derivados | ECG crudo y filtrado, espectros, espectrograma, serie RR, EDR contra respiración, espectros con y sin apnea, C en una noche |
 | Que todos puedan explicar las técnicas | Pendiente: guía de estudio y ensayo |

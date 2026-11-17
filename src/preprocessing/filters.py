@@ -10,7 +10,10 @@ especificación de la respuesta en frecuencia.
 from __future__ import annotations
 
 import numpy as np
+
 from scipy.signal import butter, sosfiltfilt, sosfreqz, welch
+
+from ..config import REALIZATION_S
 
 
 def design_bandpass(fs: float, low: float, high: float, order: int):
@@ -45,8 +48,8 @@ def cumulative_energy_freq(f: np.ndarray, power: np.ndarray, frac: float) -> flo
     return float(f[np.searchsorted(c / c[-1], frac)])
 
 
-def beat_spectrum(ecg: np.ndarray, peaks: np.ndarray, fs: float, pre: float = 0.25,
-                  post: float = 0.40, nfft: int = 1024) -> tuple[np.ndarray, np.ndarray]:
+def beat_spectrum(ecg: np.ndarray, peaks: np.ndarray, fs: float, pre: float = REALIZATION_S[0],
+                  post: float = REALIZATION_S[1], nfft: int = 1024) -> tuple[np.ndarray, np.ndarray]:
     """(f, |X|^2) del latido mediano (de -pre a +post s alrededor de cada pico).
 
     Se resta la mediana del latido para sacar la línea de base y se completa con

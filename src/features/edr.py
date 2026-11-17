@@ -19,6 +19,7 @@ noches), así que se mide en cada registro con qrs_reference() y no se supone.
 import numpy as np
 
 from ..config import ECG_FILTER
+from ..config import HAMPEL_K, HAMPEL_SIGMAS, QRS_AREA_HALF_S, RESP_COH_SEG_S
 from ..features.coupling import weighted_coherence
 from ..preprocessing.filters import apply_zero_phase, design_bandpass
 from ..qrs.pan_tompkins import refine_peaks_parabolic
@@ -41,7 +42,7 @@ def qrs_reference(ecg: np.ndarray, qrs: np.ndarray, fs: float,
 
 
 def beat_matrix(ecg: np.ndarray, centers: np.ndarray, fs: float,
-                half_width: float = 0.06,
+                half_width: float = QRS_AREA_HALF_S,
                 baseline: tuple | None = None) -> tuple[np.ndarray, np.ndarray]:
     """(latidos, ok): ventana de ±`half_width` s alrededor de cada centro de QRS.
 
@@ -134,7 +135,7 @@ def compute_edr(ecg: np.ndarray, qrs: np.ndarray, fs: float, method: str = "area
         x = apply_zero_phase(ecg, design_bandpass(fs, *filt))
         off, sign = qrs_reference(x, qrs, fs)
         centers = qrs + off
-        beats, ok = beat_matrix(x, centers, fs, 0.06)
+        beats, ok = beat_matrix(x, centers, fs, QRS_AREA_HALF_S)
         values = edr_area(beats, sign, fs)
     elif method == "baseline":
         off, _ = qrs_reference(ecg, qrs, fs)
@@ -147,7 +148,7 @@ def compute_edr(ecg: np.ndarray, qrs: np.ndarray, fs: float, method: str = "area
 
 
 def validate_edr(edr_u: np.ndarray, resp_u: np.ndarray, fs: float,
-                 win_s: float = 120, seg_s: float = 32, fmin: float = 0.05) -> np.ndarray:
+                 win_s: float = 120, seg_s: float = RESP_COH_SEG_S, fmin: float = 0.05) -> np.ndarray:
     """Coherencia ponderada EDR-respiración real en ventanas de `win_s` s, sin solapar.
 
     Las dos series tienen que estar muestreadas en la misma grilla uniforme.
@@ -170,7 +171,7 @@ def validate_edr(edr_u: np.ndarray, resp_u: np.ndarray, fs: float,
 BEAT_METHODS = ("area", "amplitude", "baseline", "combined")
 
 
-def hampel_outliers(values: np.ndarray, k: int = 11, n_sigmas: float = 3.0) -> np.ndarray:
+def hampel_outliers(values: np.ndarray, k: int = HAMPEL_K, n_sigmas: float = HAMPEL_SIGMAS) -> np.ndarray:
     """Latidos atípicos según el filtro de Hampel, con un piso para el desvío.
 
     Un valor es atípico si se aparta de la mediana de sus `k` vecinos más de
@@ -224,7 +225,7 @@ def beat_edr(ecg: np.ndarray, t_r: np.ndarray, fs: float, method: str = "area",
     vals = {}
     size = np.full(len(centers), np.nan)
     if method in ("area", "amplitude", "combined"):
-        beats, ok = beat_matrix(x, centers, fs, 0.06)
+        beats, ok = beat_matrix(x, centers, fs, QRS_AREA_HALF_S)
         v = np.full(len(centers), np.nan)
         v[ok] = edr_area(beats, sign, fs) if method != "amplitude" else edr_amplitude(beats, sign)
         size[ok] = np.abs(beats).sum(axis=1) / fs

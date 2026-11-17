@@ -58,8 +58,11 @@ def weighted_coherence(x: np.ndarray, y: np.ndarray, fs: float, nperseg: int,
     return float((cxy[m] * pyy[m]).sum() / w) if w > 0 else np.nan
 
 
+WELCH_DETREND = "linear"   # tendencia que se quita en cada segmento (notebook 04, sección 15)
+
+
 def welch_spectra(x: np.ndarray, y: np.ndarray, fs: float,
-                  nperseg: int) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+                  nperseg: int, detrend_type: str | None = None) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """(f, Sxx, Syy, Sxy) por Welch con 50 % de solapamiento, en una sola pasada.
 
     Igual que scipy.signal.welch y csd: ventana de Hann, detrend lineal por
@@ -69,8 +72,10 @@ def welch_spectra(x: np.ndarray, y: np.ndarray, fs: float,
     n_seg = 1 + (len(x) - nperseg) // step
     idx = np.arange(nperseg)[None, :] + step * np.arange(n_seg)[:, None]
     win = get_window("hann", nperseg)
-    fx = np.fft.rfft(detrend(x[idx], axis=1, type="linear") * win, axis=1)
-    fy = np.fft.rfft(detrend(y[idx], axis=1, type="linear") * win, axis=1)
+    dt = WELCH_DETREND if detrend_type is None else detrend_type
+    quitar = (lambda z: z) if dt == "none" else (lambda z: detrend(z, axis=1, type=dt))
+    fx = np.fft.rfft(quitar(x[idx]) * win, axis=1)
+    fy = np.fft.rfft(quitar(y[idx]) * win, axis=1)
     scale = np.full(fx.shape[1], 2.0 / (fs * (win ** 2).sum()))
     scale[0] /= 2
     if nperseg % 2 == 0:

@@ -21,9 +21,11 @@ import pandas as pd
 from scipy.signal import butter, fftconvolve, sosfiltfilt
 
 from .config import RAW_DIR
+from .config import ECG_FILTER, FS, REALIZATION_S, RR_ECTOPIC_FRAC, RR_RANGE_S
+from .preprocessing.filters import apply_zero_phase, design_bandpass
 from .data import load_ecg, load_qrs
 
-PRE, POST = 25, 40   # ventana del latido en muestras a 100 Hz: -250 ms a +400 ms
+PRE, POST = (int(round(v * FS)) for v in REALIZATION_S)   # ventana del latido: -250 ms a +400 ms (muestras)
 SHIFT = 3            # alineación fina de ±30 ms al comparar latidos
 
 
@@ -31,14 +33,14 @@ def beat_template(ecg: np.ndarray, qrs: np.ndarray, fs: float,
                   hours: tuple = (1, 4)) -> np.ndarray:
     """Latido mediano (z-score) de los latidos con RR estable entre `hours`.
 
-    El pasabanda de 0,5-40 Hz es solo para comparar morfologías; el filtro del
-    pipeline está en preprocessing/filters.py.
+    Usa el mismo filtro del pipeline (ECG_FILTER) y los mismos criterios de
+    latido normal que la limpieza del RR (RR_RANGE_S y RR_ECTOPIC_FRAC).
     """
-    sos = butter(2, [0.5, 40], btype="band", fs=fs, output="sos")
-    x = sosfiltfilt(sos, ecg)
+    x = apply_zero_phase(np.asarray(ecg, float), design_bandpass(fs, *ECG_FILTER))
     q = qrs[(qrs > hours[0] * 3600 * fs) & (qrs < hours[1] * 3600 * fs)]
     rr = np.diff(q) / fs
-    stable = (rr[:-1] > 0.4) & (rr[:-1] < 1.6) & (np.abs(rr[1:] / rr[:-1] - 1) < 0.2)
+    lo, hi = RR_RANGE_S
+    stable = (rr[:-1] > lo) & (rr[:-1] < hi) & (np.abs(rr[1:] / rr[:-1] - 1) < RR_ECTOPIC_FRAC)
     beats = np.stack([x[i - PRE: i + POST] for i in q[np.flatnonzero(stable) + 1]])
     t = np.median(beats, axis=0)
     return (t - t.mean()) / t.std()

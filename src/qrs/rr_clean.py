@@ -6,10 +6,13 @@ Bloque: Latidos (Integrante 1).
 - Inválidos y ectópicos se interpolan; un minuto con > 20 % corregido se excluye.
 """
 import numpy as np
+
 import pandas as pd
 
+from ..config import MINUTE_MAX_CORRECTED, RR_ECTOPIC_FRAC, RR_NEIGHBORS, RR_RANGE_S
 
-def rr_in_range(t_r: np.ndarray, lo: float = 0.3, hi: float = 2.0) -> np.ndarray:
+
+def rr_in_range(t_r: np.ndarray, lo: float = RR_RANGE_S[0], hi: float = RR_RANGE_S[1]) -> np.ndarray:
     """Latidos cuyo RR con el anterior y con el siguiente está entre `lo` y `hi` s.
 
     El primer y el último latido quedan inválidos porque les falta un vecino.
@@ -21,8 +24,8 @@ def rr_in_range(t_r: np.ndarray, lo: float = 0.3, hi: float = 2.0) -> np.ndarray
     return valid
 
 
-def clean_rr(t_r: np.ndarray, lo: float = 0.3, hi: float = 2.0, ectopic: float = 0.2,
-             k: int = 11) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def clean_rr(t_r: np.ndarray, lo: float = RR_RANGE_S[0], hi: float = RR_RANGE_S[1],
+             ectopic: float = RR_ECTOPIC_FRAC, k: int = RR_NEIGHBORS) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """(t, rr_limpio, corregidos) a partir de los tiempos de los latidos.
 
     Cada RR se ubica en el tiempo del latido que lo cierra. Se corrige un RR si

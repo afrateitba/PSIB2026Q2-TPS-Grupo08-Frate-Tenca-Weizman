@@ -49,6 +49,20 @@ MAX_APNEA_DIFF = 0.02
 # vuelta. Justificado en notebooks/02_filtro_y_latidos.ipynb, sección 1.
 ECG_FILTER = (0.5, 45.0, 3)
 
+# --- Serie RR, EDR y evaluación (un solo lugar para cada número) -------------
+RR_RANGE_S = (0.3, 2.0)        # RR posibles (30 a 200 lpm); notebook 02, sección 4
+RR_ECTOPIC_FRAC = 0.2          # RR atípico: se aparta más de esta fracción de la mediana local
+RR_NEIGHBORS = 11              # latidos de la mediana local (~10 s)
+MINUTE_MAX_CORRECTED = 0.2     # un minuto con más RR corregidos que esto no se evalúa
+MIN_MINUTES_PER_CLASS = 20     # mínimo de minutos de cada tipo para el AUC dentro de una noche
+REALIZATION_S = (0.25, 0.40)   # latido como realización: desde 250 ms antes hasta 400 ms después del pico R
+QRS_AREA_HALF_S = 0.06         # semiancho del área del QRS (EDR)
+HAMPEL_K = RR_NEIGHBORS        # vecinos del filtro de Hampel de la EDR
+HAMPEL_SIGMAS = 3.0            # desvíos robustos del filtro de Hampel
+RESP_COH_SEG_S = 32            # segmentos de Welch para la coherencia en la banda respiratoria (notebook 03)
+ENVELOPE_RMS_S = 10            # valor eficaz de la envolvente de la respiración (notebook 03)
+MOV_LOWPASS = (ECG_FILTER[0], 2)   # movimiento: lo que el filtro saca por debajo de 0,5 Hz (orden 2, fijado antes de test)
+
 # --- Bandas de HRV (Hz). Primera versión: el pipeline actual usa la banda
 # 0,01-0,05 Hz de src/features/detector.py (BAND), medida en notebook 01.
 BANDS = {
@@ -79,6 +93,11 @@ QRS_TEMPLATE_CORR_MIN = 0.5    # en esa ventana, correlación mínima con la for
 QRS_HF_CUTOFF = 20.0           # Hz: la onda T casi no tiene energía por encima
 QRS_HF_RATIO_MIN = 0.3         # en esa ventana, energía > 20 Hz mínima respecto del QRS anterior
 QRS_TEMPLATE_N = 8             # latidos con que se arma la forma de referencia
+QRS_TEMPLATE_HALF_S = 0.10     # semiancho (s) de la ventana con que se compara la forma del candidato
+QRS_TEMPLATE_MIN = 3           # QRS previos necesarios antes de usar la comparación de forma
+QRS_PROMINENCE_WLEN_S = 2.0    # ventana (s) para medir la prominencia en la señal integrada
+QRS_HF_HALF_S = 0.05           # semiancho (s) de la ventana de energía por encima de QRS_HF_CUTOFF
+QRS_HF_ORDER = 2               # orden del pasaaltos de la energía rápida
 
 # --- EDR (notebooks/03_edr_wiener.ipynb) -----------------------------------
 # Área del QRS sobre el ECG filtrado con Wiener, sin latidos ectópicos ni atípicos.
@@ -86,3 +105,5 @@ EDR_EXCLUDE_ECTOPIC = True     # descarta los latidos que la limpieza del RR cor
 EDR_HAMPEL = True              # descarta los latidos atípicos (filtro de Hampel)
 EDR_WIENER = True              # mide el QRS sobre el ECG filtrado con Wiener
 EDR_RELATIVE = True            # divide el área por el tamaño típico del QRS (mediana del área sin signo; notebook 03, sección 7)
+WIENER_NUMTAPS = 129           # coeficientes del FIR que aproxima H(f) (notebook 03, sección 5)
+WIENER_TEMPLATE = "mean"       # estimador de la forma del latido: media de las realizaciones

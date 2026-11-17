@@ -12,10 +12,16 @@ from __future__ import annotations
 import numpy as np
 from scipy.signal import butter, find_peaks, peak_prominences, sosfiltfilt
 
+from .. import config as _cfg
 from ..config import (QRS_BAND, QRS_FLOOR_FRAC, QRS_HF_CUTOFF, QRS_HF_RATIO_MIN,
                       QRS_INTEGRATION_S, QRS_LOCATE_S, QRS_PROMINENCE_MIN, QRS_REFRACTORY_S,
                       QRS_SEARCHBACK, QRS_SLOPE_WIN_S, QRS_TEMPLATE_CORR_MIN, QRS_TEMPLATE_N,
                       QRS_TOLERANCE_S, QRS_TWAVE_RR_FRAC, QRS_TWAVE_S)
+QRS_TEMPLATE_HALF_S = _cfg.QRS_TEMPLATE_HALF_S
+QRS_TEMPLATE_MIN = _cfg.QRS_TEMPLATE_MIN
+QRS_PROMINENCE_WLEN_S = _cfg.QRS_PROMINENCE_WLEN_S
+QRS_HF_HALF_S = _cfg.QRS_HF_HALF_S
+QRS_HF_ORDER = _cfg.QRS_HF_ORDER
 from ..preprocessing.filters import apply_zero_phase, design_bandpass
 
 
@@ -42,14 +48,15 @@ def _learn(mwi: np.ndarray, start: int, fs: float) -> tuple[float, float]:
 
 
 def high_freq_energy(ecg: np.ndarray, fs: float, fc: float = QRS_HF_CUTOFF,
-                     half: float = 0.05) -> np.ndarray:
+                     half: float | None = None) -> np.ndarray:
     """Energía por encima de `fc` Hz en una ventana de ±`half` s alrededor de cada muestra.
 
     El QRS es rápido y tiene energía por encima de 20 Hz; la onda T es lenta y
     casi no tiene. Sirve para separarlos cuando la T deja en la señal
     integrada un pulso tan grande como el del QRS.
     """
-    e = sosfiltfilt(butter(2, fc, "high", fs=fs, output="sos"), np.asarray(ecg, float)) ** 2
+    half = QRS_HF_HALF_S if half is None else half
+    e = sosfiltfilt(butter(QRS_HF_ORDER, fc, "high", fs=fs, output="sos"), np.asarray(ecg, float)) ** 2
     n = int(round(half * fs))
     return np.convolve(e, np.ones(2 * n + 1), mode="same")
 
@@ -84,13 +91,13 @@ def _classify(mwi: np.ndarray, d: np.ndarray, fs: float, bp: np.ndarray | None =
     if len(cand) == 0:
         return np.array([], dtype=int)
     if improved:
-        rel = peak_prominences(mwi, cand, wlen=int(2 * fs))[0] / np.maximum(mwi[cand], 1e-12)
+        rel = peak_prominences(mwi, cand, wlen=int(QRS_PROMINENCE_WLEN_S * fs))[0] / np.maximum(mwi[cand], 1e-12)
         eligible = (rel >= QRS_PROMINENCE_MIN) & (mwi[cand] >= floor)
     else:
         eligible = np.ones(len(cand), dtype=bool)
     spki, npki = _learn(mwi, 0, fs)
     h = int(round(QRS_SLOPE_WIN_S * fs))
-    w = int(round(0.1 * fs))
+    w = int(round(QRS_TEMPLATE_HALF_S * fs))
     twave = QRS_TWAVE_S * fs
 
     def slope(k):
@@ -107,7 +114,7 @@ def _classify(mwi: np.ndarray, d: np.ndarray, fs: float, bp: np.ndarray | None =
     def looks_like_t(k):
         if not improved:
             return False
-        if len(templates) >= 3 and w <= k < len(bp) - w:
+        if len(templates) >= QRS_TEMPLATE_MIN and w <= k < len(bp) - w:
             if np.corrcoef(bp[k - w:k + w + 1], np.median(templates, axis=0))[0, 1] < QRS_TEMPLATE_CORR_MIN:
                 return True
         return last_hf is not None and hf[k] < QRS_HF_RATIO_MIN * last_hf

@@ -28,7 +28,7 @@ import numpy as np
 import pandas as pd
 from scipy.signal import butter, detrend, sosfiltfilt
 
-from ..config import RAW_DIR
+from ..config import MINUTE_MAX_CORRECTED, MOV_LOWPASS, RAW_DIR
 from ..data import load_apnea_labels, load_ecg
 from ..qrs.rr_clean import minute_quality
 from .build import record_series
@@ -44,7 +44,8 @@ F_LOMB = np.arange(0.01, 0.0501, 0.0025)
 
 
 def minute_table(rec: str, raw_dir: Path = RAW_DIR, lomb: bool = False,
-                 series: dict | None = None) -> pd.DataFrame:
+                 series: dict | None = None, centered: bool = True,
+                 band_edr: tuple | None = None) -> pd.DataFrame:
     """Una fila por minuto con ventana completa: etiqueta, calidad, P_RR, P_EDR, F y movimiento.
 
     label: 1 apnea, 0 normal, -1 sin etiqueta. q: fracción de RR corregidos
@@ -52,14 +53,21 @@ def minute_table(rec: str, raw_dir: Path = RAW_DIR, lomb: bool = False,
     lomb=True agrega P_RR_lomb: la potencia del RR en la banda con el
     periodograma de Lomb sobre los latidos, sin interpolar (para comparar).
     `series` permite pasar el resultado de record_series(rec) si ya se calculó.
+    `centered=False` usa una ventana que termina al final del minuto (solo datos
+    pasados), para comparar con la centrada (notebook 04, sección 15).
+    `band_edr` permite medir P_EDR en otra banda (solo para comparar).
     """
     s = series if series is not None else record_series(rec, raw_dir)
     lab = load_apnea_labels(rec, raw_dir)
     q = minute_quality(s["t_rr"], s["corrected"], len(lab))
     ecg, fs = load_ecg(rec, raw_dir)
-    lento = sosfiltfilt(butter(2, 0.5, "low", fs=fs, output="sos"), ecg)
+    lento = sosfiltfilt(butter(MOV_LOWPASS[1], MOV_LOWPASS[0], "low", fs=fs, output="sos"), ecg)
     t = s["t"]
     minutos, inicios = centered_windows(len(lab), WINDOW_S, t[0], t[-1] + 1 / FS_U)
+    if not centered:
+        m_all = np.arange(len(lab)); ini = 60.0 * m_all + 60 - WINDOW_S
+        ok = (ini >= t[0]) & (ini + WINDOW_S <= t[-1] + 1 / FS_U)
+        minutos, inicios = m_all[ok], ini[ok]
     n = int(WINDOW_S * FS_U)
     filas = []
     for m, a in zip(minutos, inicios):
@@ -69,13 +77,14 @@ def minute_table(rec: str, raw_dir: Path = RAW_DIR, lomb: bool = False,
             continue
         f, sxx, syy, sxy = welch_spectra(x, y, FS_U, n // 2)
         b = (f >= BAND[0] - 1e-9) & (f <= BAND[1] + 1e-9)
+        be = b if band_edr is None else (f >= band_edr[0] - 1e-9) & (f <= band_edr[1] + 1e-9)
         fila_lomb = {}
         if lomb:
             sel = (s["t_rr"] >= a) & (s["t_rr"] < a + WINDOW_S)
             fila_lomb["P_RR_lomb"] = (float(np.log10(lomb_psd(s["t_rr"][sel], detrend(s["rr_beats"][sel]), F_LOMB).mean()))
                                       if sel.sum() > 20 else np.nan)
         filas.append({**fila_lomb, "record": rec, "minute": int(m), "label": int(lab[m]), "q": float(q[m]),
-                      "P_RR": float(np.log10(sxx[b].mean())), "P_EDR": float(np.log10(syy[b].mean())),
+                      "P_RR": float(np.log10(sxx[b].mean())), "P_EDR": float(np.log10(syy[be].mean())),
                       "F": float(np.log10(np.abs(sxy[b]).mean())),
                       "mov": float(np.var(lento[int(a * fs):int((a + WINDOW_S) * fs)])),
                       "escala_qrs": float(s["edr_scale"])})
@@ -98,7 +107,7 @@ def add_night_terms(tab: pd.DataFrame) -> pd.DataFrame:
 
 def evaluable(tab: pd.DataFrame) -> pd.Series:
     """Minutos que se evalúan: con etiqueta y con 20 % o menos de RR corregidos."""
-    return (tab["label"] >= 0) & (tab["q"] <= 0.2)
+    return (tab["label"] >= 0) & (tab["q"] <= MINUTE_MAX_CORRECTED)
 
 
 def fit_c(tab: pd.DataFrame, w: float, rr: str = "P_RR") -> dict:

@@ -36,7 +36,8 @@ El minuto es apnea si C > 0,489 (umbral de Youden). La confianza (alta, media o 
 
 - [`docs/objetivos_hipotesis.md`](docs/objetivos_hipotesis.md): objetivo general, objetivos específicos, hipótesis, predicciones, parámetros fijados, alcance y limitaciones.
 - [`docs/decisiones.md`](docs/decisiones.md): cada ventana, umbral y parámetro, con su justificación (datos, bibliografía o física) y dónde se muestra.
-- [`docs/auditoria_decisiones.md`](docs/auditoria_decisiones.md): las 85 decisiones del proyecto, con el tipo de justificación y si está justificada.
+- [`docs/auditoria_decisiones.md`](docs/auditoria_decisiones.md): las 88 decisiones del proyecto, con el tipo de justificación (datos, bibliografía, física) y su estado: 86 justificadas y 2 limitaciones.
+- [`docs/referencias.md`](docs/referencias.md): todas las fuentes citadas, con DOI o página oficial verificados en Crossref, doi.org y PubMed (se regenera con `python scripts/verificar_referencias.py`).
 - [`docs/revision_devolucion.md`](docs/revision_devolucion.md): cada observación de la devolución, dónde se resolvió y qué falta.
 - [`docs/plan_recuperatorio.md`](docs/plan_recuperatorio.md): plan de trabajo y regla de no tocar test.
 - [`docs/parametros_test.json`](docs/parametros_test.json): lo que queda fijo para test.
@@ -114,5 +115,5 @@ Las constantes (rutas, filtro, parámetros del detector de QRS y de la EDR) est�
 
 - Toda decisión se toma con los registros de desarrollo y se justifica con un análisis de las señales: una figura y un número.
 - El 30 % de test no se mira (ni señales, ni etiquetas, ni resultados) hasta la evaluación final, que se corre una sola vez con los parámetros de `docs/parametros_test.json`.
-- `pytest` tiene que pasar antes de cada commit.
+- `pytest` tiene que pasar antes de cada commit. `tests/test_consistencia.py` verifica que ventanas, bandas y umbrales estén definidos en un solo lugar (`src/config.py`, `src/features/detector.py`) y que ningún notebook los escriba a mano.
 - `data/split.csv` no se modifica.
