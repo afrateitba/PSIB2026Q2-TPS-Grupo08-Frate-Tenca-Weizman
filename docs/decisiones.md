@@ -91,7 +91,7 @@ Hay **una sola ventana de análisis**: 240 s centrada en cada minuto. Se usa igu
 | Combinación | C = RR estandarizado + w · nivel nocturno de la EDR estandarizado | Cada señal en lo que mide bien: el RR marca cuándo dentro de la noche y el nivel de la EDR cuánta apnea tiene la noche (§6). Le gana al RR solo de forma significativa y empata con G, F y una regresión logística (§8) | Datos |
 | Peso w | 1 | Validación cruzada por personas, grilla de 0 a 3 cada 0,25 (§7) | Datos |
 | μ1, σ1, μ2, σ2 | −1,492; 0,590; −2,197; 0,636 | Media y desvío en desarrollo. Son solo un cambio de unidades: no cambian el orden dentro de una noche | Datos |
-| Umbral | C > 0,489 | Índice de Youden (Youden, 1950): no hay costos definidos para cada tipo de error y las clases tienen tamaños parecidos (40 % de apnea). Fluss et al. (2005) | Bibliografía + datos |
+| Umbral | C > 0,489 | Índice de Youden (Youden, 1950). El umbral óptimo depende de la prevalencia y de los costos de cada error (Metz, 1978; Zweig y Campbell, 1993; Habibzadeh et al., 2016), que acá no están definidos. Youden maximiza la exactitud balanceada: pesa igual la sensibilidad y la especificidad y no depende de la prevalencia. Es el criterio recomendado frente al punto más cercano a (0, 1) (Perkins y Schisterman, 2006; Ünal, 2017), y el optimismo de estimarlo en la muestra se corrige con validación cruzada (Fluss et al., 2005). Con personas no vistas, los criterios alternativos dan la misma exactitud balanceada (`04` §9) | Bibliografía + datos |
 | Confianza | Movimiento relativo a la noche: cortes en los percentiles 50 y 90 de desarrollo (−0,001 y 0,702) | El acierto baja en el decil de más movimiento | Datos |
 | Minutos evaluados | Con etiqueta y ≤ 20 % de RR corregidos | Igual que la limpieza del RR | Datos |
 | AUC dentro de la noche | Registros con ≥ 20 minutos de cada tipo | Con menos minutos el AUC de un registro es muy inestable | Convención |
@@ -122,19 +122,24 @@ El spline cúbico da una curva suave, con derivada continua. Interpolar en forma
 - Fluss, R., Faraggi, D. y Reiser, B. (2005). Estimation of the Youden index and its associated cutoff point. *Biometrical Journal*, 47(4), 458–472.
 - Guilleminault, C., Connolly, S., Winkle, R., Melvin, K. y Tilkian, A. (1984). Cyclical variation of the heart rate in sleep apnoea syndrome. *The Lancet*, 323(8369), 126–131.
 - Hampel, F. R. (1974). The influence curve and its role in robust estimation. *Journal of the American Statistical Association*, 69(346), 383–393.
+- Habibzadeh, F., Habibzadeh, P. y Yadollahie, M. (2016). On determining the most appropriate test cut-off value: the case of tests with continuous results. *Biochemia Medica*, 26(3), 297–307.
 - Hanley, J. A. y McNeil, B. J. (1982). The meaning and use of the area under a receiver operating characteristic (ROC) curve. *Radiology*, 143(1), 29–36.
 - Kligfield, P. et al. (2007). Recommendations for the standardization and interpretation of the electrocardiogram: Part I. *Circulation*, 115(10), 1306–1324.
 - Laguna, P., Moody, G. B. y Mark, R. G. (1998). Power spectral density of unevenly sampled data by least-square analysis. *IEEE Transactions on Biomedical Engineering*, 45(6), 698–715.
 - Lomb, N. R. (1976). Least-squares frequency analysis of unequally spaced data. *Astrophysics and Space Science*, 39, 447–462.
+- Metz, C. E. (1978). Basic principles of ROC analysis. *Seminars in Nuclear Medicine*, 8(4), 283–298.
 - Moody, G. B., Mark, R. G., Zoccola, A. y Mantero, S. (1985). Derivation of respiratory signals from multi-lead ECGs. *Computers in Cardiology*, 12, 113–116.
 - Pan, J. y Tompkins, W. J. (1985). A real-time QRS detection algorithm. *IEEE Transactions on Biomedical Engineering*, 32(3), 230–236.
+- Perkins, N. J. y Schisterman, E. F. (2006). The inconsistency of "optimal" cutpoints obtained using two criteria based on the receiver operating characteristic curve. *American Journal of Epidemiology*, 163(7), 670–675.
 - Penzel, T., Moody, G. B., Mark, R. G., Goldberger, A. L. y Peter, J. H. (2000). The Apnea-ECG Database. *Computers in Cardiology*, 27, 255–258.
 - Sörnmo, L. y Laguna, P. (2005). *Bioelectrical Signal Processing in Cardiac and Neurological Applications*. Elsevier Academic Press.
 - Spearman, C. (1904). The proof and measurement of association between two things. *American Journal of Psychology*, 15(1), 72–101.
 - Task Force of the European Society of Cardiology and the North American Society of Pacing and Electrophysiology (1996). Heart rate variability: standards of measurement, physiological interpretation and clinical use. *Circulation*, 93(5), 1043–1065.
+- Ünal, I. (2017). Defining an optimal cut-point value in ROC analysis: an alternative approach. *Computational and Mathematical Methods in Medicine*, 2017, 3762651.
 - Welch, P. D. (1967). The use of fast Fourier transform for the estimation of power spectra. *IEEE Transactions on Audio and Electroacoustics*, 15(2), 70–73.
 - Wiener, N. (1949). *Extrapolation, Interpolation, and Smoothing of Stationary Time Series*. MIT Press.
 - Youden, W. J. (1950). Index for rating diagnostic tests. *Cancer*, 3(1), 32–35.
+- Zweig, M. H. y Campbell, G. (1993). Receiver-operating characteristic (ROC) plots: a fundamental evaluation tool in clinical medicine. *Clinical Chemistry*, 39(4), 561–577.
 - ANSI/AAMI EC57 (2012). Testing and reporting performance results of cardiac rhythm and ST segment measurement algorithms.
 
 **Falta para el informe**: el estado del arte con trabajos recientes (la devolución dice que las referencias eran viejas). Esa bibliografía va en el informe, no en este documento.
