@@ -36,6 +36,7 @@ El minuto es apnea si C > 0,489 (umbral de Youden). La confianza (alta, media o 
 
 - [`docs/objetivos_hipotesis.md`](docs/objetivos_hipotesis.md): objetivo general, objetivos específicos, hipótesis, predicciones, parámetros fijados, alcance y limitaciones.
 - [`docs/decisiones.md`](docs/decisiones.md): cada ventana, umbral y parámetro, con su justificación (datos, bibliografía o física) y dónde se muestra.
+- [`docs/auditoria_decisiones.md`](docs/auditoria_decisiones.md): las 85 decisiones del proyecto, con el tipo de justificación y si está justificada.
 - [`docs/revision_devolucion.md`](docs/revision_devolucion.md): cada observación de la devolución, dónde se resolvió y qué falta.
 - [`docs/plan_recuperatorio.md`](docs/plan_recuperatorio.md): plan de trabajo y regla de no tocar test.
 - [`docs/parametros_test.json`](docs/parametros_test.json): lo que queda fijo para test.
