@@ -19,7 +19,7 @@ noches), así que se mide en cada registro con qrs_reference() y no se supone.
 import numpy as np
 
 from ..config import ECG_FILTER
-from ..config import HAMPEL_K, HAMPEL_SIGMAS, QRS_AREA_HALF_S, RESP_COH_SEG_S
+from ..config import ABERRANT_IQR_K, HAMPEL_K, HAMPEL_SIGMAS, QRS_AREA_HALF_S, RESP_COH_SEG_S
 from ..features.coupling import weighted_coherence
 from ..preprocessing.filters import apply_zero_phase, design_bandpass
 from ..qrs.pan_tompkins import refine_peaks_parabolic
@@ -190,10 +190,31 @@ def hampel_outliers(values: np.ndarray, k: int = HAMPEL_K, n_sigmas: float = HAM
     return (resid > n_sigmas * np.maximum(local, floor)).to_numpy()
 
 
+def aberrant_qrs(beats: np.ndarray, minutes: np.ndarray, k: float = ABERRANT_IQR_K) -> np.ndarray:
+    """QRS aberrantes según Varon et al. (2020, doi:10.1038/s41598-020-62624-5).
+
+    A cada QRS (±60 ms del pico R) se le resta su media y se calcula su
+    varianza. En cada minuto se calculan los percentiles 25 y 75 de esas
+    varianzas y su rango intercuartil (IQR); un QRS es aberrante si su varianza
+    cae fuera de [Q1 − k·IQR, Q3 + k·IQR], con k = 2,5. Los minutos con menos
+    de 4 QRS no se evalúan. Supone que en cada minuto la mayoría de los latidos
+    tiene la misma forma.
+    """
+    var = np.var(beats - beats.mean(axis=1, keepdims=True), axis=1)
+    bad = np.zeros(len(var), bool)
+    for m in np.unique(minutes):
+        i = np.flatnonzero(minutes == m)
+        if len(i) < 4:
+            continue
+        q1, q3 = np.percentile(var[i], [25, 75])
+        bad[i] = (var[i] <= q1 - k * (q3 - q1)) | (var[i] >= q3 + k * (q3 - q1))
+    return bad
+
+
 def beat_edr(ecg: np.ndarray, t_r: np.ndarray, fs: float, method: str = "area",
              filt: tuple = ECG_FILTER, exclude: np.ndarray | None = None,
              hampel: bool = False, prefilter=None, relative: bool = False,
-             return_scale: bool = False):
+             return_scale: bool = False, aberrant: bool = False):
     """(t, edr) a partir de los tiempos de los picos R `t_r` (s).
 
     method: "area" (área con signo del QRS en ±60 ms, sobre el ECG filtrado),
@@ -211,6 +232,7 @@ def beat_edr(ecg: np.ndarray, t_r: np.ndarray, fs: float, method: str = "area",
     No se usa la mediana del área con signo: en un QRS con R y S la parte
     positiva y la negativa se cancelan y esa mediana no mide el tamaño.
     return_scale: devuelve también esa escala (NaN si relative es False).
+    aberrant: descarta los QRS aberrantes (aberrant_qrs, Varon et al., 2020).
     """
     if method not in BEAT_METHODS:
         raise ValueError(f"método desconocido: {method} (opciones: {BEAT_METHODS})")
@@ -236,6 +258,13 @@ def beat_edr(ecg: np.ndarray, t_r: np.ndarray, fs: float, method: str = "area",
         v[ok] = b
         vals["baseline"] = v
     keep &= np.all([np.isfinite(v) for v in vals.values()], axis=0)
+    if aberrant:
+        qrs_b, ok_b = beat_matrix(x, centers, fs, QRS_AREA_HALF_S)
+        idx_ok = np.flatnonzero(ok_b)
+        sel = keep[idx_ok]
+        bad = np.zeros(len(centers), bool)
+        bad[idx_ok[sel]] = aberrant_qrs(qrs_b[sel], (centers[idx_ok[sel]] / fs // 60).astype(int))
+        keep &= ~bad
     if hampel:
         for v in vals.values():
             bad = np.zeros(len(centers), bool)

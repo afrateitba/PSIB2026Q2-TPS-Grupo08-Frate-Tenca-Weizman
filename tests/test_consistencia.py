@@ -54,6 +54,8 @@ def test_etapas_del_pipeline_usan_config():
     d = _defaults(build.record_series)
     assert d["wiener"] == cfg.EDR_WIENER and d["exclude_ectopic"] == cfg.EDR_EXCLUDE_ECTOPIC
     assert d["hampel"] == cfg.EDR_HAMPEL and d["interp"] == cfg.RR_INTERP
+    assert d["relative"] == cfg.EDR_RELATIVE and d["aberrant"] == cfg.EDR_ABERRANT
+    assert _defaults(edr.aberrant_qrs)["k"] == cfg.ABERRANT_IQR_K
     assert _defaults(detector.minute_table)["detrend_type"] is None
     assert _defaults(detector.evaluable)["max_corrected"] == cfg.MINUTE_MAX_CORRECTED
     assert _defaults(detector.fit_c)["max_corrected"] == cfg.MINUTE_MAX_CORRECTED

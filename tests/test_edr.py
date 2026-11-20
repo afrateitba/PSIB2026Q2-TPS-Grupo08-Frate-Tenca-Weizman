@@ -138,3 +138,16 @@ def test_beat_edr_excluye_latidos_marcados():
     t_all, _ = beat_edr(ecg, t_r, fs, "area")
     t_ex, _ = beat_edr(ecg, t_r, fs, "area", exclude=excl)
     assert len(t_ex) == len(t_all) - 1 and not np.any(np.isclose(t_ex, t_r[10]))
+
+
+def test_aberrant_qrs_marca_el_latido_con_otra_forma():
+    import numpy as np
+    from src.features.edr import aberrant_qrs
+    rng = np.random.default_rng(0)
+    t = np.linspace(-1, 1, 13)
+    base = np.exp(-t ** 2 / 0.1)
+    beats = np.stack([base * (1 + 0.05 * rng.standard_normal()) + 0.01 * rng.standard_normal(13) for _ in range(60)])
+    beats[17] = 4 * np.sin(6 * t)                     # otra forma, mucha más varianza
+    bad = aberrant_qrs(beats, np.zeros(60, int))
+    assert bad[17] and bad.sum() <= 3
+    assert not aberrant_qrs(beats[:3], np.zeros(3, int)).any()   # menos de 4 latidos: no se evalúa
