@@ -41,7 +41,7 @@ Cada decisión del proyecto (código y notebooks `01`–`06`), con el tipo de ju
 | 15 | Umbrales descriptivos de calidad | Tramo plano ≥ 1 s; sin ECG si la energía en 5–15 Hz < 10 %; deriva o interferencia > 10 % | Física, Datos | Solo describen la base; ninguno excluye datos. La señal perdida es estable entre 1 y 2 s (191 y 190 minutos) porque un ECG de 12 bits no queda constante un segundo; la deriva marca los mismos 20 registros con 5, 10 o 20 %. El resto mide magnitud y cambia con el umbral, como se espera | 01 §5 | ✅ Justificada |
 | 16 | PSD del ECG | Welch, 4096 muestras (~41 s) | Física | Resolución de 0,024 Hz, suficiente para el latido y sus armónicos; descriptivo | 01 §5 | ✅ Justificada |
 | 17 | Espectrograma | Ventanas de 30 s | Física | Compromiso tiempo–frecuencia; descriptivo | 01 §5 | ✅ Justificada |
-| 18 | Banda de la apnea | 0,01–0,05 Hz | Datos, Bibliografía | Máximo aumento de potencia del RR con apnea dentro de cada registro (pico 0,025 Hz; −3 dB entre 0,017 y 0,05 Hz, las mismas cinco frecuencias k = 2…6); ciclos de 20–100 s (Guilleminault et al., 1984) | 01 §7 | ✅ Justificada |
+| 18 | Banda de la apnea | 0,017–0,05 Hz (k = 2…6; se escribía 0,01–0,05 Hz) | Datos, Bibliografía | Máximo aumento de potencia del RR con apnea dentro de cada registro (pico 0,025 Hz; −3 dB entre 0,017 y 0,05 Hz). El borde de 0,01 Hz era nominal: con el doble de resolución, el aumento con la apnea se concentra entre 20 y 60 s (Guilleminault et al., 1984, describen ciclos de 20 a 100 s) | 01 §7; 08 §1 | ✅ Justificada |
 | 19 | Misma banda para la EDR | 0,01–0,05 Hz | Datos | En la EDR la banda a −3 dB es 0,017–0,033 Hz, dentro de la elegida y con el mismo pico (0,025 Hz). Limitar la EDR a 0,01–0,033 Hz no mejora (−0,011; significativo sin corregir, no con Holm) | 01 §7; 04 §15 | ✅ Justificada |
 
 ## Filtro
@@ -99,11 +99,11 @@ Cada decisión del proyecto (código y notebooks `01`–`06`), con el tipo de ju
 
 | # | Decisión | Valor | Justificación | Fundamento | Dónde | Estado |
 |---|---|---|---|---|---|---|
-| 51 | Ventana de análisis | 240 s | Física, Datos | Para ver 0,01 Hz cada segmento debe durar > 100 s. Con 180, 300 o 360 s la exactitud baja ~0,01; con Holm sobre 13 variantes solo la caída con 360 s es significativa | 01 §7; 04 §1, §15 | ✅ Justificada |
+| 51 | Ventana de análisis | 240 s | Física, Datos | Con segmentos de 120 s la banda empieza en 0,017 Hz (ciclos de 60 s, dos por segmento); los de 60 a 100 s entran solo en parte (08 §1). Con 180, 300 o 360 s la exactitud baja ~0,01; con Holm sobre 13 variantes solo la caída con 360 s es significativa | 01 §7; 04 §1, §15 | ✅ Justificada |
 | 52 | Ventana centrada en el minuto | Usa 90 s antes y después del minuto | Datos | El análisis es fuera de línea. Con una ventana que termina al final del minuto la exactitud baja 0,005 (significativo solo sin corregir) y el AUC dentro de la noche pasa de 0,908 a 0,894 | 04 §15 | ✅ Justificada |
 | 53 | Estimador espectral | Welch, 3 segmentos de 120 s, Hann, 50 % de solapamiento | Bibliografía, Física | Welch (1967); resolución 1/120 Hz | 04 §1 | ✅ Justificada |
 | 54 | Quitar la tendencia lineal en cada segmento | detrend lineal antes de la FFT | Bibliografía, Datos | Práctica habitual (Tarvainen et al., 2002). La figura muestra que con Hann la deriva queda casi toda en k ≤ 1; con los datos, no quitarla da lo mismo (+0,002, IC con el cero). Se mantiene como protección | 04 §15 | ✅ Justificada |
-| 55 | Banda de la EDR | La misma que la del RR (0,01–0,05 Hz) | Datos | Limitarla a su banda a −3 dB (0,01–0,033 Hz) no mejora (−0,011; significativo sin corregir, p de Holm 0,07) | 04 §15 | ✅ Justificada |
+| 55 | Banda de la EDR | La misma que la del RR (0,017–0,05 Hz) | Datos | Limitarla a su banda a −3 dB (0,017–0,033 Hz) no mejora (−0,011; significativo sin corregir, p de Holm 0,07) | 04 §15 | ✅ Justificada |
 | 56 | Escala logarítmica | log10 de la potencia | Física, Datos | En escala lineal C es la peor variante: exactitud −0,052 (resiste Holm) y ρ por noche 0,66 | 04 §15 | ✅ Justificada |
 | 57 | Potencia en la banda | Promedio de la PSD en k = 2…6 (k/120 Hz) | Física | Son las 5 frecuencias de la grilla que caen en la banda | 04 §1 | ✅ Justificada |
 | 58 | Feature combinada C | RR del minuto + w · nivel nocturno de la EDR | Datos | El RR ubica la apnea dentro de la noche y el nivel de la EDR estima cuánta tiene la noche (04 §6); frente al RR solo marca ~30 puntos menos en controles (resiste Holm) y no se distingue de G, F ni de la logística (04 §8) | 04 §6–8 | ✅ Justificada |

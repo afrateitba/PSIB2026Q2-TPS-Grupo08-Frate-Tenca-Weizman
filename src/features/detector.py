@@ -5,7 +5,10 @@ notebooks/04_feature_y_detector.ipynb.
 
 Para cada minuto m (ventana de 240 s centrada en él):
 - P_RR(m), P_EDR(m): log10 de la potencia de la serie RR y de la EDR en
-  0,01-0,05 Hz (Welch, 3 segmentos de 120 s, Hann, 50 % de solapamiento).
+  la banda de la apnea (Welch, 3 segmentos de 120 s, Hann, 50 % de solapamiento).
+  Con segmentos de 120 s el espectro está en las frecuencias k/120 Hz y se
+  suman k = 2…6: 0,017-0,05 Hz (BANDA_EFECTIVA), con bordes que caen a la
+  mitad de la potencia en ~80 s y ~18 s de período (notebook 08, sección 1).
 - F(m): log10 del módulo del espectro cruzado RR-EDR en la misma banda
   (feature de la primera versión; se conserva para comparar).
 - mov(m): varianza del ECG crudo por debajo de 0,5 Hz en la ventana
@@ -36,7 +39,8 @@ from .coupling import welch_spectra
 from .lomb import lomb_psd
 from .windows import centered_windows
 
-BAND = (0.01, 0.05)
+BAND = (0.01, 0.05)            # límites de la selección; registrado así para test (docs/parametros_test.json)
+BANDA_EFECTIVA = (1 / 60, 0.05)  # lo que realmente se suma: k = 2…6 de segmentos de 120 s (notebook 08, sección 1)
 WINDOW_S = 240
 FS_U = 2.0
 CONFIANZA = ("alta", "media", "baja")

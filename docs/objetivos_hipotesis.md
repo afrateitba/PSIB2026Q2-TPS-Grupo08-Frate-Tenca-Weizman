@@ -22,13 +22,15 @@ Cada objetivo es un paso del trabajo, tiene un resultado medible y un notebook d
 
 ### Enunciado
 
-**H.** En la apnea obstructiva, cada episodio sigue un ciclo de pausa respiratoria y recuperación que dura entre 20 y 100 s: la frecuencia cardíaca baja durante la pausa y se acelera al reanudarse la respiración, y la mecánica del tórax cambia con el mismo ritmo. Ese ciclo aumenta la potencia de la serie RR y de la EDR en la banda de **0,01 a 0,05 Hz**. Se espera que:
+**H.** En la apnea obstructiva, cada episodio sigue un ciclo de pausa respiratoria y recuperación que dura entre 20 y 100 s: la frecuencia cardíaca baja durante la pausa y se acelera al reanudarse la respiración, y la mecánica del tórax cambia con el mismo ritmo. Ese ciclo aumenta la potencia de la serie RR y de la EDR en la banda de **0,01 a 0,05 Hz** (en la práctica, 0,017 a 0,05 Hz: ver la nota de abajo). Se espera que:
 
 - **(a) Dentro de cada noche**, la potencia del RR en esa banda sea **mayor en los minutos con apnea que en los minutos normales de la misma noche**.
 - **(b) Entre noches**, el **nivel nocturno de la potencia de la EDR** en esa banda sea **mayor cuanto más apnea tiene la noche**.
 - **(c) Sumando la potencia del RR de cada minuto y el nivel nocturno de la EDR** en una única feature, C, un **único umbral fijado en desarrollo** permita clasificar cada minuto de personas nuevas como apnea o normal.
 
 Cada señal se usa para lo que mide bien (`04`, sección 6): el RR ubica la apnea dentro de la noche, pero su nivel general cambia de una persona a otra y no acompaña a la cantidad de apnea; la EDR separa peor los minutos, pero su nivel nocturno acompaña a la cantidad de apnea. En C, el término de la EDR es el mismo para toda la noche: no cambia el orden de los minutos dentro de la noche, pero corre toda la noche hacia arriba o hacia abajo según cuánta apnea indica.
+
+**Nota sobre la banda (agregada después de test; no cambia ningún cálculo).** La banda se escribió 0,01–0,05 Hz por los ciclos de 20 a 100 s de la apnea. Con segmentos de Welch de 120 s el espectro se calcula en las frecuencias k/120 Hz, y la feature siempre sumó k = 2…6, es decir 0,017–0,05 Hz. Sus bordes son suaves: la potencia cae a la mitad en ciclos de ~80 s y de ~18 s. Una oscilación de 100 s entra solo con ~25 % de su potencia. Medido con el doble de resolución, el aumento de potencia con la apnea se concentra entre 20 y 60 s y es menor en los ciclos más largos (`08` §1). Las predicciones y su evaluación en test no cambian, porque se calcularon siempre con esas mismas frecuencias.
 
 ### Definiciones operativas
 
@@ -37,7 +39,7 @@ Cada señal se usa para lo que mide bien (`04`, sección 6): el RR ubica la apne
 | Serie RR | Intervalos entre picos R del detector propio (`02`), con la limpieza del RR, interpolados a 2 Hz |
 | EDR | Área con signo del QRS (±60 ms) sobre el ECG filtrado con Wiener, sin latidos ectópicos ni atípicos, dividida por el tamaño típico del QRS del registro (mediana del área sin signo), interpolada a 2 Hz (`03`) |
 | Ventana de un minuto | 240 s centrados en el minuto |
-| Potencia en la banda, P(m) | log₁₀ de la densidad espectral de potencia promediada en 0,01–0,05 Hz (las frecuencias k/120 Hz con k = 2, …, 6), estimada por Welch (3 segmentos de 120 s, Hann, 50 % de solapamiento) en la ventana del minuto m; P_RR para la serie RR y P_EDR para la EDR |
+| Potencia en la banda, P(m) | log₁₀ de la densidad espectral de potencia promediada en las frecuencias k/120 Hz con k = 2, …, 6 (0,017–0,05 Hz; se escribía 0,01–0,05 Hz), estimada por Welch (3 segmentos de 120 s, Hann, 50 % de solapamiento) en la ventana del minuto m; P_RR para la serie RR y P_EDR para la EDR |
 | Nivel nocturno de la EDR, P̄_EDR | Mediana de P_EDR en todas las ventanas de esa noche. No usa etiquetas: se calcula igual en test |
 | Feature | **C(m) = [P_RR(m) − μ₁] / σ₁ + w · [P̄_EDR − μ₂] / σ₂**, con μ y σ medidos en los minutos de desarrollo y w = 1 elegido por validación cruzada por personas en desarrollo (`04`) |
 | Decisión | Un minuto es apnea si C(m) supera el umbral de Youden de desarrollo |
@@ -124,7 +126,7 @@ Los resultados de test de la sección anterior son de la versión evaluada, no d
 
 **Del método**
 
-5. **Ventana de 240 s.** Hace falta para ver oscilaciones de 0,01 Hz, pero diluye los episodios de un solo minuto (22 % de los episodios en desarrollo) y suaviza los bordes de cada episodio.
+5. **Ventana de 240 s.** Con segmentos de 120 s la banda empieza en 0,017 Hz (ciclos de 60 s): los ciclos de apnea de 60 a 100 s entran solo con entre ~25 % y ~80 % de su potencia (`08` §1). Una ventana más larga los vería mejor, pero en desarrollo no mejoró la detección (con 360 s empeoró, `04` §15). Además, la ventana diluye los episodios de un solo minuto (22 % de los episodios en desarrollo) y suaviza los bordes de cada episodio.
 6. **Ritmos irregulares.** La versión evaluada en test no decide en los minutos con más de 20 % de RR corregidos (señal perdida, ritmos irregulares). La simplificada los clasifica igual, pero en ellos la potencia del RR no refleja la apnea: en desarrollo acierta 0,64 en esos minutos, contra 0,82 en el resto. En pacientes con arritmias frecuentes ninguna de las dos versiones sirve.
 7. **La EDR solo se valida en 8 registros**, y en la banda lenta solo en los 4 con mucha apnea. Por diseño están todos en desarrollo, así que esa validación no se repite en test.
 8. **Las decisiones de preprocesamiento se tomaron mirando desarrollo** (por ejemplo, las mejoras del detector de QRS). Se controlan con la revisión manual y con que ningún registro empeore, pero solo test mide si generalizan.

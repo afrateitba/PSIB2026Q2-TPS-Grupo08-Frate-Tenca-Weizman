@@ -64,7 +64,7 @@ ENVELOPE_RMS_S = 10            # valor eficaz de la envolvente de la respiració
 MOV_LOWPASS = (ECG_FILTER[0], 2)   # movimiento: lo que el filtro saca por debajo de 0,5 Hz (orden 2, fijado antes de test)
 
 # --- Bandas de HRV (Hz). Primera versión: el pipeline actual usa la banda
-# 0,01-0,05 Hz de src/features/detector.py (BAND), medida en notebook 01.
+# 0,017-0,05 Hz de src/features/detector.py (BANDA_EFECTIVA), medida en los notebooks 01 y 08.
 BANDS = {
     "VLF": (0.01, 0.04),
     "LF": (0.04, 0.15),

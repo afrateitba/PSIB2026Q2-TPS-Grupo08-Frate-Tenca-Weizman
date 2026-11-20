@@ -23,7 +23,7 @@ Sale del informe: H1 de la primera versión (coherencia y cociente de coherencia
 | Qué se ajusta en desarrollo | feature, posprocesamiento, umbral | **solo el umbral**; banda y ventana salen del análisis de las señales |
 | Niveles de análisis | mezclados | **minuto** (decisión), **registro** (noche), **sujeto** (intervalos de confianza) — se dice en cada resultado |
 
-La ventana de 240 s tiene una justificación física: para resolver 0,01 Hz hace falta un segmento de más de 100 s (un ciclo completo); Welch con 3 segmentos de 120 s solapados al 50 % ocupa 240 s. Las realizaciones de Wiener (−250 a +400 ms alrededor del pico R) no son una ventana de análisis sino un latido, y se aclara así.
+La ventana de 240 s tiene una justificación física: con segmentos de 120 s la banda empieza en 0,017 Hz (ciclos de 60 s, dos por segmento); Welch con 3 segmentos de 120 s solapados al 50 % ocupa 240 s. Los ciclos de 60 a 100 s entran solo en parte (`08` §1). Las realizaciones de Wiener (−250 a +400 ms alrededor del pico R) no son una ventana de análisis sino un latido, y se aclara así.
 
 ## 3. Cada observación y su respuesta
 
@@ -41,7 +41,7 @@ La ventana de 240 s tiene una justificación física: para resolver 0,01 Hz hace
 | Wiener sin motivo ni relación con el EDR | El EDR depende de la forma del QRS; Wiener busca limpiar el QRS sin cambiar su amplitud. Se evalúa con la coherencia EDR–respiración | nb `03` |
 | EDR vs deriva de línea de base sin análisis | Comparación con figura y números contra la respiración real | nb `03` |
 | Remuestreo a 2 Hz sin justificar | La potencia cruzada necesita las dos señales en una grilla común; 2 Hz cubre hasta 1 Hz, por encima de la respiración (≤ 0,4 Hz) | nb `04` |
-| De dónde sale F | Espectro medio de RR y EDR en minutos con y sin apnea: la diferencia está en 0,01–0,05 Hz | nb `04` |
+| De dónde sale F | Espectro medio de RR y EDR en minutos con y sin apnea: la diferencia está en 0,017–0,05 Hz | nb `04` |
 | Referencia HRV sin paper y con otra ventana | Lomb (Task Force 1996; Laguna et al. 1998) en la misma banda y ventana | nb `04` |
 | ¿Por qué Youden? | Sin costo distinto para falsos positivos y negativos, maximiza sensibilidad + especificidad; cita Youden 1950 y Fluss et al. 2005 | nb `04` |
 | ¿Una sola feature alcanza? | Distribuciones de F con y sin apnea, curva ROC, comparación contra RR solo y EDR solo | nb `04` |

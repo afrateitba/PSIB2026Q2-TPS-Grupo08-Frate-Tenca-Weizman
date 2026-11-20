@@ -19,7 +19,7 @@ from plotly.subplots import make_subplots
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.features.detector import BAND, WINDOW_S  # noqa: E402
+from src.features.detector import BANDA_EFECTIVA as BAND, WINDOW_S  # noqa: E402
 from src.viz.plots import APNEA, NORMAL  # noqa: E402
 from src.viz.visor_data import (analizar_noche, ecg_minuto, registros_visibles, resumen_noche,  # noqa: E402
                                 ventana_minuto)
@@ -82,7 +82,7 @@ crudo = st.sidebar.checkbox("Mostrar también el ECG sin filtrar")
 
 with st.sidebar.expander("Parámetros fijados en desarrollo"):
     st.markdown(f"""
-- Banda: {BAND[0]}–{BAND[1]} Hz · ventana de {WINDOW_S} s
+- Banda: {BAND[0]:.3f}–{BAND[1]:.2f} Hz (ciclos de 20 a 60 s) · ventana de {WINDOW_S} s
 - μ₁ = {p['mu1']:.3f}, σ₁ = {p['s1']:.3f}
 - μ₂ = {p['mu2']:.3f}, σ₂ = {p['s2']:.3f}, w = {p['w']:g}
 - Umbral: C > {p['umbral']:.3f}
@@ -105,7 +105,7 @@ k[5].metric("Exactitud", fmt(res["exactitud"]))
 with st.expander("Cómo leer el visor"):
     st.markdown(f"""
 Para cada minuto se toma una ventana de {WINDOW_S} s centrada en él. En esa ventana se calcula la potencia de la serie RR y de la
-respiración derivada del ECG (EDR) entre {BAND[0]} y {BAND[1]} Hz, la banda del ciclo de la apnea. La feature combina dos términos:
+respiración derivada del ECG (EDR) entre {BAND[0]:.3f} y {BAND[1]:.2f} Hz (ciclos de 20 a 60 s), la banda del ciclo de la apnea. La feature combina dos términos:
 
 - **término del RR**: la potencia del RR en ese minuto, estandarizada. Cambia de un minuto a otro y dice **cuándo** hay apnea en la noche.
 - **término de la EDR**: el nivel de la potencia de la EDR en toda la noche (su mediana), estandarizado. Es el mismo para todos los minutos y dice **cuánta** apnea tiene la noche: corre la curva de C hacia arriba o hacia abajo.

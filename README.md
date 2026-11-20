@@ -8,7 +8,7 @@ Trabajo práctico de señales de Procesamiento de Señales e Imágenes Biomédic
 
 Detectar, minuto a minuto y solo con el ECG, si hay apnea del sueño. Se usa una feature y un umbral, sin aprendizaje automático. El detalle está en [`docs/objetivos_hipotesis.md`](docs/objetivos_hipotesis.md).
 
-**Hipótesis H.** El ciclo de pausa y recuperación de cada apnea (20–100 s) aumenta la potencia de la serie RR y de la respiración derivada del ECG (EDR) en la banda de 0,01–0,05 Hz. De ahí salen tres predicciones:
+**Hipótesis H.** El ciclo de pausa y recuperación de cada apnea (20–100 s) aumenta la potencia de la serie RR y de la respiración derivada del ECG (EDR) en la banda lenta, sobre todo entre 0,017 y 0,05 Hz (ciclos de 20 a 60 s). De ahí salen tres predicciones:
 - **(a)** Dentro de cada noche, la potencia del RR es mayor en los minutos con apnea.
 - **(b)** Entre noches, el nivel nocturno de la potencia de la EDR crece con la cantidad de apnea.
 - **(c)** Con la feature C = potencia del RR del minuto + nivel nocturno de la EDR, ambos estandarizados, un único umbral fijado en desarrollo clasifica los minutos de personas nuevas.
@@ -27,7 +27,7 @@ Cada notebook es un paso, usa lo que dejó el anterior y termina con una tabla d
 | [`06_posterior_test`](notebooks/06_posterior_test.ipynb) | Análisis posterior, descriptivo, de por qué falla en algunas noches de test. No cambia `05` | Los errores son por noche: siguen al nivel de la EDR que no corresponde a la apnea y al nivel del RR de la persona. Una persona con ritmo muy irregular queda casi toda excluida |
 | [`07_simplificacion`](notebooks/07_simplificacion.ipynb) | Criterio de sencillez registrado antes de correr (`docs/criterio_parsimonia.md`): cada etapa que se agregó sin demostrar que hace falta se prueba contra su alternativa simple, con validación cruzada en desarrollo, Holm, un bootstrap que repite el ajuste y validación anidada. Revisión completa del Wiener, con datos y bibliografía. No usa test | Detector simplificado: de las 8 etapas revisadas solo queda el refinamiento del pico R. Exactitud 0,821 en validación cruzada (0,836 la versión evaluada en test; la diferencia no es demostrable). Parámetros en [`docs/parametros_simplificado.json`](docs/parametros_simplificado.json) |
 
-**Detector evaluado en test.** Para cada minuto se toma una ventana de 240 s centrada en él. En esa ventana se estiman por Welch (3 × 120 s, Hann) la potencia del RR y la de la EDR en 0,01–0,05 Hz:
+**Detector evaluado en test.** Para cada minuto se toma una ventana de 240 s centrada en él. En esa ventana se estiman por Welch (3 × 120 s, Hann) la potencia del RR y la de la EDR en 0,017–0,05 Hz, las frecuencias k/120 Hz con k = 2…6 (se escribía 0,01–0,05 Hz, pero el borde de 0,01 Hz era nominal: `08` §1):
 
 C(m) = (P_RR(m) − μ₁)/σ₁ + w · (mediana de P_EDR en la noche − μ₂)/σ₂, con w = 1.
 

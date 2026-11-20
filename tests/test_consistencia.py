@@ -21,7 +21,7 @@ from src.qrs import rr_clean
 
 ROOT = Path(__file__).resolve().parents[1]
 # 05 queda afuera: se registró sin ejecutar antes de abrir test y no se modifica.
-NOTEBOOKS = [p for p in sorted((ROOT / "notebooks").glob("0[1-7]_*.ipynb")) if not p.name.startswith("05")]
+NOTEBOOKS = [p for p in sorted((ROOT / "notebooks").glob("0[1-8]_*.ipynb")) if not p.name.startswith("05")]
 
 
 def _defaults(f):
@@ -33,6 +33,7 @@ def test_ventana_banda_y_grilla():
     n = int(detector.WINDOW_S * detector.FS_U) // 2                     # segmento de Welch: 120 s
     f = np.fft.rfftfreq(n, 1 / detector.FS_U)
     k = np.flatnonzero((f >= detector.BAND[0] - 1e-9) & (f <= detector.BAND[1] + 1e-9))
+    assert np.isclose(f[k].min(), detector.BANDA_EFECTIVA[0]) and np.isclose(f[k].max(), detector.BANDA_EFECTIVA[1])
     assert list(k) == [2, 3, 4, 5, 6]                                   # 1/60, 1/40, 1/30, 1/24 y 1/20 Hz
 
 
