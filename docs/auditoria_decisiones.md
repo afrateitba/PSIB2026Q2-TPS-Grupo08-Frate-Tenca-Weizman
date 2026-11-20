@@ -42,7 +42,7 @@ Cada decisión del proyecto (código y notebooks `01`–`06`), con el tipo de ju
 | 16 | PSD del ECG | Welch, 4096 muestras (~41 s) | Física | Resolución de 0,024 Hz, suficiente para el latido y sus armónicos; descriptivo | 01 §5 | ✅ Justificada |
 | 17 | Espectrograma | Ventanas de 30 s | Física | Compromiso tiempo–frecuencia; descriptivo | 01 §5 | ✅ Justificada |
 | 18 | Banda de la apnea | 0,017–0,05 Hz (k = 2…6; se escribía 0,01–0,05 Hz) | Datos, Bibliografía | Máximo aumento de potencia del RR con apnea dentro de cada registro (pico 0,025 Hz; −3 dB entre 0,017 y 0,05 Hz). El borde de 0,01 Hz era nominal: con el doble de resolución, el aumento con la apnea se concentra entre 20 y 60 s (Guilleminault et al., 1984, describen ciclos de 20 a 100 s) | 01 §7; 08 §1 | ✅ Justificada |
-| 19 | Misma banda para la EDR | 0,01–0,05 Hz | Datos | En la EDR la banda a −3 dB es 0,017–0,033 Hz, dentro de la elegida y con el mismo pico (0,025 Hz). Limitar la EDR a 0,01–0,033 Hz no mejora (−0,011; significativo sin corregir, no con Holm) | 01 §7; 04 §15 | ✅ Justificada |
+| 19 | Misma banda para la EDR | 0,017–0,05 Hz | Datos | En la EDR la banda a −3 dB es 0,017–0,033 Hz, dentro de la elegida y con el mismo pico (0,025 Hz). Limitar la EDR a 0,017–0,033 Hz no mejora (−0,011; significativo sin corregir, no con Holm) | 01 §7; 04 §15 | ✅ Justificada |
 
 ## Filtro
 
