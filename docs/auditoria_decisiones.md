@@ -40,7 +40,7 @@ Cada decisión del proyecto (código y notebooks `01`–`06`), con el tipo de ju
 | 16 | PSD del ECG | Welch, 4096 muestras (~41 s) | Física | Resolución de 0,024 Hz, suficiente para el latido y sus armónicos; descriptivo | 01 §5 | ✅ Justificada |
 | 17 | Espectrograma | Ventanas de 30 s | Física | Compromiso tiempo–frecuencia; descriptivo | 01 §5 | ✅ Justificada |
 | 18 | Banda de la apnea | 0,01–0,05 Hz | Datos, Bibliografía | Máximo aumento de potencia del RR con apnea dentro de cada registro (pico 0,025 Hz; −3 dB entre 0,017 y 0,05 Hz, las mismas cinco frecuencias k = 2…6); ciclos de 20–100 s (Guilleminault et al., 1984) | 01 §7 | ✅ Justificada |
-| 19 | Misma banda para la EDR | 0,01–0,05 Hz | Datos | En la EDR la banda a −3 dB es 0,017–0,033 Hz, dentro de la elegida y con el mismo pico (0,025 Hz). Limitar la EDR a 0,01–0,033 Hz baja la exactitud (−0,011, IC sin el cero) | 01 §7; 04 §15 | ✅ Justificada |
+| 19 | Misma banda para la EDR | 0,01–0,05 Hz | Datos | En la EDR la banda a −3 dB es 0,017–0,033 Hz, dentro de la elegida y con el mismo pico (0,025 Hz). Limitar la EDR a 0,01–0,033 Hz no mejora (−0,011; significativo sin corregir, no con Holm) | 01 §7; 04 §15 | ✅ Justificada |
 
 ## Filtro
 
@@ -86,7 +86,7 @@ Cada decisión del proyecto (código y notebooks `01`–`06`), con el tipo de ju
 | 42 | Implementación del Wiener | FIR de 129 coeficientes (firwin2), plantilla = media de las realizaciones, extensión por reflexión | Física, Bibliografía, Datos | H(f) tiene una resolución real de ~1,5 Hz (realizaciones de 0,65 s) y 129 coeficientes siguen ~0,8 Hz (firwin2; Virtanen et al., 2020). Desde 65 coeficientes A1 y B no cambian más de 0,004; media y mediana dan lo mismo (0,001) | 03 §5–6 | ✅ Justificada |
 | 43 | Excluir latidos ectópicos | Los que corrige la limpieza del RR | Datos | Parte de la variante elegida (03 §6) | 03 §6 | ✅ Justificada |
 | 44 | Filtro de Hampel | 3 desvíos robustos, 11 vecinos, piso de ruido por diferencias | Bibliografía, Datos | Hampel (1974); el piso evita marcar las crestas de la respiración (visto en datos) | 03 §6 | ✅ Justificada |
-| 45 | Variante de EDR elegida | Wiener + exclusiones juntas | Datos | Solo la combinación mejora de forma significativa el AUC dentro de la noche (+0,036 [+0,005; +0,087]) | 03 §6 | ✅ Justificada |
+| 45 | Variante de EDR elegida | Wiener + exclusiones juntas | Datos | La combinación mejora en promedio las tres medidas; en el AUC dentro de la noche +0,036 [+0,005; +0,087], significativo sin corregir (p = 0,006) pero no con Holm sobre 12 comparaciones (0,066). No empeora nada | 03 §6 | ✅ Justificada |
 | 46 | Medidas para elegir la variante | A1 coherencia con la respiración, A2 con la envolvente, B AUC dentro de la noche | Diseño | Cada una responde una pregunta (sigue cada respiración, sigue el ciclo de apnea, detecta) | 03 §6 | ✅ Justificada |
 | 47 | Detalles de A1 y A2 | Segmentos de 32 s dentro de ventanas de 120 s; ponderada por el espectro de la respiración; media de los tres canales respiratorios | Bibliografía, Datos | Segmentos de 32 s: resolución de ~0,03 Hz con seis segmentos por ventana; la coherencia con pocos segmentos tiene sesgo (Carter, 1987). Con 16 o 64 s el orden de las variantes es el mismo (ρ 1,00 y 0,95) | 03 §6 | ✅ Justificada |
 | 48 | Envolvente de la respiración | Valor eficaz en 10 s | Física, Datos | 2–3 respiraciones. Con 5 o 20 s el orden de las variantes en A2 es el mismo (ρ 1,00 y 0,95) | 03 §4, §6 | ✅ Justificada |
@@ -97,14 +97,14 @@ Cada decisión del proyecto (código y notebooks `01`–`06`), con el tipo de ju
 
 | # | Decisión | Valor | Justificación | Fundamento | Dónde | Estado |
 |---|---|---|---|---|---|---|
-| 51 | Ventana de análisis | 240 s | Física, Datos | Para ver 0,01 Hz cada segmento debe durar > 100 s. Con 180, 300 o 360 s la exactitud baja ~0,01 (IC sin el cero) | 01 §7; 04 §1, §15 | ✅ Justificada |
-| 52 | Ventana centrada en el minuto | Usa 90 s antes y después del minuto | Datos | El análisis es fuera de línea. Con una ventana que termina al final del minuto la exactitud baja 0,005 (IC sin el cero) y el AUC dentro de la noche pasa de 0,908 a 0,894 | 04 §15 | ✅ Justificada |
+| 51 | Ventana de análisis | 240 s | Física, Datos | Para ver 0,01 Hz cada segmento debe durar > 100 s. Con 180, 300 o 360 s la exactitud baja ~0,01; con Holm sobre 13 variantes solo la caída con 360 s es significativa | 01 §7; 04 §1, §15 | ✅ Justificada |
+| 52 | Ventana centrada en el minuto | Usa 90 s antes y después del minuto | Datos | El análisis es fuera de línea. Con una ventana que termina al final del minuto la exactitud baja 0,005 (significativo solo sin corregir) y el AUC dentro de la noche pasa de 0,908 a 0,894 | 04 §15 | ✅ Justificada |
 | 53 | Estimador espectral | Welch, 3 segmentos de 120 s, Hann, 50 % de solapamiento | Bibliografía, Física | Welch (1967); resolución 1/120 Hz | 04 §1 | ✅ Justificada |
 | 54 | Quitar la tendencia lineal en cada segmento | detrend lineal antes de la FFT | Bibliografía, Datos | Práctica habitual (Tarvainen et al., 2002). La figura muestra que con Hann la deriva queda casi toda en k ≤ 1; con los datos, no quitarla da lo mismo (+0,002, IC con el cero). Se mantiene como protección | 04 §15 | ✅ Justificada |
-| 55 | Banda de la EDR | La misma que la del RR (0,01–0,05 Hz) | Datos | Limitarla a su banda a −3 dB (0,01–0,033 Hz) baja la exactitud (−0,011, IC sin el cero) | 04 §15 | ✅ Justificada |
-| 56 | Escala logarítmica | log10 de la potencia | Física, Datos | En escala lineal C es la peor variante: exactitud −0,052 (IC sin el cero) y ρ por noche 0,66 | 04 §15 | ✅ Justificada |
+| 55 | Banda de la EDR | La misma que la del RR (0,01–0,05 Hz) | Datos | Limitarla a su banda a −3 dB (0,01–0,033 Hz) no mejora (−0,011; significativo sin corregir, p de Holm 0,07) | 04 §15 | ✅ Justificada |
+| 56 | Escala logarítmica | log10 de la potencia | Física, Datos | En escala lineal C es la peor variante: exactitud −0,052 (resiste Holm) y ρ por noche 0,66 | 04 §15 | ✅ Justificada |
 | 57 | Potencia en la banda | Promedio de la PSD en k = 2…6 (k/120 Hz) | Física | Son las 5 frecuencias de la grilla que caen en la banda | 04 §1 | ✅ Justificada |
-| 58 | Feature combinada C | RR del minuto + w · nivel nocturno de la EDR | Datos | El RR ubica la apnea dentro de la noche y el nivel de la EDR estima cuánta tiene la noche (04 §6); le gana al RR solo y empata con G, F y la logística (04 §8) | 04 §6–8 | ✅ Justificada |
+| 58 | Feature combinada C | RR del minuto + w · nivel nocturno de la EDR | Datos | El RR ubica la apnea dentro de la noche y el nivel de la EDR estima cuánta tiene la noche (04 §6); frente al RR solo marca ~30 puntos menos en controles (resiste Holm) y no se distingue de G, F ni de la logística (04 §8) | 04 §6–8 | ✅ Justificada |
 | 59 | Nivel nocturno | Mediana de P_EDR en la noche | Datos | Con la media da lo mismo (−0,001, IC con el cero); la mediana es robusta a minutos con movimiento | 04 §15 | ✅ Justificada |
 | 60 | Estandarización | μ y σ globales de desarrollo | Datos | Es un cambio de unidades; centrar por noche (G) no mejora | 04 §7 | ✅ Justificada |
 | 61 | Peso w | 1 (grilla 0–3 cada 0,25) | Datos | Validación cruzada por personas; el rango de la grilla es convencional | 04 §7 | ✅ Justificada |
@@ -130,7 +130,7 @@ Cada decisión del proyecto (código y notebooks `01`–`06`), con el tipo de ju
 | 76 | Cantidad de remuestreos | 2000 o 4000 | Bibliografía, Datos | Efron y Tibshirani (1993). Con 2000 los extremos del intervalo cambian < 0,002 entre semillas; con 4000, < 0,001 | 04 §15 | ✅ Justificada |
 | 77 | Validación cruzada | 5 grupos de personas, semilla 2026 | Bibliografía, Datos | Compromiso entre sesgo y varianza (Arlot y Celisse, 2010); con 10 grupos o una persona por grupo la exactitud es la misma (−0,001 y +0,006) | 04 §7, §15 | ✅ Justificada |
 | 78 | Criterio de las predicciones | IC 95 % que no incluye 0,5 (AUC) o 0 (ρ) | Bibliografía | IC 95 % fijado antes de abrir test; como hacen falta las tres, la prueba de unión-intersección no necesita corrección (Berger, 1982) | objetivos_hipotesis.md; 04 §14 | ✅ Justificada |
-| 79 | Comparaciones múltiples | Muchas diferencias con IC 95 % sin corrección | Bibliografía, Datos | Corrección de Holm (Aickin y Gensler, 1996). En desarrollo resisten 4 de 21 diferencias (las ventajas de C sobre F no); en test, 3 de 13: C da menos falsas alarmas que F y que el RR solo | 04 §8; 06 §5 | ✅ Justificada |
+| 79 | Comparaciones múltiples | Muchas diferencias con IC 95 % sin corrección | Bibliografía, Datos | Corrección de Holm (Aickin y Gensler, 1996) en cada familia de comparaciones (02, 03, 04, 06). En la comparación de features de desarrollo resisten 4 de 21 (las ventajas de C sobre F no); en test, 3 de 13: C da menos falsas alarmas que F y que el RR solo. Tampoco resisten la mejora de la variante de EDR ni varias diferencias de robustez; los textos lo dicen | 04 §8; 06 §5 | ✅ Justificada |
 | 80 | Reformular la hipótesis con C | Después de analizar desarrollo | Datos | Justificada por 04 §6; el riesgo está declarado (limitación 13) y test la confirmó | objetivos_hipotesis.md | ✅ Justificada |
 
 ## Test
