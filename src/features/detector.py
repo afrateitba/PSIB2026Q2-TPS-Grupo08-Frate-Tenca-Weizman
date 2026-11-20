@@ -45,7 +45,7 @@ F_LOMB = np.arange(0.01, 0.0501, 0.0025)
 
 def minute_table(rec: str, raw_dir: Path = RAW_DIR, lomb: bool = False,
                  series: dict | None = None, centered: bool = True,
-                 band_edr: tuple | None = None) -> pd.DataFrame:
+                 band_edr: tuple | None = None, detrend_type: str | None = None) -> pd.DataFrame:
     """Una fila por minuto con ventana completa: etiqueta, calidad, P_RR, P_EDR, F y movimiento.
 
     label: 1 apnea, 0 normal, -1 sin etiqueta. q: fracción de RR corregidos
@@ -56,6 +56,8 @@ def minute_table(rec: str, raw_dir: Path = RAW_DIR, lomb: bool = False,
     `centered=False` usa una ventana que termina al final del minuto (solo datos
     pasados), para comparar con la centrada (notebook 04, sección 15).
     `band_edr` permite medir P_EDR en otra banda (solo para comparar).
+    `detrend_type` cambia la tendencia que se quita en cada segmento de Welch
+    (por defecto coupling.WELCH_DETREND).
     """
     s = series if series is not None else record_series(rec, raw_dir)
     lab = load_apnea_labels(rec, raw_dir)
@@ -75,7 +77,7 @@ def minute_table(rec: str, raw_dir: Path = RAW_DIR, lomb: bool = False,
         x, y = s["rr"][i:i + n], s["edr"][i:i + n]
         if len(x) < n:
             continue
-        f, sxx, syy, sxy = welch_spectra(x, y, FS_U, n // 2)
+        f, sxx, syy, sxy = welch_spectra(x, y, FS_U, n // 2, detrend_type)
         b = (f >= BAND[0] - 1e-9) & (f <= BAND[1] + 1e-9)
         be = b if band_edr is None else (f >= band_edr[0] - 1e-9) & (f <= band_edr[1] + 1e-9)
         fila_lomb = {}
@@ -105,18 +107,24 @@ def add_night_terms(tab: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def evaluable(tab: pd.DataFrame) -> pd.Series:
-    """Minutos que se evalúan: con etiqueta y con 20 % o menos de RR corregidos."""
-    return (tab["label"] >= 0) & (tab["q"] <= MINUTE_MAX_CORRECTED)
+def evaluable(tab: pd.DataFrame, max_corrected: float | None = MINUTE_MAX_CORRECTED) -> pd.Series:
+    """Minutos que se evalúan: con etiqueta y con 20 % o menos de RR corregidos.
+
+    max_corrected=None no excluye minutos por calidad (notebook 07).
+    """
+    ok = tab["label"] >= 0
+    return ok if max_corrected is None else ok & (tab["q"] <= max_corrected)
 
 
-def fit_c(tab: pd.DataFrame, w: float, rr: str = "P_RR") -> dict:
+def fit_c(tab: pd.DataFrame, w: float, rr: str = "P_RR",
+          max_corrected: float | None = MINUTE_MAX_CORRECTED) -> dict:
     """Parámetros de estandarización de C con los minutos evaluables de `tab`.
 
     `rr`: columna del término del RR ("P_RR"; "RR_dev" para la variante
-    centrada en la noche, que se usa solo para comparar).
+    centrada en la noche, que se usa solo para comparar). `max_corrected`: como
+    en evaluable().
     """
-    e = tab[evaluable(tab)]
+    e = tab[evaluable(tab, max_corrected)]
     return {"mu1": float(e[rr].mean()), "s1": float(e[rr].std()), "mu2": float(e["EDR_noche"].mean()),
             "s2": float(e["EDR_noche"].std()), "w": float(w), "rr": rr}
 

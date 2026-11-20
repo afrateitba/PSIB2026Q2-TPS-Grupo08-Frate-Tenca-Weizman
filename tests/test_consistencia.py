@@ -21,7 +21,7 @@ from src.qrs import rr_clean
 
 ROOT = Path(__file__).resolve().parents[1]
 # 05 queda afuera: se registró sin ejecutar antes de abrir test y no se modifica.
-NOTEBOOKS = [p for p in sorted((ROOT / "notebooks").glob("0[1-6]_*.ipynb")) if not p.name.startswith("05")]
+NOTEBOOKS = [p for p in sorted((ROOT / "notebooks").glob("0[1-7]_*.ipynb")) if not p.name.startswith("05")]
 
 
 def _defaults(f):
@@ -46,6 +46,16 @@ def test_minutos_evaluados_usan_config():
     import pandas as pd
     t = pd.DataFrame({"label": [1, 0, -1, 1], "q": [0.0, cfg.MINUTE_MAX_CORRECTED, 0.0, cfg.MINUTE_MAX_CORRECTED + 0.01]})
     assert list(detector.evaluable(t)) == [True, True, False, False]
+
+
+def test_etapas_del_pipeline_usan_config():
+    from src.features import build
+    d = _defaults(build.record_series)
+    assert d["wiener"] == cfg.EDR_WIENER and d["exclude_ectopic"] == cfg.EDR_EXCLUDE_ECTOPIC
+    assert d["hampel"] == cfg.EDR_HAMPEL and d["interp"] == cfg.RR_INTERP
+    assert _defaults(detector.minute_table)["detrend_type"] is None
+    assert _defaults(detector.evaluable)["max_corrected"] == cfg.MINUTE_MAX_CORRECTED
+    assert _defaults(detector.fit_c)["max_corrected"] == cfg.MINUTE_MAX_CORRECTED
 
 
 def test_realizacion_del_latido_es_la_misma_en_todos_lados():

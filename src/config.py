@@ -104,6 +104,7 @@ QRS_HF_ORDER = 2               # orden del pasaaltos de la energía rápida
 EDR_EXCLUDE_ECTOPIC = True     # descarta los latidos que la limpieza del RR corrige
 EDR_HAMPEL = True              # descarta los latidos atípicos (filtro de Hampel)
 EDR_WIENER = True              # mide el QRS sobre el ECG filtrado con Wiener
+RR_INTERP = "cubic"            # interpolación del RR y de la EDR a la grilla de 2 Hz (notebook 04, sección 1)
 EDR_RELATIVE = True            # divide el área por el tamaño típico del QRS (mediana del área sin signo; notebook 03, sección 7)
 WIENER_NUMTAPS = 129           # coeficientes del FIR que aproxima H(f) (notebook 03, sección 5)
 WIENER_TEMPLATE = "mean"       # estimador de la forma del latido: media de las realizaciones

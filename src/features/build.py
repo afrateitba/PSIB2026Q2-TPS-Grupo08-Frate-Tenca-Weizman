@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from ..config import ECG_FILTER, EDR_EXCLUDE_ECTOPIC, EDR_HAMPEL, EDR_RELATIVE, EDR_WIENER, RAW_DIR
+from ..config import ECG_FILTER, EDR_EXCLUDE_ECTOPIC, EDR_HAMPEL, EDR_RELATIVE, EDR_WIENER, RAW_DIR, RR_INTERP
 from ..data import load_apnea_labels, load_ecg, load_qrs
 from ..preprocessing.filters import apply_zero_phase, design_bandpass
 from ..qrs.beats import record_beats
@@ -31,7 +31,9 @@ ESTIMATORS = ("welch3", "welch7", "multitaper")
 
 def record_series(rec: str, raw_dir: Path = RAW_DIR, fs_u: float = 2.0,
                   edr_method: str = "area", edr_methods: tuple = (),
-                  filt: tuple = ECG_FILTER, refine: bool = True, beats: str = "pt") -> dict:
+                  filt: tuple = ECG_FILTER, refine: bool = True, beats: str = "pt",
+                  wiener: bool = EDR_WIENER, exclude_ectopic: bool = EDR_EXCLUDE_ECTOPIC,
+                  hampel: bool = EDR_HAMPEL, interp: str = RR_INTERP) -> dict:
     """RR limpio y EDR de un registro, remuestreados a `fs_u` en una grilla común.
 
     Devuelve t, rr, edr (el de `edr_method`), edrs ({método: serie} para
@@ -47,6 +49,8 @@ def record_series(rec: str, raw_dir: Path = RAW_DIR, fs_u: float = 2.0,
     salen los latidos para el RR y la EDR,
     "pt" (detector propio mejorado, el del pipeline), "pt_clasico" o "marks"
     (marcas .qrs de la base); ver notebooks/02_filtro_y_latidos.ipynb.
+    `wiener`, `exclude_ectopic`, `hampel` e `interp` permiten cambiar una etapa
+    por vez (notebooks/07_simplificacion.ipynb); por defecto, las de config.
     """
     ecg, fs = load_ecg(rec, raw_dir)
     x = apply_zero_phase(ecg, design_bandpass(fs, *filt))
@@ -63,18 +67,18 @@ def record_series(rec: str, raw_dir: Path = RAW_DIR, fs_u: float = 2.0,
     base = {m for m in methods if m in EDR_METHODS}
     if "combined" in methods:
         base |= {"area", "baseline"}
-    grids = {"rr": resample_uniform(t_rr, rr, fs_u)}
+    grids = {"rr": resample_uniform(t_rr, rr, fs_u, interp)}
     scales = {}
     for m in sorted(base):
         if beats == "marks":                     # EDR de la primera versión, para comparar
-            grids[m] = resample_uniform(*compute_edr(ecg, qrs, fs, m, filt), fs_u)
+            grids[m] = resample_uniform(*compute_edr(ecg, qrs, fs, m, filt), fs_u, interp)
         else:                                    # EDR elegida en notebooks/03_edr_wiener.ipynb
-            pre = (lambda s_: wiener_from_beats(s_, t_r, fs)) if EDR_WIENER else None
-            exc = np.r_[False, corrected] if EDR_EXCLUDE_ECTOPIC else None
+            pre = (lambda s_: wiener_from_beats(s_, t_r, fs)) if wiener else None
+            exc = np.r_[False, corrected] if exclude_ectopic else None
             rel = EDR_RELATIVE and m == "area"     # EDR relativa al tamaño del QRS (notebook 03)
-            t_e, v_e, scales[m] = beat_edr(ecg, t_r, fs, m, filt, exclude=exc, hampel=EDR_HAMPEL,
+            t_e, v_e, scales[m] = beat_edr(ecg, t_r, fs, m, filt, exclude=exc, hampel=hampel,
                                            prefilter=pre, relative=rel, return_scale=True)
-            grids[m] = resample_uniform(t_e, v_e, fs_u)
+            grids[m] = resample_uniform(t_e, v_e, fs_u, interp)
     t0 = max(g[0][0] for g in grids.values())
     t1 = min(g[0][-1] for g in grids.values())
     cut = {k: g[1][(g[0] >= t0) & (g[0] <= t1)] for k, g in grids.items()}
