@@ -65,8 +65,13 @@ La exclusión de minutos se mantiene si resiste 7a o 7b.
 - **El detector simplificado se informa solo con validación cruzada en desarrollo**, aclarando que no tiene una evaluación independiente.
 - No cambian la banda, la ventana, la forma de C, la partición, las semillas ni ninguna decisión fuera de la tabla.
 
+## Agregados después de registrar el criterio
+
+**2026-11-20: validación cruzada anidada (`07` §8).** Después de correr las secciones 2 a 5 se vio que la exactitud del detector simplificado se mide con la misma validación cruzada que se usó para elegir qué etapas quitar, y por eso puede ser optimista (Varma y Simon, 2006). Se agrega un control: se deja afuera cada grupo de personas, se repite todo el procedimiento con las demás (pruebas, Holm, decisión, chequeo de la combinación y ajuste de los parámetros) y se clasifica a las que quedaron afuera. El control no cambia la regla ni ninguna decisión: estima cuánto vale el procedimiento con personas que no intervinieron en él, y muestra si las decisiones cambian según qué personas se usan.
+
 ## Referencias
 
 - Breiman, L., Friedman, J. H., Olshen, R. A. y Stone, C. J. (1984). *Classification and Regression Trees*. Chapman & Hall/CRC. [doi:10.1201/9781315139470](https://doi.org/10.1201/9781315139470)
 - Hastie, T., Tibshirani, R. y Friedman, J. (2009). *The Elements of Statistical Learning* (2.ª ed.), §7.10. Springer. [doi:10.1007/978-0-387-84858-7](https://doi.org/10.1007/978-0-387-84858-7)
 - Aickin, M. y Gensler, H. (1996). Adjusting for multiple testing when reporting research results: the Bonferroni vs Holm methods. *American Journal of Public Health*, 86(5), 726–728. [doi:10.2105/AJPH.86.5.726](https://doi.org/10.2105/AJPH.86.5.726)
+- Varma, S. y Simon, R. (2006). Bias in error estimation when using cross-validation for model selection. *BMC Bioinformatics*, 7, 91. [doi:10.1186/1471-2105-7-91](https://doi.org/10.1186/1471-2105-7-91)
