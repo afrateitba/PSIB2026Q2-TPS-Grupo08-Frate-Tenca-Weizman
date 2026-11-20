@@ -80,7 +80,7 @@ Cada señal se usa para lo que mide bien (`04`, sección 6): el RR ubica la apne
   | Umbral | C > 0,489 |
   | Confianza | alta si el movimiento relativo ≤ −0,001; media hasta 0,702; baja por encima |
 
-- **En desarrollo** (validación cruzada por personas): sensibilidad 0,81, especificidad 0,85, exactitud 0,84; P1 = 0,91, P2 = 0,83, P3 = 0,93. Se cumplen las tres, como era de esperar con datos que se usaron para armar la hipótesis.
+- **En desarrollo:** con validación cruzada por personas, sensibilidad 0,81, especificidad 0,85 y exactitud 0,84. P1 = 0,91 y P2 = 0,83 no ajustan nada, así que no necesitan validación cruzada. P3 = 0,93 es el AUC de C con los parámetros ajustados en todo desarrollo (`04` §14); con validación cruzada (márgenes de cada grupo, `07` §6) es 0,92. Se cumplen las tres, como era de esperar con datos que se usaron para armar la hipótesis.
 - **Minutos evaluados, predicciones y preguntas secundarias:** como arriba.
 - Test se corre **una sola vez**, con un notebook que solo lee estos valores.
 

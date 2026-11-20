@@ -1,0 +1,26 @@
+{
+  "feature": "C(m) = (P_RR(m) - mu1)/s1 + w * (mediana_noche(P_EDR) - mu2)/s2",
+  "mu1": -1.4934964914174096,
+  "s1": 0.5952056650946452,
+  "mu2": -2.02197242676589,
+  "s2": 0.6111909816094626,
+  "w": 1.0,
+  "umbral": 0.6045171197172678,
+  "banda_hz": [
+    0.01,
+    0.05
+  ],
+  "ventana_s": 240,
+  "etapas": {
+    "refinamiento_pico_r": true,
+    "wiener_edr": false,
+    "excluir_ectopicos_edr": false,
+    "hampel_edr": true,
+    "interpolacion": "linear",
+    "tendencia_welch": "constant",
+    "max_rr_corregidos_por_minuto": null,
+    "confianza": false
+  },
+  "fijado_con": "47 registros de desarrollo (notebooks/07_simplificacion.ipynb)",
+  "evaluacion": "solo validación cruzada por personas en desarrollo; sin evaluación independiente"
+}
