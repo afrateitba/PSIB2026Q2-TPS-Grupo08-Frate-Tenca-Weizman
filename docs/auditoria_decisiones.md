@@ -1,6 +1,8 @@
 # Auditoría de decisiones
 
-Cada decisión del proyecto (código y notebooks `01`–`06`), con el tipo de justificación y si está justificada. Complementa a [`decisiones.md`](decisiones.md), que detalla los valores y la bibliografía completa.
+Cada decisión del proyecto (código y notebooks `01`–`06`), con el tipo de justificación y si está justificada. Las filas describen la versión del detector evaluada en test.
+
+**Revisión con el criterio de sencillez (`07`).** Ocho de estas decisiones son etapas que se agregaron sin demostrar que hacen falta: el refinamiento del pico R (30), la exclusión de minutos (35), el Wiener (40–42), excluir ectópicos (43) y Hampel (44) en la EDR, el spline cúbico (50), quitar la recta en Welch (54) y la confianza (66–67). Se probaron contra su alternativa simple con el criterio de [`criterio_parsimonia.md`](criterio_parsimonia.md). Solo se mantiene el refinamiento del pico R; las otras siete salen del detector simplificado. El detalle está en [`decisiones.md`](decisiones.md) §5 y en `07`. Complementa a [`decisiones.md`](decisiones.md), que detalla los valores y la bibliografía completa.
 
 **Estados.**
 - ✅ **Justificada**: con datos (figura o número en un notebook), bibliografía o un argumento físico verificable.

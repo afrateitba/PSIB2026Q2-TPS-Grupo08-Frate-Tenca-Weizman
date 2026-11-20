@@ -121,6 +121,23 @@ El RR y la EDR tienen un valor por latido, en instantes irregulares. El método 
 
 El spline cúbico da una curva suave, con derivada continua. Interpolar en forma lineal da el mismo resultado (exactitud −0,005, IC con el cero; `04` §15).
 
+## 5. Simplificación con el criterio de sencillez (`07`)
+
+Las ocho etapas que se habían agregado sin demostrar que hacen falta se probaron contra su alternativa simple, con el criterio escrito antes de correr el análisis ([`criterio_parsimonia.md`](criterio_parsimonia.md)). Una etapa queda si mejora de forma demostrable la medición de su paso o el detector, con la corrección de Holm y un bootstrap que repite el ajuste en cada sorteo. Todo se hace en desarrollo; test no interviene.
+
+| Etapa | Versión evaluada en test | Detector simplificado | Por qué |
+|---|---|---|---|
+| Refinamiento del pico R | Parábola de 3 puntos | Igual | El desacuerdo entre las dos fases baja de 10,0 a 2,3 ms, en los 47 registros |
+| Wiener en la EDR | FIR de 129 coeficientes | Sin Wiener | No mejora ninguna medida; el área del QRS ya promedia el ruido rápido; ningún trabajo publicado de apnea o EDR con ECG lo usa (`07` §9) |
+| Excluir ectópicos de la EDR | Sí | No | No mejora la EDR ni el detector |
+| Hampel en la EDR | Sí | No | Su efecto viene de una sola persona; repitiendo el ajuste, p = 0,61 |
+| Interpolación a 2 Hz | Spline cúbico | Lineal | No cambia el detector |
+| Tendencia en cada segmento de Welch | Se quita una recta | Se quita la media | Con la ventana de Hann la media no llega a la banda; la recta no cambia el detector |
+| Minutos con > 20 % de RR corregidos | No se clasifican | Se clasifican | Son el 0,6 % de los minutos: muy pocos para demostrar que el detector falla en ellos |
+| Confianza según el movimiento | Alta, media o baja | No se informa | No es demostrable que la exactitud cambie con el movimiento (p = 0,056) |
+
+Exactitud en validación cruzada: 0,836 la versión evaluada en test y 0,821 la simplificada. La diferencia no es demostrable; la simplificada marca más minutos en los controles (12 % contra 7 %), casi todo por las dos noches de una misma persona que sin Hampel tienen un nivel de EDR inflado.
+
 ## 4. Bibliografía
 
 La lista completa, con el DOI o la página oficial de cada fuente, la verificación en Crossref, doi.org y PubMed, y el tipo de acceso (texto libre o suscripción), está en [`referencias.md`](referencias.md). Se regenera con `python scripts/verificar_referencias.py`.

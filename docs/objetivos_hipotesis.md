@@ -101,6 +101,12 @@ Se evaluó una sola vez en `05`, con el notebook registrado sin ejecutar antes d
 
 Detalle en `notebooks/05_test.ipynb` (sección 6) y en `docs/resultados_test.json`. El análisis posterior de por qué falla en algunas noches está en `notebooks/06_posterior_test.ipynb`: es descriptivo y no cambia estos resultados.
 
+## Después de test: simplificación del detector (solo desarrollo)
+
+Después de la evaluación única se revisó, con un criterio de sencillez escrito antes de aplicarlo (`docs/criterio_parsimonia.md`), si cada etapa agregada hace falta (`07`). De las ocho revisadas solo se mantiene el refinamiento del pico R. El **detector simplificado** tiene una exactitud de 0,821 en validación cruzada por personas en desarrollo, y la versión evaluada en test, 0,836; la diferencia no es demostrable.
+
+Los resultados de test de la sección anterior son de la versión evaluada, no de la simplificada. Volver a usar las mismas 10 personas para medir la simplificada ya no sería una evaluación independiente, así que **el detector simplificado no tiene una evaluación independiente**.
+
 ## Alcance
 
 - Se detecta **apnea o hipopnea por minuto**, como las etiquetas de la base. No se distingue apnea de hipopnea ni obstructiva de central.
@@ -119,7 +125,7 @@ Detalle en `notebooks/05_test.ipynb` (sección 6) y en `docs/resultados_test.jso
 **Del método**
 
 5. **Ventana de 240 s.** Hace falta para ver oscilaciones de 0,01 Hz, pero diluye los episodios de un solo minuto (22 % de los episodios en desarrollo) y suaviza los bordes de cada episodio.
-6. **Minutos excluidos.** El detector no decide en los minutos con más de 20 % de RR corregidos (señal perdida, ritmos irregulares). En pacientes con arritmias frecuentes el método no se puede aplicar.
+6. **Ritmos irregulares.** La versión evaluada en test no decide en los minutos con más de 20 % de RR corregidos (señal perdida, ritmos irregulares). La simplificada los clasifica igual, pero en ellos la potencia del RR no refleja la apnea: en desarrollo acierta 0,64 en esos minutos, contra 0,82 en el resto. En pacientes con arritmias frecuentes ninguna de las dos versiones sirve.
 7. **La EDR solo se valida en 8 registros**, y en la banda lenta solo en los 4 con mucha apnea. Por diseño están todos en desarrollo, así que esa validación no se repite en test.
 8. **Las decisiones de preprocesamiento se tomaron mirando desarrollo** (por ejemplo, las mejoras del detector de QRS). Se controlan con la revisión manual y con que ningún registro empeore, pero solo test mide si generalizan.
 
@@ -132,3 +138,4 @@ Detalle en `notebooks/05_test.ipynb` (sección 6) y en `docs/resultados_test.jso
 13. **La hipótesis se reformuló después de analizar desarrollo.** C salió de mirar qué mide bien cada señal en esos mismos registros. Lo atenúa que C casi no tiene parámetros (un peso elegido por validación cruzada por personas, que resultó 1, y una mediana sin etiquetas), pero solo test dice si generaliza.
 14. **El método supone ritmo sinusal.** En test, una persona (c04 y x29) tiene un ritmo muy irregular. Los latidos se detectan bien, pero la limpieza del RR corrige el 36–41 % de los intervalos y se excluyen la mayoría de sus minutos (`06`, sección 3). Con una arritmia sostenida, la serie RR no refleja la modulación por la apnea.
 15. **Los errores son por persona o por noche.** Dependen de dónde queda la vara de cada noche: el nivel de la EDR que no corresponde a su cantidad de apnea, o el nivel general del RR de la persona (`04` sección 11, `06` sección 2). En test el error de cada noche sigue a esas dos cantidades (ρ = 0,67 y 0,75).
+16. **El detector simplificado solo se midió en desarrollo** (`07`), con validación cruzada y validación anidada. No tiene una evaluación independiente.

@@ -25,16 +25,20 @@ Cada notebook es un paso, usa lo que dejó el anterior y termina con una tabla d
 | [`04_feature_y_detector`](notebooks/04_feature_y_detector.ipynb) | Métricas y niveles de análisis, qué mide cada señal, la feature C y su peso por validación cruzada, otras combinaciones, umbral de Youden, resultados por noche, dónde falla, confianza según el movimiento, robustez | Parámetros congelados en [`docs/parametros_test.json`](docs/parametros_test.json) |
 | [`05_test`](notebooks/05_test.ipynb) | Evaluación única en test (20 registros, 10 personas) con los parámetros congelados: predicciones P1–P3, C contra F y RR, confianza y resultados por noche | **H se sostiene**: P1 0,87, P2 0,66, P3 0,85, los tres con IC que cumplen el criterio. Exactitud 0,78. Resultados en [`docs/resultados_test.json`](docs/resultados_test.json) |
 | [`06_posterior_test`](notebooks/06_posterior_test.ipynb) | Análisis posterior, descriptivo, de por qué falla en algunas noches de test. No cambia `05` | Los errores son por noche: siguen al nivel de la EDR que no corresponde a la apnea y al nivel del RR de la persona. Una persona con ritmo muy irregular queda casi toda excluida |
+| [`07_simplificacion`](notebooks/07_simplificacion.ipynb) | Criterio de sencillez registrado antes de correr (`docs/criterio_parsimonia.md`): cada etapa que se agregó sin demostrar que hace falta se prueba contra su alternativa simple, con validación cruzada en desarrollo, Holm, un bootstrap que repite el ajuste y validación anidada. Revisión completa del Wiener, con datos y bibliografía. No usa test | Detector simplificado: de las 8 etapas revisadas solo queda el refinamiento del pico R. Exactitud 0,821 en validación cruzada (0,836 la versión evaluada en test; la diferencia no es demostrable). Parámetros en [`docs/parametros_simplificado.json`](docs/parametros_simplificado.json) |
 
-**Detector final.** Para cada minuto se toma una ventana de 240 s centrada en él. En esa ventana se estiman por Welch (3 × 120 s, Hann) la potencia del RR y la de la EDR en 0,01–0,05 Hz:
+**Detector evaluado en test.** Para cada minuto se toma una ventana de 240 s centrada en él. En esa ventana se estiman por Welch (3 × 120 s, Hann) la potencia del RR y la de la EDR en 0,01–0,05 Hz:
 
 C(m) = (P_RR(m) − μ₁)/σ₁ + w · (mediana de P_EDR en la noche − μ₂)/σ₂, con w = 1.
 
 El minuto es apnea si C > 0,489 (umbral de Youden). La confianza (alta, media o baja) depende del movimiento en la ventana.
 
+**Detector simplificado (`07`).** Es la misma feature C, sin las etapas que no demostraron hacer falta: sin Wiener, sin excluir latidos ectópicos ni atípicos de la EDR, interpolación lineal, Welch quitando la media, sin excluir minutos y sin la medida de confianza. Se conserva el refinamiento del pico R. Se informa solo con validación cruzada en desarrollo, porque test ya se usó una vez para la versión evaluada: no tiene una evaluación independiente.
+
 ## Documentos
 
 - [`docs/objetivos_hipotesis.md`](docs/objetivos_hipotesis.md): objetivo general, objetivos específicos, hipótesis, predicciones, parámetros fijados, alcance y limitaciones.
+- [`docs/criterio_parsimonia.md`](docs/criterio_parsimonia.md): el criterio de sencillez, escrito antes de aplicarlo, con los dos agregados posteriores (validación anidada y valor p que repite el ajuste).
 - [`docs/decisiones.md`](docs/decisiones.md): cada ventana, umbral y parámetro, con su justificación (datos, bibliografía o física) y dónde se muestra.
 - [`docs/auditoria_decisiones.md`](docs/auditoria_decisiones.md): las 88 decisiones del proyecto, con el tipo de justificación (datos, bibliografía, física) y su estado: 86 justificadas y 2 limitaciones.
 - [`docs/referencias.md`](docs/referencias.md): todas las fuentes citadas, con DOI o página oficial verificados en Crossref, doi.org y PubMed (se regenera con `python scripts/verificar_referencias.py`).
