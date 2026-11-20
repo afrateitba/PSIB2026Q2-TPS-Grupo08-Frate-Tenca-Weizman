@@ -41,3 +41,12 @@ def test_exactitud_bootstrap_pareada():
     so = [np.array(["a", "a"]), np.array(["b", "b"])]
     assert list(exactitud(ok, s, so)) == [1.0, 0.5]
     assert len(sorteos_personas(["a", "b", "c"], n=7)) == 7
+
+
+def test_replicar_personas_mantiene_juntas_las_copias():
+    from src.evaluation.cv import replicar_personas
+    t = _tabla(n_personas=6)
+    rep = replicar_personas(t, ["S00", "S00", "S03", "S05", "S05", "S05"])
+    assert len(rep) == 6 * 60 and (rep.subject == "S05").sum() == 180
+    r = cv_c(rep)
+    assert r.groupby("subject").grupo.nunique().max() == 1

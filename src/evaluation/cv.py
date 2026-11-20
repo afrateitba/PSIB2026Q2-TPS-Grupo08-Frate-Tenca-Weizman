@@ -103,3 +103,18 @@ def metricas(y, pred) -> dict:
     tp = int(((pred == 1) & (y == 1)).sum()); tn = int(((pred == 0) & (y == 0)).sum())
     return {"sensibilidad": tp / max(int((y == 1).sum()), 1), "especificidad": tn / max(int((y == 0).sum()), 1),
             "exactitud": (tp + tn) / max(len(y), 1)}
+
+
+def replicar_personas(e: pd.DataFrame, muestra) -> pd.DataFrame:
+    """Tabla con los minutos de cada persona de `muestra`, repetidos tantas veces como aparece.
+
+    Es un sorteo del bootstrap de personas que después se vuelve a ajustar
+    entero (cv_c): así el intervalo incluye cuánto cambia el detector cuando
+    cambian las personas con que se ajusta, y no solo con cuáles se mide
+    (Bates, Hastie y Tibshirani, 2023). Una persona repetida conserva su
+    identificador, así que sus copias caen siempre en el mismo grupo de la
+    validación cruzada y nunca se entrena con una copia para clasificar la otra.
+    """
+    s = e["subject"].to_numpy()
+    idx = np.concatenate([np.flatnonzero(s == u) for u in muestra])
+    return e.iloc[idx].reset_index(drop=True)

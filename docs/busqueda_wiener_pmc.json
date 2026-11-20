@@ -1,0 +1,105 @@
+{
+ "fecha": "2026-11-20",
+ "fuente": "NCBI E-utilities (PubMed y PubMed Central)",
+ "pmc": {
+  "deteccion de apnea con ECG": {
+   "consulta": "(\"sleep apnea\"[Title/Abstract] OR \"sleep apnoea\"[Title/Abstract]) AND (ECG[Title/Abstract] OR electrocardiogram[Title/Abstract] OR electrocardiographic[Title/Abstract]) AND (detection[Title/Abstract] OR classification[Title/Abstract] OR screening[Title/Abstract]) AND \"open access\"[filter]",
+   "resultados": 139,
+   "con_texto_completo": 135,
+   "conteos": {
+    "Wiener": 0,
+    "Butterworth": 20,
+    "pasabanda": 33,
+    "Pan-Tompkins": 6,
+    "wavelet": 42,
+    "filtro de mediana": 17,
+    "notch": 12,
+    "promedio móvil": 5,
+    "Kalman": 1,
+    "filtro adaptativo": 2,
+    "promediado coherente o plantilla": 6,
+    "base Apnea-ECG": 56
+   },
+   "con_base_apnea_ecg": {
+    "n": 56,
+    "conteos": {
+     "Wiener": 0,
+     "Butterworth": 13,
+     "pasabanda": 24,
+     "Pan-Tompkins": 3,
+     "wavelet": 26,
+     "filtro de mediana": 13,
+     "notch": 5,
+     "promedio móvil": 2,
+     "Kalman": 0,
+     "filtro adaptativo": 1,
+     "promediado coherente o plantilla": 0,
+     "base Apnea-ECG": 56
+    }
+   },
+   "mencionan_wiener": {}
+  },
+  "EDR": {
+   "consulta": "(\"ECG-derived respiration\"[Title/Abstract] OR \"ECG derived respiration\"[Title/Abstract] OR \"electrocardiogram-derived respiration\"[Title/Abstract] OR \"ECG-derived respiratory\"[Title/Abstract]) AND \"open access\"[filter]",
+   "resultados": 47,
+   "con_texto_completo": 47,
+   "conteos": {
+    "Wiener": 1,
+    "Butterworth": 12,
+    "pasabanda": 19,
+    "Pan-Tompkins": 3,
+    "wavelet": 15,
+    "filtro de mediana": 2,
+    "notch": 7,
+    "promedio móvil": 11,
+    "Kalman": 3,
+    "filtro adaptativo": 2,
+    "promediado coherente o plantilla": 7,
+    "base Apnea-ECG": 3
+   },
+   "con_base_apnea_ecg": {
+    "n": 3,
+    "conteos": {
+     "Wiener": 0,
+     "Butterworth": 0,
+     "pasabanda": 1,
+     "Pan-Tompkins": 0,
+     "wavelet": 2,
+     "filtro de mediana": 0,
+     "notch": 1,
+     "promedio móvil": 0,
+     "Kalman": 1,
+     "filtro adaptativo": 0,
+     "promediado coherente o plantilla": 0,
+     "base Apnea-ECG": 3
+    }
+   },
+   "mencionan_wiener": {
+    "PMC7795986": {
+     "titulo": "Respiratory Monitoring Based on Tracheal Sounds: Continuous Time-Frequency Processing of the Phonospirogram Combined with Phonocardiogram-Derived Respiration",
+     "contexto": [
+      "record TS and environmental noise separately. The ideal would have been to use recorded noise to reduce the environmental noise in the recorded TS by using the Wiener adaptive filter [25]. But, in the obtained recordings, the noisy environment was simulated by playing specific videos, in which the frequency band was higher t"
+     ]
+    }
+   }
+  }
+ },
+ "pubmed": {
+  "deteccion de apnea con ECG": {
+   "consulta": "(\"sleep apnea\"[Title/Abstract] OR \"sleep apnoea\"[Title/Abstract]) AND (ECG[Title/Abstract] OR electrocardiogram[Title/Abstract] OR electrocardiographic[Title/Abstract]) AND (detection[Title/Abstract] OR classification[Title/Abstract] OR screening[Title/Abstract])",
+   "resultados": 407
+  },
+  "deteccion de apnea con ECG y Wiener": {
+   "consulta": "(\"sleep apnea\"[Title/Abstract] OR \"sleep apnoea\"[Title/Abstract]) AND (ECG[Title/Abstract] OR electrocardiogram[Title/Abstract] OR electrocardiographic[Title/Abstract]) AND (detection[Title/Abstract] OR classification[Title/Abstract] OR screening[Title/Abstract]) AND Wiener[Title/Abstract]",
+   "resultados": 0
+  },
+  "EDR": {
+   "consulta": "(\"ECG-derived respiration\"[Title/Abstract] OR \"ECG derived respiration\"[Title/Abstract] OR \"electrocardiogram-derived respiration\"[Title/Abstract] OR \"ECG-derived respiratory\"[Title/Abstract])",
+   "resultados": 170
+  },
+  "EDR y Wiener": {
+   "consulta": "(\"ECG-derived respiration\"[Title/Abstract] OR \"ECG derived respiration\"[Title/Abstract] OR \"electrocardiogram-derived respiration\"[Title/Abstract] OR \"ECG-derived respiratory\"[Title/Abstract]) AND Wiener[Title/Abstract]",
+   "resultados": 0
+  }
+ }
+}
