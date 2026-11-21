@@ -50,6 +50,14 @@ Los niveles de perturbación son ilustrativos. El 5 % es del orden de lo que se 
 
 El **candidato** es el detector con todas las etapas protectoras, el refinamiento del pico R, spline cúbico, sin Wiener y sin medida de confianza. Para los atípicos se usa lo que resulte de S2. Al final, el detector que resulte se compara con la versión evaluada en test, con el bootstrap que repite el ajuste. Si es peor de forma demostrable (p < 0,05), se informa y se revisa cuál de los cambios lo explica. El detector resultante no tiene una evaluación independiente hasta que se evalúe en test, una sola vez, con un notebook registrado antes de ejecutarse.
 
+## Agregados después de registrar el criterio
+
+**2026-11-21: Hampel o el procedimiento de Varon para los atípicos (`08` §7).** La regla de arriba elegía el procedimiento publicado (Varon) si los dos protegían y ninguno empeoraba, y eso fue lo que pasó (`08` §6). Pero esa regla suponía que los dos protegían parecido, y la prueba de estrés S2 mostró que Hampel protege unas diez veces más: con artefactos en el 5 % de los latidos, el nivel de la EDR se mueve 0,06 con Hampel y 0,67 con Varon.
+
+Se agrega una comparación directa, decidida después de ver S2 y antes de calcularla. En S2 al 5 %, se toma la diferencia del cambio del nivel de la EDR, Varon menos Hampel, por registro. Cada persona aporta la mediana de sus noches, y se hace una prueba de signos con p < 0,05. Si Hampel protege más de forma demostrable, reemplaza a Varon. Si no, queda Varon.
+
+La decisión se apoya solo en S2, que no usa etiquetas. No usa los minutos marcados en los controles: ese número se conoce, pero depende de una sola persona (c10 y x18) y no decide nada. Con Hampel se repiten la prueba de no inferioridad y el chequeo contra la versión evaluada en test.
+
 ## Referencias
 
 - Hampel, F. R. (1974). The influence curve and its role in robust estimation. *JASA*, 69(346), 383–393. [doi:10.1080/01621459.1974.10482962](https://doi.org/10.1080/01621459.1974.10482962)
