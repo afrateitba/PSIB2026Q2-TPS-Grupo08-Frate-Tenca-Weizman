@@ -15,7 +15,7 @@ Detectar, minuto a minuto y solo con el ECG, si hay apnea del sueño. Se usa una
 
 ## El pipeline, paso por paso
 
-Cada notebook es un paso, usa lo que dejó el anterior y termina con una tabla de lo que se lleva el siguiente. Todo se desarrolla con los registros de desarrollo. **Test no se usó para nada**: se evalúa una sola vez, al final.
+Cada notebook es un paso, usa lo que dejó el anterior y termina con una tabla de lo que se lleva el siguiente. Todo se desarrolla con los registros de desarrollo. Test se usó una sola vez en `05`, con la versión evaluada. El detector final se evalúa en test una sola vez en `11`, con un notebook registrado sin ejecutar antes de correrlo.
 
 | Notebook | Qué hace | Qué deja |
 |---|---|---|
@@ -28,6 +28,8 @@ Cada notebook es un paso, usa lo que dejó el anterior y termina con una tabla d
 | [`07_simplificacion`](notebooks/07_simplificacion.ipynb) | Criterio de sencillez registrado antes de correr (`docs/criterio_parsimonia.md`): cada etapa que se agregó sin demostrar que hace falta se prueba contra su alternativa simple, con validación cruzada en desarrollo, Holm, un bootstrap que repite el ajuste y validación anidada. Revisión completa del Wiener, con datos y bibliografía. No usa test | Detector simplificado: de las 8 etapas revisadas solo queda el refinamiento del pico R. Exactitud 0,821 en validación cruzada (0,836 la versión evaluada en test; la diferencia no es demostrable). Parámetros en [`docs/parametros_simplificado.json`](docs/parametros_simplificado.json) |
 | [`08_edr_nivel_noche`](notebooks/08_edr_nivel_noche.ipynb) | §1: qué banda capta cada etapa del pipeline (simulaciones sin etiquetas) y dónde se nota la apnea con el doble de resolución. §2–3: las decisiones de la EDR con `docs/criterio_edr.md`; no se adoptan, porque sacan la EDR relativa y el detector empeora. §4–7: las etapas que protegen contra fallas, con el criterio de robustez (`docs/criterio_robustez.md`): pruebas de estrés sin etiquetas, si alguna etapa empeora el detector, y Hampel contra el procedimiento de Varon. No usa test | La banda que se mide es 0,017–0,05 Hz (k = 2…6), con bordes suaves en ~80 s y ~18 s. **Detector final:** las cinco etapas protectoras protegen y ninguna empeora el detector. Exactitud 0,830 en validación cruzada (0,836 la versión evaluada en test; la diferencia no es demostrable). Parámetros en [`docs/parametros_final.json`](docs/parametros_final.json) |
 | [`09_robustez_qrs`](notebooks/09_robustez_qrs.ipynb) | Las seis etapas que se le agregaron a Pan-Tompkins (el reaprendizaje de los umbrales y las cinco mejoras de `02`), con el criterio de robustez: pruebas de estrés sin etiquetas (tramos sin ECG, ondas T altas, caída de amplitud), fallas reales de desarrollo y si alguna etapa empeora el detector. No usa test | Se mantienen las seis etapas. Sin el reaprendizaje, 10 noches de desarrollo quedan casi sin latidos. El detector final de `08` no cambia |
+| [`10_revision_04`](notebooks/10_revision_04.ipynb) | Las comparaciones de `04` §8 (C contra 9 alternativas y la regresión logística, en 7 medidas) y §15 (13 decisiones de diseño), recalculadas con el detector final y un bootstrap que repite toda la validación cruzada en cada sorteo. Plan en `docs/revision_04.md`, registrado antes. No usa test | Ninguna diferencia resiste Holm (en `04` resistían 4 de §8 y 2 de §15). Ninguna alternativa es mejor que C, así que las decisiones de `04` no cambian; sus textos se corrigieron con una nota fechada |
+| [`11_test_final`](notebooks/11_test_final.ipynb) | Segunda evaluación en test, del detector final, con las mismas predicciones P1–P3 y el mismo criterio. Plan en `docs/plan_test_final.md`. Registrado sin ejecutar y probado en modo ensayo con personas de desarrollo; se corre una sola vez. No es ciega: test ya se usó en `05` | Pendiente de su única ejecución |
 
 **Detector evaluado en test.** Para cada minuto se toma una ventana de 240 s centrada en él. En esa ventana se estiman por Welch (3 × 120 s, Hann) la potencia del RR y la de la EDR en 0,017–0,05 Hz, las frecuencias k/120 Hz con k = 2…6 (se escribía 0,01–0,05 Hz, pero el borde de 0,01 Hz era nominal: `08` §1):
 
@@ -43,7 +45,7 @@ El minuto es apnea si C > 0,489 (umbral de Youden). La confianza (alta, media o 
 - sin decidir en los minutos con más de 20 % de RR corregidos;
 - quitando la recta en cada segmento de Welch.
 
-Se conserva el refinamiento del pico R, la interpolación es spline cúbico, y salen el Wiener y la medida de confianza. El detector de QRS conserva sus seis etapas, revisadas con el mismo criterio en `09`. En validación cruzada por personas en desarrollo, la exactitud es 0,830 (sensibilidad 0,780, especificidad 0,863). Todavía no tiene una evaluación independiente. Se evaluará en test una sola vez, con un notebook registrado antes de ejecutarse; esa segunda evaluación no es ciega.
+Se conserva el refinamiento del pico R, la interpolación es spline cúbico, y salen el Wiener y la medida de confianza. El detector de QRS conserva sus seis etapas, revisadas con el mismo criterio en `09`. En validación cruzada por personas en desarrollo, la exactitud es 0,830 (sensibilidad 0,780, especificidad 0,863). Todavía no tiene una evaluación independiente. Se evalúa en test una sola vez en `11`, registrado sin ejecutar antes de correrlo; esa segunda evaluación no es ciega.
 
 ## Documentos
 
@@ -51,6 +53,8 @@ Se conserva el refinamiento del pico R, la interpolación es spline cúbico, y s
 - [`docs/criterio_parsimonia.md`](docs/criterio_parsimonia.md): el criterio de sencillez, escrito antes de aplicarlo, con los dos agregados posteriores (validación anidada y valor p que repite el ajuste).
 - [`docs/criterio_edr.md`](docs/criterio_edr.md): el criterio para las decisiones de la EDR por P2, escrito antes de aplicarlo (`08` §2; sus decisiones no se adoptaron).
 - [`docs/criterio_robustez.md`](docs/criterio_robustez.md): el criterio para las etapas que protegen contra fallas, con las pruebas de estrés, escrito antes de correrlo, y el agregado de Hampel contra Varon.
+- [`docs/revision_04.md`](docs/revision_04.md): el plan para recalcular las comparaciones de `04` §8 y §15 con el bootstrap que repite el ajuste (`10`), escrito antes de correrlo.
+- [`docs/plan_test_final.md`](docs/plan_test_final.md): el plan de la segunda evaluación en test, del detector final (`11`), escrito antes de correrla.
 - [`docs/decisiones.md`](docs/decisiones.md): cada ventana, umbral y parámetro, con su justificación (datos, bibliografía o física) y dónde se muestra.
 - [`docs/auditoria_decisiones.md`](docs/auditoria_decisiones.md): las 88 decisiones del proyecto, con el tipo de justificación (datos, bibliografía, física) y su estado: 86 justificadas y 2 limitaciones.
 - [`docs/referencias.md`](docs/referencias.md): todas las fuentes citadas, con DOI o página oficial verificados en Crossref, doi.org y PubMed (se regenera con `python scripts/verificar_referencias.py`).
