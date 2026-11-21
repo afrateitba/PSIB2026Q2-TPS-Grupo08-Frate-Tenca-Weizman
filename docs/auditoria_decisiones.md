@@ -2,7 +2,11 @@
 
 Cada decisión del proyecto (código y notebooks `01`–`06`), con el tipo de justificación y si está justificada. Las filas describen la versión del detector evaluada en test.
 
-**Revisión con el criterio de sencillez (`07`).** Ocho de estas decisiones son etapas que se agregaron sin demostrar que hacen falta: el refinamiento del pico R (30), la exclusión de minutos (35), el Wiener (40–42), excluir ectópicos (43) y Hampel (44) en la EDR, el spline cúbico (50), quitar la recta en Welch (54) y la confianza (66–67). Se probaron contra su alternativa simple con el criterio de [`criterio_parsimonia.md`](criterio_parsimonia.md). Solo se mantiene el refinamiento del pico R; las otras siete salen del detector simplificado. El detalle está en [`decisiones.md`](decisiones.md) §5 y en `07`. Complementa a [`decisiones.md`](decisiones.md), que detalla los valores y la bibliografía completa.
+**Revisiones posteriores a test (`07` y `08`, solo desarrollo).** Ocho de estas decisiones son etapas que se agregaron sin demostrar que hacen falta: el refinamiento del pico R (30), la exclusión de minutos (35), el Wiener (40–42), excluir ectópicos (43) y Hampel (44) en la EDR, el spline cúbico (50), quitar la recta en Welch (54) y la confianza (66–67).
+- **Criterio de sencillez** ([`criterio_parsimonia.md`](criterio_parsimonia.md), `07`): cada etapa se probó contra su alternativa simple, y solo se mantenía el refinamiento del pico R.
+- **Criterio de robustez** ([`criterio_robustez.md`](criterio_robustez.md), `08`): la regla de sencillez sacaba también las etapas que protegen contra fallas, y por eso se revisaron con este criterio. La EDR relativa (49), excluir ectópicos (43), excluir atípicos con Hampel (44), la exclusión de minutos (35) y quitar la recta (54) protegen en pruebas de estrés sin etiquetas y no empeoran el detector, así que se mantienen.
+
+En el detector final salen el Wiener (40–42) y la confianza (66–67), y la interpolación queda en spline cúbico (50). El detalle está en [`decisiones.md`](decisiones.md) §5 y §6. Este documento complementa a [`decisiones.md`](decisiones.md), que detalla los valores y la bibliografía completa.
 
 **Estados.**
 - ✅ **Justificada**: con datos (figura o número en un notebook), bibliografía o un argumento físico verificable.

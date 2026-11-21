@@ -103,11 +103,15 @@ Se evaluó una sola vez en `05`, con el notebook registrado sin ejecutar antes d
 
 Detalle en `notebooks/05_test.ipynb` (sección 6) y en `docs/resultados_test.json`. El análisis posterior de por qué falla en algunas noches está en `notebooks/06_posterior_test.ipynb`: es descriptivo y no cambia estos resultados.
 
-## Después de test: simplificación del detector (solo desarrollo)
+## Después de test: revisión del detector (solo desarrollo)
 
 Después de la evaluación única se revisó, con un criterio de sencillez escrito antes de aplicarlo (`docs/criterio_parsimonia.md`), si cada etapa agregada hace falta (`07`). De las ocho revisadas solo se mantiene el refinamiento del pico R. El **detector simplificado** tiene una exactitud de 0,821 en validación cruzada por personas en desarrollo, y la versión evaluada en test, 0,836; la diferencia no es demostrable.
 
-Los resultados de test de la sección anterior son de la versión evaluada, no de la simplificada. Volver a usar las mismas 10 personas para medir la simplificada ya no sería una evaluación independiente, así que **el detector simplificado no tiene una evaluación independiente**.
+Esa regla también sacaba las etapas que protegen contra fallas poco frecuentes o concentradas en pocas personas: con 19 personas su beneficio no se puede demostrar. Aplicada a la EDR (`docs/criterio_edr.md`, `08` §2), sacaba la EDR relativa, y la exactitud caía a 0,768. Esas decisiones no se adoptaron. Las etapas protectoras se revisaron con un criterio de robustez, también escrito antes de correrlo (`docs/criterio_robustez.md`, `08` §4–7): se mantienen, salvo que empeoren el detector de forma demostrable o que una prueba de estrés sin etiquetas muestre que no protegen. Las cinco protegen y ninguna empeora. Para los atípicos se usa Hampel, que protegió más que el procedimiento de Varon en las 19 personas.
+
+El **detector final** tiene una exactitud de 0,830 en validación cruzada por personas en desarrollo (sensibilidad 0,780, especificidad 0,863). La versión evaluada en test tiene 0,836, y la diferencia no es demostrable. Sus parámetros están en `docs/parametros_final.json` y sus etapas en `docs/decisiones.md` §6.
+
+Los resultados de test de la sección anterior son de la versión evaluada, no de la simplificada ni de la final. **Ninguna de las dos tiene todavía una evaluación independiente.** El detector final se evaluará en test una sola vez, con un notebook registrado antes de ejecutarse. Como esas 10 personas ya se usaron, esa segunda evaluación no es ciega (limitación 10).
 
 ## Alcance
 
@@ -127,7 +131,7 @@ Los resultados de test de la sección anterior son de la versión evaluada, no d
 **Del método**
 
 5. **Ventana de 240 s.** Con segmentos de 120 s la banda empieza en 0,017 Hz (ciclos de 60 s): los ciclos de apnea de 60 a 100 s entran solo con entre ~25 % y ~80 % de su potencia (`08` §1). Una ventana más larga los vería mejor, pero en desarrollo no mejoró la detección (con 360 s empeoró, `04` §15). Además, la ventana diluye los episodios de un solo minuto (22 % de los episodios en desarrollo) y suaviza los bordes de cada episodio.
-6. **Ritmos irregulares.** La versión evaluada en test no decide en los minutos con más de 20 % de RR corregidos (señal perdida, ritmos irregulares). La simplificada los clasifica igual, pero en ellos la potencia del RR no refleja la apnea: en desarrollo acierta 0,64 en esos minutos, contra 0,82 en el resto. En pacientes con arritmias frecuentes ninguna de las dos versiones sirve.
+6. **Ritmos irregulares.** La versión evaluada en test y el detector final no deciden en los minutos con más de 20 % de RR corregidos (señal perdida, ritmos irregulares). La simplificada los clasificaba igual, pero en ellos la potencia del RR no refleja la apnea: en desarrollo acertaba 0,64 en esos minutos, contra 0,82 en el resto. En pacientes con arritmias frecuentes el detector no sirve.
 7. **La EDR solo se valida en 8 registros**, y en la banda lenta solo en los 4 con mucha apnea. Por diseño están todos en desarrollo, así que esa validación no se repite en test.
 8. **Las decisiones de preprocesamiento se tomaron mirando desarrollo** (por ejemplo, las mejoras del detector de QRS). Se controlan con la revisión manual y con que ningún registro empeore, pero solo test mide si generalizan.
 
@@ -140,4 +144,5 @@ Los resultados de test de la sección anterior son de la versión evaluada, no d
 13. **La hipótesis se reformuló después de analizar desarrollo.** C salió de mirar qué mide bien cada señal en esos mismos registros. Lo atenúa que C casi no tiene parámetros (un peso elegido por validación cruzada por personas, que resultó 1, y una mediana sin etiquetas), pero solo test dice si generaliza.
 14. **El método supone ritmo sinusal.** En test, una persona (c04 y x29) tiene un ritmo muy irregular. Los latidos se detectan bien, pero la limpieza del RR corrige el 36–41 % de los intervalos y se excluyen la mayoría de sus minutos (`06`, sección 3). Con una arritmia sostenida, la serie RR no refleja la modulación por la apnea.
 15. **Los errores son por persona o por noche.** Dependen de dónde queda la vara de cada noche: el nivel de la EDR que no corresponde a su cantidad de apnea, o el nivel general del RR de la persona (`04` sección 11, `06` sección 2). En test el error de cada noche sigue a esas dos cantidades (ρ = 0,67 y 0,75).
-16. **El detector simplificado solo se midió en desarrollo** (`07`), con validación cruzada y validación anidada. No tiene una evaluación independiente.
+16. **El detector simplificado y el final solo se midieron en desarrollo** (`07` y `08`), con validación cruzada por personas. No tienen una evaluación independiente. La del detector final será en test, que ya se usó (limitación 10).
+17. **Las pruebas de estrés simulan las fallas** (`08` §4). Muestran que cada etapa protege contra esa falla simulada, pero no cuánto aparece la falla en los datos reales. Los niveles de perturbación (5 %) son ilustrativos. La comparación entre Hampel y el procedimiento de Varon se agregó al criterio después de ver S2, aunque antes de calcularla.

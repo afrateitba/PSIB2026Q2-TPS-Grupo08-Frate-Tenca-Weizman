@@ -7,7 +7,7 @@ Cada fila dice qué la justifica. Las citas están verificadas en fuentes oficia
 - **Bibliografía**: es el valor de un método publicado o de una recomendación.
 - **Física**: sale de una propiedad de la señal, como una resolución o el límite de Nyquist.
 
-Test no interviene en ninguna decisión.
+Test no interviene en ninguna decisión. Las secciones 1 a 3 describen la versión del detector evaluada en test; las secciones 5 y 6, los cambios posteriores, decididos solo con desarrollo.
 
 ## 1. Ventanas y duraciones
 
@@ -121,6 +121,12 @@ El RR y la EDR tienen un valor por latido, en instantes irregulares. El método 
 
 El spline cúbico da una curva suave, con derivada continua. Interpolar en forma lineal da el mismo resultado (exactitud −0,005, IC con el cero; `04` §15).
 
+## 4. Bibliografía
+
+La lista completa, con el DOI o la página oficial de cada fuente, la verificación en Crossref, doi.org y PubMed, y el tipo de acceso (texto libre o suscripción), está en [`referencias.md`](referencias.md). Se regenera con `python scripts/verificar_referencias.py`.
+
+**Falta para el informe**: el estado del arte con trabajos recientes (la devolución dice que las referencias eran viejas). Esa bibliografía va en el informe, no en este documento.
+
 ## 5. Simplificación con el criterio de sencillez (`07`)
 
 Las ocho etapas que se habían agregado sin demostrar que hacen falta se probaron contra su alternativa simple, con el criterio escrito antes de correr el análisis ([`criterio_parsimonia.md`](criterio_parsimonia.md)). Una etapa queda si mejora de forma demostrable la medición de su paso o el detector, con la corrección de Holm y un bootstrap que repite el ajuste en cada sorteo. Todo se hace en desarrollo; test no interviene.
@@ -138,8 +144,24 @@ Las ocho etapas que se habían agregado sin demostrar que hacen falta se probaro
 
 Exactitud en validación cruzada: 0,836 la versión evaluada en test y 0,821 la simplificada. La diferencia no es demostrable; la simplificada marca más minutos en los controles (12 % contra 7 %), casi todo por las dos noches de una misma persona que sin Hampel tienen un nivel de EDR inflado.
 
-## 4. Bibliografía
+Esta regla sacaba también las etapas que protegen contra fallas poco frecuentes o concentradas en pocas personas, cuyo beneficio no se puede demostrar con 19 personas. Por eso se revisaron con otro criterio (§6).
 
-La lista completa, con el DOI o la página oficial de cada fuente, la verificación en Crossref, doi.org y PubMed, y el tipo de acceso (texto libre o suscripción), está en [`referencias.md`](referencias.md). Se regenera con `python scripts/verificar_referencias.py`.
+## 6. Detector final: criterio de robustez (`08`)
 
-**Falta para el informe**: el estado del arte con trabajos recientes (la devolución dice que las referencias eran viejas). Esa bibliografía va en el informe, no en este documento.
+Al aplicar a la EDR la misma regla de sencillez (`criterio_edr.md`, `08` §2) se sacaba la EDR relativa, y la exactitud caía de 0,821 a 0,768 (`08` §3). Esas decisiones no se adoptaron. Las etapas que protegen contra una falla se revisaron con un criterio escrito antes de correrlo ([`criterio_robustez.md`](criterio_robustez.md)): **una etapa protectora se mantiene, salvo que empeore el detector de forma demostrable o que una prueba de estrés sin etiquetas muestre que no protege.**
+
+Cada prueba de estrés perturba los registros de desarrollo de una forma que imita la falla y mide cuánto cambia la salida con la etapa y sin ella. Las perturbaciones afectan al 5 % de los latidos, salvo S3 (el ECG ×0,5 y ×2) y S5 (30 minutos por noche). Hay una prueba de signos sobre las 19 personas y Holm.
+
+| Etapa | Falla que previene | Prueba de estrés | ¿Empeora el detector? | Detector final |
+|---|---|---|---|---|
+| EDR relativa | Distinto tamaño del QRS entre personas | Con el ECG ×0,5 o ×2 cambia la decisión en el 15 % de los minutos con la EDR en mV·ms, y en ninguno con la relativa | No (exactitud +0,058, p = 0,21) | Se mantiene |
+| Excluir ectópicos de la EDR | Latidos de otra forma, cuya área no es respiración | El nivel de la EDR se mueve 1,31 sin excluirlos y 0,52 excluyéndolos | No (−0,007, p = 0,84) | Se mantiene |
+| Excluir atípicos de la EDR | Artefactos de movimiento | El nivel se mueve 1,36 sin excluirlos, 0,67 con el procedimiento de Varon y 0,06 con Hampel. Hampel protege más que Varon en las 19 personas (p = 2·10⁻⁶) | No (Hampel: +0,009, p = 0,85; P2 +0,018, p = 0,66) | Hampel |
+| No decidir en los minutos con > 20 % de RR corregidos | RR que no se midió; ritmos irregulares | Sin la exclusión cambia la decisión en el 10 % de los minutos con ritmo irregular simulado. Con la exclusión, esos minutos quedan sin decisión | No (−0,006, p = 0,96) | Se mantiene |
+| Quitar la recta en cada segmento de Welch | Deriva lenta dentro del segmento | P_RR se mueve 0,008 quitando la media y 0,003 quitando la recta | No (−0,0002, p = 0,62) | Se mantiene |
+
+Las cinco etapas protegen, con p de Holm < 0,001 (S5, en las 12 personas donde quedaron minutos para comparar). Ninguna empeora el detector: en la exactitud con validación cruzada (bootstrap que repite el ajuste) y en P2, p de Holm = 1 en todas. Las etapas que no protegen contra una falla siguen la regla de §5: se mantiene el refinamiento del pico R y salen el Wiener y la medida de confianza. La interpolación es spline cúbico, el estándar, porque no hubo diferencia demostrable con la lineal (`criterio_edr.md`, E6).
+
+**Hampel en lugar de Varon.** La regla registrada elegía el procedimiento publicado para la EDR (Varon et al., 2020) si los dos protegían y ninguno empeoraba, y eso pasó (`08` §6). Como S2 mostró que Hampel protegía unas diez veces más, se agregó al criterio una comparación directa sin etiquetas, decidida antes de calcularla (`08` §7). Hampel (1974) es un estimador robusto general; su protección contra los artefactos se midió en estos datos.
+
+**Resultado (validación cruzada por personas en desarrollo).** Exactitud 0,830, contra 0,836 de la versión evaluada en test. La diferencia es +0,006 (IC −0,051 a +0,049, repitiendo el ajuste; p = 1,00). Sensibilidad 0,780, especificidad 0,863 y P2 0,787. Marca el 9,5 % de los minutos en los controles (7,4 % la versión evaluada en test; 12,1 % la simplificada). Los parámetros están en [`parametros_final.json`](parametros_final.json). No tiene una evaluación independiente: se evaluará en test una sola vez, con un notebook registrado antes de ejecutarse, y esa evaluación no es ciega (`objetivos_hipotesis.md`, limitación 10).
