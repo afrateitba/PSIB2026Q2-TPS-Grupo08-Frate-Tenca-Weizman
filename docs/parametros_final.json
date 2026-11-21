@@ -28,5 +28,15 @@
     "confianza": false
   },
   "fijado_con": "47 registros de desarrollo (notebooks/08_edr_nivel_noche.ipynb, sección 7)",
-  "evaluacion": "solo validación cruzada por personas en desarrollo; sin evaluación independiente todavía"
+  "evaluacion": "solo validación cruzada por personas en desarrollo; sin evaluación independiente todavía",
+  "etapas_qrs": {
+    "pan_tompkins_1985": true,
+    "reaprendizaje": true,
+    "pulso_aislado": true,
+    "piso_de_energía": true,
+    "ventana_según_el_ritmo": true,
+    "forma": true,
+    "energía_rápida": true,
+    "revisadas_en": "notebooks/09_robustez_qrs.ipynb"
+  }
 }
