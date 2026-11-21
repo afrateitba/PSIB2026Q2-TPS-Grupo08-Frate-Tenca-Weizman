@@ -107,6 +107,21 @@ La familia de Holm son esas 12 comparaciones.
 
 Las etiquetas se usan solo en la exactitud y en P2. Test no se usa.
 
+**2026-11-21, después de la prueba rápida de `09` y antes de la corrida completa: fallas reales para las etapas del QRS.** Para probar el código, `09` se corrió con 16 registros (10 personas). La prueba mostró dos problemas del agregado anterior.
+
+1. **La falla del reaprendizaje estaba mal atribuida.** En a03 no baja la amplitud: hay un artefacto de ~11 mV en los primeros segundos. Sin reaprendizaje, el detector queda ciego toda la noche: encuentra 6 latidos de 34 226. La caída de amplitud es la de a17, donde el QRS pasa de ~1,45 a ~0,3 mV en la hora 6, después de un artefacto de ~15 mV. Sin reaprendizaje, a17 pierde el 22 % de los latidos. Q4 (×0,3) imita esa caída, algo atenuada y sin el artefacto.
+2. **El criterio medía la protección solo con fallas simuladas.** Pero las fallas que motivaron estas etapas están en los datos reales de desarrollo, y son una evidencia más directa que una simulación. Con la regla registrada, el reaprendizaje podía salir aunque sin él una noche real de desarrollo se queda sin latidos.
+
+Se agrega una segunda vía para mostrar que una etapa protege:
+
+**Una etapa del detector de QRS también protege si, en el ECG original de desarrollo, sin ella alguna noche queda más de un punto peor en porcentaje de RR corregidos que con ella.**
+- El umbral es el mismo con que `02` decidió que un registro empeoraba: más de un punto peor que las marcas de la base.
+- Alcanza con una sola noche. Una falla real que la etapa evita es justo lo que la etapa tiene que prevenir, y las fallas de este tipo se concentran en pocas personas (ver "Por qué").
+
+Una etapa protege si cumple esta condición o la de las pruebas de estrés. El resto del criterio no cambia.
+
+**Qué se sabía al escribirlo.** En la prueba rápida, el reaprendizaje protegió en Q4 en 8 de 10 personas (p = 0,055), y con la regla registrada salía. Este agregado se escribió después de ver eso, de acuerdo con el grupo. Por eso `09` informa la decisión con las dos reglas: la registrada antes y la que incluye este agregado.
+
 ## Referencias
 
 - Bazett, H. C. (1920). An analysis of the time-relations of electrocardiograms. *Heart*, 7, 353–370. Reimpreso en *Annals of Noninvasive Electrocardiology*, 2(2), 177–194 (1997). [doi:10.1111/j.1542-474X.1997.tb00325.x](https://doi.org/10.1111/j.1542-474X.1997.tb00325.x)

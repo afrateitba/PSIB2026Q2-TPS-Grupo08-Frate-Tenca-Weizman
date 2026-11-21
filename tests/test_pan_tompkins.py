@@ -55,7 +55,7 @@ def test_validate_empty():
 
 
 def test_recovers_after_amplitude_drop():
-    """Si el ECG baja de amplitud a mitad de la noche (como en a03), el detector no queda ciego."""
+    """Si el ECG baja de amplitud a mitad de la noche (como en a17), el detector no queda ciego."""
     x, true_r = _synthetic_ecg(dur=1200.0)
     a = int(300 * FS)
     x[a:] *= 0.15
