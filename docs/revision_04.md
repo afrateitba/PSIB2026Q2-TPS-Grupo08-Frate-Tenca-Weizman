@@ -35,3 +35,12 @@ Las mismas dos familias, con el **detector final** (`docs/parametros_final.json`
 
 - Bates, S., Hastie, T. y Tibshirani, R. (2023). Cross-validation: what does it estimate and how well does it do it? *Journal of the American Statistical Association*, 119(546), 1434–1445. [doi:10.1080/01621459.2023.2197686](https://doi.org/10.1080/01621459.2023.2197686)
 - Efron, B. y Tibshirani, R. J. (1993). *An Introduction to the Bootstrap*. Chapman & Hall/CRC. [doi:10.1201/9780429246593](https://doi.org/10.1201/9780429246593)
+
+## Agregado del 2026-11-21: la primera corrida se cortó
+
+La primera corrida completa de `notebooks/10_revision_04.ipynb` se cortó a las 2 horas, que es el tiempo máximo de una tarea en este entorno, y no guardó ningún resultado. Se aceleró el código sin cambiar lo que calcula:
+- `cv_c` (`src/evaluation/cv.py`) filtra los minutos de entrenamiento una sola vez por grupo en vez de una vez por cada w. La estandarización no depende de w.
+- En §15, la validación cruzada del detector actual se hace una vez por sorteo y se compara con las 13 variantes, en vez de repetirla para cada variante.
+- Las tablas que entran al bootstrap tienen solo las columnas que usa el ajuste.
+
+Se verificó que el código nuevo da exactamente los mismos números que el anterior: `cv_c` en 40 sorteos (con 5, 10 y 19 grupos) y las diferencias de §15 y las medidas de §8 en la estimación y en varios sorteos. El plan no cambia.

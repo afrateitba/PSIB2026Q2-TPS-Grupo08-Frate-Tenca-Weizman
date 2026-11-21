@@ -53,10 +53,12 @@ def cv_c(e: pd.DataFrame, n_grupos: int = N_GRUPOS, semilla: int = SEMILLA) -> p
     conf = np.full(len(e), "", dtype=object)
     for k, gpo in enumerate(grupos_personas(s, n_grupos, semilla)):
         te = np.isin(s, gpo); tr = ~te
-        a_w = [auc(c_score(e[tr], fit_c(e[tr], w, max_corrected=None)), y[tr]) for w in GRILLA_W]
+        e_tr = e[tr]
+        p0 = fit_c(e_tr, 0.0, max_corrected=None)   # la estandarización no depende de w
+        a_w = [auc(c_score(e_tr, {**p0, "w": float(w)}), y[tr]) for w in GRILLA_W]
         w = float(GRILLA_W[int(np.nanargmax(a_w))])
-        p = fit_c(e[tr], w, max_corrected=None)
-        u = youden_threshold(c_score(e[tr], p).to_numpy(), y[tr])
+        p = {**p0, "w": w}
+        u = youden_threshold(c_score(e_tr, p).to_numpy(), y[tr])
         out["grupo"][te], out["w"][te], out["umbral"][te] = k, w, u
         out["margen"][te] = c_score(e[te], p).to_numpy() - u
         if "mov_rel" in e:
