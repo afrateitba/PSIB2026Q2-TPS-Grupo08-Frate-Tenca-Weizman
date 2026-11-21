@@ -1,7 +1,12 @@
 """Datos del visor de registros (app/visor.py).
 
-El visor no ajusta nada. Aplica a un registro el detector tal como quedó
-fijado en desarrollo (docs/parametros_test.json) y prepara lo que se muestra:
+El visor no ajusta nada. Aplica a un registro uno de los dos detectores
+fijados en desarrollo y prepara lo que se muestra:
+- el detector final (src/detector_final.py, docs/parametros_final.json), por
+  defecto;
+- la versión evaluada en test (docs/parametros_test.json), con su confianza.
+
+Lo que se muestra:
 - la noche: C de cada minuto con el umbral, la decisión, la confianza y las
   etiquetas;
 - un minuto: el ECG con los picos R, la serie RR y la EDR en su ventana de
@@ -18,6 +23,7 @@ import pandas as pd
 
 from ..config import ECG_FILTER, RAW_DIR, ROOT, SPLIT_CSV
 from ..data import load_ecg
+from ..detector_final import cargar_params, tabla_final
 from ..features.build import record_series
 from ..features.coupling import welch_spectra
 from ..features.detector import (BAND, FS_U, WINDOW_S, c_score, confidence, evaluable, load_params,
@@ -25,6 +31,8 @@ from ..features.detector import (BAND, FS_U, WINDOW_S, c_score, confidence, eval
 from ..preprocessing.filters import apply_zero_phase, design_bandpass
 
 PARAMS_PATH = ROOT / "docs" / "parametros_test.json"
+VERSIONES = {"final": "detector final (desarrollo, notebooks 07 a 09)",
+             "evaluada": "versión evaluada en test (notebook 04)"}
 
 
 def registros_visibles(incluir_test: bool = False) -> pd.DataFrame:
@@ -37,24 +45,31 @@ def registros_visibles(incluir_test: bool = False) -> pd.DataFrame:
     return split if incluir_test else split[split["set"] == "dev"].reset_index(drop=True)
 
 
-def analizar_noche(rec: str, raw_dir: Path = RAW_DIR, params: dict | None = None) -> dict:
-    """Corre el detector fijado sobre un registro y devuelve todo lo que muestra el visor.
+def analizar_noche(rec: str, raw_dir: Path = RAW_DIR, params: dict | None = None, version: str = "final") -> dict:
+    """Corre un detector fijado sobre un registro y devuelve todo lo que muestra el visor.
 
     tabla: una fila por minuto con P_RR, EDR_noche, los dos términos de C, C,
-    la decisión (1 apnea), la confianza, la etiqueta y si el minuto se evalúa.
+    la decisión (1 apnea), la etiqueta, si el minuto se evalúa y, solo en la
+    versión evaluada en test, la confianza.
     """
-    p = params or load_params(PARAMS_PATH)
-    s = record_series(rec, raw_dir)
-    tab = minute_table(rec, raw_dir, series=s)
-    pc = {"mu1": p["mu1"], "s1": p["s1"], "mu2": p["mu2"], "s2": p["s2"], "w": p["w"]}
-    tab["termino_rr"] = (tab["P_RR"] - p["mu1"]) / p["s1"]
-    tab["termino_edr"] = p["w"] * (tab["EDR_noche"] - p["mu2"]) / p["s2"]
-    tab["C"] = c_score(tab, pc)
-    tab["decision"] = (tab["C"] > p["umbral"]).astype(int)
-    tab["confianza"] = confidence(tab["mov_rel"], tuple(p["cortes_confianza_mov_rel"]))
-    tab["evaluado"] = evaluable(tab)
+    if version == "final":
+        p = params or cargar_params()
+        tab, s = tabla_final(rec, raw_dir, p)
+    elif version == "evaluada":
+        p = params or load_params(PARAMS_PATH)
+        s = record_series(rec, raw_dir)
+        tab = minute_table(rec, raw_dir, series=s)
+        pc = {"mu1": p["mu1"], "s1": p["s1"], "mu2": p["mu2"], "s2": p["s2"], "w": p["w"]}
+        tab["termino_rr"] = (tab["P_RR"] - p["mu1"]) / p["s1"]
+        tab["termino_edr"] = p["w"] * (tab["EDR_noche"] - p["mu2"]) / p["s2"]
+        tab["C"] = c_score(tab, pc)
+        tab["decision"] = (tab["C"] > p["umbral"]).astype(int)
+        tab["confianza"] = confidence(tab["mov_rel"], tuple(p["cortes_confianza_mov_rel"]))
+        tab["evaluado"] = evaluable(tab)
+    else:
+        raise ValueError(f"versión desconocida: {version} (opciones: {list(VERSIONES)})")
     ecg, fs = load_ecg(rec, raw_dir)
-    return {"rec": rec, "tabla": tab, "params": p, "ecg": ecg,
+    return {"rec": rec, "version": version, "tabla": tab, "params": p, "ecg": ecg,
             "ecg_f": apply_zero_phase(ecg, design_bandpass(fs, *ECG_FILTER)), "fs": fs,
             "t_r": s["t_r"], "t": s["t"], "rr": s["rr"], "edr": s["edr"]}
 
@@ -70,7 +85,8 @@ def resumen_noche(tab: pd.DataFrame) -> dict:
            "sensibilidad": ((d == 1) & (y == 1)).sum() / n1 if n1 else np.nan,
            "especificidad": ((d == 0) & (y == 0)).sum() / n0 if n0 else np.nan,
            "exactitud": (d == y).mean() if len(e) else np.nan}
-    out["confianza"] = e["confianza"].value_counts(normalize=True).reindex(["alta", "media", "baja"]).fillna(0).to_dict()
+    if "confianza" in e:
+        out["confianza"] = e["confianza"].value_counts(normalize=True).reindex(["alta", "media", "baja"]).fillna(0).to_dict()
     return out
 
 

@@ -41,3 +41,13 @@ def test_analizar_noche_a03():
     assert np.isclose(v["P_RR"], v["fila"].P_RR) and np.isclose(v["P_EDR"], v["fila"].P_EDR)
     e = ecg_minuto(an, m)
     assert len(e["crudo"]) == 60 * an["fs"] and 40 < len(e["t_r"]) < 120
+
+
+@pytest.mark.skipif(not (RAW_DIR / "a03.dat").exists(), reason="faltan los datos")
+def test_las_dos_versiones_del_visor():
+    final, evaluada = analizar_noche("a03"), analizar_noche("a03", version="evaluada")
+    assert final["version"] == "final" and "confianza" not in final["tabla"]
+    assert evaluada["version"] == "evaluada" and "confianza" in evaluada["tabla"]
+    assert "confianza" not in resumen_noche(final["tabla"])
+    with pytest.raises(ValueError):
+        analizar_noche("a03", version="otra")

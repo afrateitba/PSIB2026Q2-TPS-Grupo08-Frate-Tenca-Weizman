@@ -91,8 +91,8 @@ jupyter nbconvert --to notebook --execute --inplace notebooks/02_filtro_y_latido
 streamlit run app/visor.py
 ```
 
-Se abre en el navegador un visor que aplica a una noche el detector tal como quedó fijado en desarrollo:
-- **La noche**: C de cada minuto con el umbral y el término de la EDR, las tiras de etiqueta, decisión y confianza, y la sensibilidad, especificidad y exactitud de esa noche.
+Se abre en el navegador un visor que aplica a una noche uno de los dos detectores fijados en desarrollo. Por defecto es el detector final (`src/detector_final.py`); en la barra lateral se puede elegir la versión evaluada en test (`04`).
+- **La noche**: C de cada minuto con el umbral y el término de la EDR, las tiras de etiqueta y decisión (y de confianza, en la versión evaluada en test), y la sensibilidad, especificidad y exactitud de esa noche.
 - **Un minuto**: se elige con el deslizador, o saltando entre los minutos mal clasificados. Muestra el ECG con los picos R, la serie RR y la EDR en su ventana de 240 s, sus espectros con la banda, y el cálculo de C paso a paso.
 
 Muestra solo los registros de desarrollo. Los de test quedan ocultos hasta la evaluación final; después se pueden ver con `VISOR_INCLUIR_TEST=1 streamlit run app/visor.py`. Cada noche tarda unos segundos en procesarse la primera vez.
@@ -101,7 +101,7 @@ Las figuras de los notebooks se guardan en `informe/figuras/`. En Windows, `jupy
 
 ## Código
 
-Las constantes (rutas, filtro, parámetros del detector de QRS y de la EDR) están en `src/config.py`, con el notebook que justifica cada una.
+Las constantes (rutas, filtro, parámetros del detector de QRS y de la EDR) están en `src/config.py`, con el notebook que justifica cada una. Sus valores por defecto son los de la versión evaluada en test, para poder reproducir `04` y `05`. El **detector final** es una configuración con nombre, `src/detector_final.py`. Pasa todas sus opciones de forma explícita y solo carga `docs/parametros_final.json` si coincide su hash SHA-256 congelado.
 
 | Etapa (consigna) | Módulo | Notebook |
 |---|---|---|
@@ -119,6 +119,7 @@ Las constantes (rutas, filtro, parámetros del detector de QRS y de la EDR) est�
 | Espectros de Welch y espectro cruzado | `src/features/coupling.py` | `01`, `03`, `04` |
 | Periodograma de Lomb (comparación) | `src/features/lomb.py` | `04` |
 | **Detector**: tabla por minuto, C, umbral y confianza | `src/features/detector.py` | `04` |
+| **Detector final congelado** | `src/detector_final.py` | `07`–`09` |
 | Figuras | `src/viz/plots.py` | todos |
 | Interfaz gráfica | `app/visor.py` (pantalla), `src/viz/visor_data.py` (datos) | — |
 

@@ -21,8 +21,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.features.detector import BANDA_EFECTIVA as BAND, WINDOW_S  # noqa: E402
 from src.viz.plots import APNEA, NORMAL  # noqa: E402
-from src.viz.visor_data import (analizar_noche, ecg_minuto, registros_visibles, resumen_noche,  # noqa: E402
-                                ventana_minuto)
+from src.viz.visor_data import (VERSIONES, analizar_noche, ecg_minuto, registros_visibles,  # noqa: E402
+                                resumen_noche, ventana_minuto)
 
 GRIS = "#B8B8B8"
 CONF_COLOR = {"alta": "#3B8E5A", "media": "#E3B23C", "baja": "#C0392B"}
@@ -32,8 +32,8 @@ st.set_page_config(page_title="Visor de apnea", layout="wide")
 
 
 @st.cache_data(max_entries=3, show_spinner="Procesando la noche (detector de latidos, EDR y espectros)…")
-def cargar(rec: str) -> dict:
-    return analizar_noche(rec)
+def cargar(rec: str, version: str) -> dict:
+    return analizar_noche(rec, version=version)
 
 
 def tira(x, valores, colores: dict, nombre: str):
@@ -59,8 +59,10 @@ rec = st.sidebar.selectbox("Registro", list(etiqueta_reg), format_func=etiqueta_
 if not INCLUIR_TEST:
     st.sidebar.caption("Solo registros de desarrollo: test no se mira hasta la evaluación final.")
 
-an = cargar(rec)
+version = st.sidebar.radio("Detector", list(VERSIONES), format_func=VERSIONES.get)
+an = cargar(rec, version)
 tab, p = an["tabla"], an["params"]
+CON_CONFIANZA = "confianza" in tab
 minutos = tab["minute"].to_numpy()
 
 errores = tab[tab["evaluado"] & (tab["decision"] != tab["label"])]["minute"].to_numpy()
@@ -86,8 +88,12 @@ with st.sidebar.expander("Parámetros fijados en desarrollo"):
 - μ₁ = {p['mu1']:.3f}, σ₁ = {p['s1']:.3f}
 - μ₂ = {p['mu2']:.3f}, σ₂ = {p['s2']:.3f}, w = {p['w']:g}
 - Umbral: C > {p['umbral']:.3f}
-- Confianza: movimiento relativo > {p['cortes_confianza_mov_rel'][0]:.2f} (media), > {p['cortes_confianza_mov_rel'][1]:.2f} (baja)
 """)
+    if CON_CONFIANZA:
+        st.markdown(f"- Confianza: movimiento relativo > {p['cortes_confianza_mov_rel'][0]:.2f} (media), "
+                    f"> {p['cortes_confianza_mov_rel'][1]:.2f} (baja)")
+    else:
+        st.markdown("- Sin medida de confianza: salió del detector en el notebook 07.")
 
 # --- La noche ---------------------------------------------------------------------
 st.header(f"Registro {rec}")
@@ -110,14 +116,19 @@ respiración derivada del ECG (EDR) entre {BAND[0]:.3f} y {BAND[1]:.2f} Hz (cicl
 - **término del RR**: la potencia del RR en ese minuto, estandarizada. Cambia de un minuto a otro y dice **cuándo** hay apnea en la noche.
 - **término de la EDR**: el nivel de la potencia de la EDR en toda la noche (su mediana), estandarizado. Es el mismo para todos los minutos y dice **cuánta** apnea tiene la noche: corre la curva de C hacia arriba o hacia abajo.
 
-Un minuto se marca como apnea si C supera el umbral. La **confianza** baja cuando hay mucho movimiento en la ventana, respecto de lo habitual en esa noche.
+Un minuto se marca como apnea si C supera el umbral.
 Los minutos grises no se evalúan: no tienen etiqueta o más del 20 % de sus latidos se corrigieron.
 """)
+    if CON_CONFIANZA:
+        st.markdown("En la versión evaluada en test, la **confianza** baja cuando hay mucho movimiento en la ventana, "
+                    "respecto de lo habitual en esa noche.")
 
 horas = tab["minute"].to_numpy() / 60
 etiq = np.where(tab["label"] == 1, "apnea", np.where(tab["label"] == 0, "normal", "sin etiqueta"))
 deci = np.where(~tab["evaluado"], "no evaluado", np.where(tab["decision"] == 1, "apnea", "normal"))
-fig = make_subplots(rows=4, cols=1, shared_xaxes=True, row_heights=[0.09, 0.09, 0.73, 0.09], vertical_spacing=0.025)
+filas = 4 if CON_CONFIANZA else 3
+fig = make_subplots(rows=filas, cols=1, shared_xaxes=True, vertical_spacing=0.025,
+                    row_heights=[0.09, 0.09, 0.73, 0.09] if CON_CONFIANZA else [0.1, 0.1, 0.8])
 fig.add_trace(tira(horas, etiq, {"normal": NORMAL, "apnea": APNEA, "sin etiqueta": GRIS}, "etiqueta"), 1, 1)
 fig.add_trace(tira(horas, deci, {"normal": NORMAL, "apnea": APNEA, "no evaluado": GRIS}, "detector"), 2, 1)
 for nombre, color in (("apnea", APNEA), ("normal", NORMAL), ("sin etiqueta", GRIS)):
@@ -131,14 +142,16 @@ fig.add_hline(y=p["umbral"], line=dict(color="black", dash="dash", width=1), row
               annotation_text=coma(f"umbral {p['umbral']:.2f}"), annotation_position="top left")
 fig.add_hline(y=float(tab["termino_edr"].iloc[0]), line=dict(color=APNEA, dash="dot", width=1), row=3, col=1,
               annotation_text="término de la EDR (constante en la noche)", annotation_position="bottom right")
-fig.add_trace(tira(horas, tab["confianza"], CONF_COLOR, "confianza"), 4, 1)
+if CON_CONFIANZA:
+    fig.add_trace(tira(horas, tab["confianza"], CONF_COLOR, "confianza"), 4, 1)
 fig.add_vline(x=minuto / 60, line=dict(color="#555", width=1.5))
 fig.update_yaxes(title_text="C", row=3, col=1)
-fig.update_xaxes(title_text="horas desde el inicio", row=4, col=1)
+fig.update_xaxes(title_text="horas desde el inicio", row=filas, col=1)
 fig.update_layout(height=470, margin=dict(l=10, r=10, t=10, b=10), legend=dict(orientation="h", y=1.08))
 st.plotly_chart(fig, width="stretch")
 st.caption("Tiras de etiqueta y detector: azul normal, naranja apnea, gris sin etiqueta o no evaluado. "
-           "Confianza: verde alta, amarillo media, rojo baja. La línea vertical marca el minuto elegido.")
+           + ("Confianza: verde alta, amarillo media, rojo baja. " if CON_CONFIANZA else "")
+           + "La línea vertical marca el minuto elegido.")
 
 # --- Un minuto ----------------------------------------------------------------------
 v = ventana_minuto(an, minuto)
@@ -148,11 +161,13 @@ etq = {1: "apnea", 0: "normal"}.get(int(f_["label"]), "sin etiqueta")
 dec = "apnea" if f_["decision"] else "normal"
 if not f_["evaluado"]:
     st.info("Este minuto no se evalúa: no tiene etiqueta o tiene más del 20 % de latidos corregidos.")
-elif etq == dec:
-    st.success(f"Acierto: el detector dice **{dec}** y la etiqueta es **{etq}** (confianza {f_['confianza']}).")
 else:
-    tipo = "falso positivo" if dec == "apnea" else "falso negativo"
-    st.error(f"Error ({tipo}): el detector dice **{dec}** y la etiqueta es **{etq}** (confianza {f_['confianza']}).")
+    conf = f" (confianza {f_['confianza']})" if CON_CONFIANZA else ""
+    if etq == dec:
+        st.success(f"Acierto: el detector dice **{dec}** y la etiqueta es **{etq}**{conf}.")
+    else:
+        tipo = "falso positivo" if dec == "apnea" else "falso negativo"
+        st.error(f"Error ({tipo}): el detector dice **{dec}** y la etiqueta es **{etq}**{conf}.")
 
 tex = lambda v: f"{v:.2f}".replace(".", "{,}")
 st.latex(r"C = \underbrace{\frac{P_{RR} - \mu_1}{\sigma_1}}_{%s} + w\,\underbrace{\frac{\tilde P_{EDR} - \mu_2}{\sigma_2}}_{%s}"
