@@ -20,8 +20,8 @@ from src.preprocessing import filters, wiener
 from src.qrs import rr_clean
 
 ROOT = Path(__file__).resolve().parents[1]
-# 05 queda afuera: se registró sin ejecutar antes de abrir test y no se modifica.
-NOTEBOOKS = [p for p in sorted((ROOT / "notebooks").glob("0[1-9]_*.ipynb")) if not p.name.startswith("05")]
+# 05 y 11 quedan afuera: se registraron sin ejecutar antes de abrir test y no se modifican.
+NOTEBOOKS = [p for p in sorted((ROOT / "notebooks").glob("[01][0-9]_*.ipynb")) if not p.name.startswith(("05", "11"))]
 
 
 def _defaults(f):
