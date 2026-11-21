@@ -122,6 +122,8 @@ Una etapa protege si cumple esta condición o la de las pruebas de estrés. El r
 
 **Qué se sabía al escribirlo.** En la prueba rápida, el reaprendizaje protegió en Q4 en 8 de 10 personas (p = 0,055), y con la regla registrada salía. Este agregado se escribió después de ver eso, de acuerdo con el grupo. Por eso `09` informa la decisión con las dos reglas: la registrada antes y la que incluye este agregado.
 
+*Resultado (`09`):* se mantienen las seis etapas, con la regla registrada antes y con este agregado. En la corrida completa el agregado no cambió ninguna decisión: con las 47 noches, el reaprendizaje también protege en Q4 (15 de 19 personas, p de Holm = 0,04). El pulso aislado no protege, y se mantiene por (b).
+
 ## Referencias
 
 - Bazett, H. C. (1920). An analysis of the time-relations of electrocardiograms. *Heart*, 7, 353–370. Reimpreso en *Annals of Noninvasive Electrocardiology*, 2(2), 177–194 (1997). [doi:10.1111/j.1542-474X.1997.tb00325.x](https://doi.org/10.1111/j.1542-474X.1997.tb00325.x)

@@ -21,7 +21,7 @@ from src.qrs import rr_clean
 
 ROOT = Path(__file__).resolve().parents[1]
 # 05 queda afuera: se registró sin ejecutar antes de abrir test y no se modifica.
-NOTEBOOKS = [p for p in sorted((ROOT / "notebooks").glob("0[1-8]_*.ipynb")) if not p.name.startswith("05")]
+NOTEBOOKS = [p for p in sorted((ROOT / "notebooks").glob("0[1-9]_*.ipynb")) if not p.name.startswith("05")]
 
 
 def _defaults(f):

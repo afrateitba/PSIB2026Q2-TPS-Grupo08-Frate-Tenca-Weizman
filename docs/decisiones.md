@@ -7,7 +7,7 @@ Cada fila dice qué la justifica. Las citas están verificadas en fuentes oficia
 - **Bibliografía**: es el valor de un método publicado o de una recomendación.
 - **Física**: sale de una propiedad de la señal, como una resolución o el límite de Nyquist.
 
-Test no interviene en ninguna decisión. Las secciones 1 a 3 describen la versión del detector evaluada en test; las secciones 5 y 6, los cambios posteriores, decididos solo con desarrollo.
+Test no interviene en ninguna decisión. Las secciones 1 a 3 describen la versión del detector evaluada en test; las secciones 5 a 7, los cambios y revisiones posteriores, decididos solo con desarrollo.
 
 ## 1. Ventanas y duraciones
 
@@ -165,3 +165,20 @@ Las cinco etapas protegen, con p de Holm < 0,001 (S5, en las 12 personas donde q
 **Hampel en lugar de Varon.** La regla registrada elegía el procedimiento publicado para la EDR (Varon et al., 2020) si los dos protegían y ninguno empeoraba, y eso pasó (`08` §6). Como S2 mostró que Hampel protegía unas diez veces más, se agregó al criterio una comparación directa sin etiquetas, decidida antes de calcularla (`08` §7). Hampel (1974) es un estimador robusto general; su protección contra los artefactos se midió en estos datos.
 
 **Resultado (validación cruzada por personas en desarrollo).** Exactitud 0,830, contra 0,836 de la versión evaluada en test. La diferencia es +0,006 (IC −0,051 a +0,049, repitiendo el ajuste; p = 1,00). Sensibilidad 0,780, especificidad 0,863 y P2 0,787. Marca el 9,5 % de los minutos en los controles (7,4 % la versión evaluada en test; 12,1 % la simplificada). Los parámetros están en [`parametros_final.json`](parametros_final.json). No tiene una evaluación independiente: se evaluará en test una sola vez, con un notebook registrado antes de ejecutarse, y esa evaluación no es ciega (`objetivos_hipotesis.md`, limitación 10).
+
+## 7. Detector de QRS: criterio de robustez (`09`)
+
+El detector de QRS es el de Pan y Tompkins (1985) con seis etapas agregadas: el reaprendizaje de los umbrales y las cinco mejoras de `02` §2. En `02` se justificaron con una ablación sin valores p. Se revisaron con el criterio de robustez ([`criterio_robustez.md`](criterio_robustez.md), agregados del 2026-11-21). Una etapa protege si lo muestra una prueba de estrés sin etiquetas, o si sin ella alguna noche real de desarrollo queda más de un punto peor en % de RR corregidos. Esta segunda vía se agregó después de una prueba rápida con 16 registros.
+
+| Etapa | Falla que previene | Prueba de estrés (% de latidos que cambian, mediana) | Falla real en desarrollo | ¿Empeora el detector? | Decisión |
+|---|---|---|---|---|---|
+| Reaprendizaje de los umbrales | El umbral queda por encima de los QRS y el detector queda ciego | Q4, caída de amplitud: 0,71 % sin él y 0,004 % con él (15 de 19 personas) | Sin él, 10 noches quedan casi sin latidos (a03, c01, c02, c06, c09, c10, x03, x04, x18 y x35) | No | Se mantiene |
+| Pulso aislado | Tramos sin ECG | No protege: el piso ya alcanza | Ninguna | No | Se mantiene por la regla de sencillez: 0,035 puntos menos de RR corregidos (p de Holm < 0,001) |
+| Piso de energía | Tramos sin ECG | Q2, ruido: 3,0 % sin él y 0,39 % con él (19 de 19) | x28 (+1,5 puntos de RR corregidos) | No | Se mantiene |
+| Ventana de onda T según el ritmo | Ondas T que terminan después de 360 ms | Q3, ondas T altas: 15 de 18 personas | Ninguna | No | Se mantiene |
+| Forma | Ondas T altas | Q3: 3,5 % sin ella y 1,1 % con ella (19 de 19) | Ninguna | No | Se mantiene |
+| Energía por encima de 20 Hz | Ondas T altas | Q3: 3,3 % sin ella y 1,1 % con ella (17 de 19) | x17 (+61 puntos de RR corregidos) | No | Se mantiene |
+
+Ninguna etapa empeora el detector, ni en exactitud (con el bootstrap que repite el ajuste) ni en P2: p de Holm = 1 en todas. Como no sale ninguna, el detector final de §6 y sus parámetros no cambian. La regla registrada antes del agregado daba la misma decisión: con las 47 noches, el reaprendizaje también protege en Q4.
+
+**Costos.** Algunas etapas empeoran un poco la salida en otras pruebas, de forma demostrable. Con el reaprendizaje, el detector marca algunos latidos falsos dentro de un tramo de ruido (0,39 % contra 0 %). La forma y la ventana según el ritmo suben el cambio en ese tramo de 0,365 % a 0,390 %. Son diferencias de centésimas de punto, contra protecciones de varios puntos.
