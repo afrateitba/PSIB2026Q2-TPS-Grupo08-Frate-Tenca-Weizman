@@ -63,6 +63,18 @@ def test_recovers_after_amplitude_drop():
     assert m["Se"] >= 0.98 and m["VPP"] >= 0.98
 
 
+def test_relearn_flag(monkeypatch):
+    """Sin reaprender los umbrales (QRS_RELEARN = False), después de la caída de amplitud queda ciego."""
+    import src.qrs.pan_tompkins as pt
+    x, true_r = _synthetic_ecg(dur=1200.0)
+    a = int(300 * FS)
+    x[a:] *= 0.15
+    monkeypatch.setattr(pt, "QRS_RELEARN", False)
+    det = detect_r_peaks(x, FS)
+    m = validate_against_reference(det[det > a + int(10 * FS)], true_r[true_r > a + int(10 * FS)], FS, tol=0.02)
+    assert m["Se"] < 0.5
+
+
 def test_recovers_after_artifact_burst():
     """Después de varios minutos de artefacto fuerte, vuelve a detectar los latidos."""
     import time

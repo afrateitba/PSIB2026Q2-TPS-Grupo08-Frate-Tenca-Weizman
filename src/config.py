@@ -92,6 +92,7 @@ QRS_TWAVE_RR_FRAC = 0.5        # la ventana de onda T crece con el RR: máx(QRS_
 QRS_TEMPLATE_CORR_MIN = 0.5    # en esa ventana, correlación mínima con la forma de los últimos QRS
 QRS_HF_CUTOFF = 20.0           # Hz: la onda T casi no tiene energía por encima
 QRS_HF_RATIO_MIN = 0.3         # en esa ventana, energía > 20 Hz mínima respecto del QRS anterior
+QRS_RELEARN = True             # si la búsqueda hacia atrás no encuentra un latido, se reaprenden los umbrales (notebooks 02 y 09)
 QRS_TEMPLATE_N = 8             # latidos con que se arma la forma de referencia
 QRS_TEMPLATE_HALF_S = 0.10     # semiancho (s) de la ventana con que se compara la forma del candidato
 QRS_TEMPLATE_MIN = 3           # QRS previos necesarios antes de usar la comparación de forma

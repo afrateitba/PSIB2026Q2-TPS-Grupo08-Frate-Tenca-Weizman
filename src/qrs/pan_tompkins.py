@@ -14,7 +14,7 @@ from scipy.signal import butter, find_peaks, peak_prominences, sosfiltfilt
 
 from .. import config as _cfg
 from ..config import (QRS_BAND, QRS_FLOOR_FRAC, QRS_HF_CUTOFF, QRS_HF_RATIO_MIN,
-                      QRS_INTEGRATION_S, QRS_LOCATE_S, QRS_PROMINENCE_MIN, QRS_REFRACTORY_S,
+                      QRS_INTEGRATION_S, QRS_LOCATE_S, QRS_PROMINENCE_MIN, QRS_REFRACTORY_S, QRS_RELEARN,
                       QRS_SEARCHBACK, QRS_SLOPE_WIN_S, QRS_TEMPLATE_CORR_MIN, QRS_TEMPLATE_N,
                       QRS_TOLERANCE_S, QRS_TWAVE_RR_FRAC, QRS_TWAVE_S)
 QRS_TEMPLATE_HALF_S = _cfg.QRS_TEMPLATE_HALF_S
@@ -72,7 +72,8 @@ def _classify(mwi: np.ndarray, d: np.ndarray, fs: float, bp: np.ndarray | None =
     encima de los QRS, por ejemplo después de un artefacto o si baja la
     amplitud del ECG), los umbrales se vuelven a aprender con los 2 s que
     siguen, igual que al principio del registro. Sin esto el detector puede
-    quedar ciego durante minutos.
+    quedar ciego durante minutos (QRS_RELEARN; se revisa en
+    notebooks/09_robustez_qrs.ipynb).
 
     Con `improved=True` (necesita `bp` y `hf`) se agregan las mejoras de
     notebooks/02_filtro_y_latidos.ipynb:
@@ -136,7 +137,7 @@ def _classify(mwi: np.ndarray, d: np.ndarray, fs: float, bp: np.ndarray | None =
                 if improved:
                     last_hf = hf[j]
                 spki = 0.25 * mwi[j] + 0.75 * spki
-            else:
+            elif QRS_RELEARN:
                 spki, npki = _learn(mwi, k, fs)
             thr = npki + 0.25 * (spki - npki)
         if mwi[k] > thr and eligible[i]:
