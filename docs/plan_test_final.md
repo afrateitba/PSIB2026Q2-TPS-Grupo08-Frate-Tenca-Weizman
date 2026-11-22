@@ -60,3 +60,11 @@ El notebook tiene un **modo ensayo** (`NB11_ENSAYO=1`), como `05`: usa 10 person
 
 - Berger, R. L. (1982). Multiparameter hypothesis testing and acceptance sampling. *Technometrics*, 24(4), 295–300. [doi:10.1080/00401706.1982.10487790](https://doi.org/10.1080/00401706.1982.10487790)
 - Efron, B. y Tibshirani, R. J. (1993). *An Introduction to the Bootstrap*. Chapman & Hall/CRC. [doi:10.1201/9780429246593](https://doi.org/10.1201/9780429246593)
+
+## Agregado del 2026-11-22, antes de la ejecución: verificaciones sin abrir test
+
+No cambia nada del plan ni del notebook. Se registran estas verificaciones, hechas solo con desarrollo:
+- **P1 tiene que repetir el valor de `05`.** En los 47 registros de desarrollo, el detector final y la versión evaluada evalúan exactamente los mismos 22 772 minutos, con el mismo P_RR en todos, y el AUC dentro de la noche da 0,908032 con las dos. Además, el notebook sortea las personas con la misma semilla y en el mismo orden que `05`. Por eso en test se espera que P1 repita el valor (0,869) y también su intervalo (0,827 a 0,930). Si no los repite, algo cambió en el RR o en los minutos evaluados, y hay que explicarlo.
+- **El código corre con controles.** Las 10 personas del modo ensayo son casi todas de categoría A, y ninguna es control. Test tiene 5 noches de control. Se corrió una copia no registrada del notebook con 10 personas de desarrollo de las tres categorías, y corrió completo, también el % marcado en los controles y las figuras.
+- **La versión registrada se volvió a probar en modo ensayo** con el código de la rama al 2026-11-22. No hubo errores, se cumplen los tres controles y no se escribe nada en el repositorio. Desde que se registró el notebook no cambió nada en `src/`, en los tests ni en los parámetros. Los 189 tests pasan.
+- **La ejecución se guarda aunque falle una celda.** Si el notebook se detuviera a mitad de camino, lo ejecutado hasta ahí queda en `notebooks/11_test_final.ipynb` como salió.
