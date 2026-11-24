@@ -135,6 +135,12 @@ Se evaluó una sola vez el 2026-11-24, con el plan (`docs/plan_test_final.md`) y
 
 Detalle en `notebooks/11_test_final.ipynb` (sección 6) y en `docs/resultados_test_final.json`.
 
+**Análisis posterior (`12`, descriptivo, no cambia este resultado).**
+- **Los errores vienen en noches enteras:** 5 noches de 3 personas concentran el 82 % de los minutos con apnea perdidos.
+- **El RR ordena bien todas las noches,** también las subestimadas. Lo que falla es dónde queda la vara de cada noche.
+- **P2 falla sobre todo por dos noches de una misma persona** (b05 y x11, de S17), con poca apnea. Sin Wiener pasan a tener niveles de EDR altos: b05 pasa a tener el más alto de test. Sin esa persona, ρ = 0,67.
+- **El ruido del latido acompaña a ese cambio:** las dos noches con el latido más ruidoso (b05 y x29) son las que más suben sin Wiener. Es compatible con que el Wiener protegía la EDR del ruido, pero no se puso a prueba (limitación 18).
+
 ## Alcance
 
 - Se detecta **apnea o hipopnea por minuto**, como las etiquetas de la base. No se distingue apnea de hipopnea ni obstructiva de central.
@@ -168,3 +174,4 @@ Detalle en `notebooks/11_test_final.ipynb` (sección 6) y en `docs/resultados_te
 15. **Los errores son por persona o por noche.** Dependen de dónde queda la vara de cada noche: el nivel de la EDR que no corresponde a su cantidad de apnea, o el nivel general del RR de la persona (`04` sección 11, `06` sección 2). En test el error de cada noche sigue a esas dos cantidades (ρ = 0,67 y 0,75).
 16. **El detector simplificado solo se midió en desarrollo** (`07`), con validación cruzada por personas. El final se evaluó una vez en test (`11`), en registros que ya se habían usado (limitación 10). Con él H no se sostiene, porque falla P2.
 17. **Las pruebas de estrés simulan las fallas** (`08` §4). Muestran que cada etapa protege contra esa falla simulada, pero no cuánto aparece la falla en los datos reales. Los niveles de perturbación (5 %) son ilustrativos. La comparación entre Hampel y el procedimiento de Varon se agregó al criterio después de ver S2, aunque antes de calcularla. Lo mismo vale para las pruebas Q1 a Q4 del detector de QRS (`09`). Esas pruebas también mostraron costos chicos de algunas etapas: por ejemplo, con el reaprendizaje el detector marca algunos latidos falsos dentro de un tramo de ruido. La vía de las fallas reales se agregó después de una prueba rápida con 16 registros; en la corrida completa no cambió ninguna decisión.
+18. **El Wiener se sacó por el criterio de sencillez, sin pasar por el de robustez** (`07` §9). No se lo consideró una etapa protectora. En test, sin él, el nivel de la EDR de las dos noches con el latido más ruidoso sube mucho, y eso es lo que más baja a P2 (`12` §4). Es una observación posterior en test y no se puede usar para volver a ponerlo: haría falta otra base.
