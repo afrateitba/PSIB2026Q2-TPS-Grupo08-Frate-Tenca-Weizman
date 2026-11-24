@@ -1,0 +1,239 @@
+{
+  "detector": "final (src/detector_final.py)",
+  "sha256_parametros": "73344a364ee3bd27616c8a1eff5f65fdc9dcd58f59e516290ebcf6615d2b0b8d",
+  "registros": 20,
+  "personas": 10,
+  "minutos_evaluados": 8844,
+  "predicciones": {
+    "P1 · AUC dentro de la noche del RR (media)": {
+      "valor": 0.868820503547969,
+      "ic95": "0.827 a 0.930",
+      "se_cumple": true
+    },
+    "P2 · ρ entre el nivel EDR de la noche y el % de apnea": {
+      "valor": 0.5305698153912726,
+      "ic95": "-0.152 a 0.732",
+      "se_cumple": false
+    },
+    "P3 · AUC de C con todos los minutos": {
+      "valor": 0.8273743618085656,
+      "ic95": "0.627 a 0.937",
+      "se_cumple": true
+    }
+  },
+  "H_se_sostiene": false,
+  "clasificacion_C": {
+    "sensibilidad": {
+      "valor": 0.6988487702773417,
+      "ic95": "0.303 a 0.905"
+    },
+    "especificidad": {
+      "valor": 0.8329350856232577,
+      "ic95": "0.727 a 0.927"
+    },
+    "exactitud": {
+      "valor": 0.7749886928991406,
+      "ic95": "0.692 a 0.862"
+    }
+  },
+  "version_evaluada_repite_05": true,
+  "final_contra_evaluada": [
+    {
+      "medida": "sensibilidad",
+      "final": 0.6988487702773417,
+      "evaluada": 0.7087912087912088,
+      "final − evaluada": -0.009942438513867113,
+      "IC 95 %": "-0.078 a +0.071",
+      "p": 0.747,
+      "p de Holm": 1.0
+    },
+    {
+      "medida": "especificidad",
+      "final": 0.8329350856232577,
+      "evaluada": 0.8343289526085225,
+      "final − evaluada": -0.00139386698526478,
+      "IC 95 %": "-0.131 a +0.100",
+      "p": 0.973,
+      "p de Holm": 1.0
+    },
+    {
+      "medida": "exactitud",
+      "final": 0.7749886928991406,
+      "evaluada": 0.7800768882858435,
+      "final − evaluada": -0.0050881953867029095,
+      "IC 95 %": "-0.067 a +0.054",
+      "p": 0.863,
+      "p de Holm": 1.0
+    },
+    {
+      "medida": "AUC de C",
+      "final": 0.8273743618085656,
+      "evaluada": 0.8485806876743897,
+      "final − evaluada": -0.02120632586582405,
+      "IC 95 %": "-0.098 a +0.023",
+      "p": 0.541,
+      "p de Holm": 1.0
+    }
+  ],
+  "comparacion": {
+    "C": {
+      "sensibilidad": 0.6988487702773417,
+      "especificidad": 0.8329350856232577,
+      "exactitud": 0.7749886928991406,
+      "AUC (todos los minutos)": 0.8273743618085656,
+      "AUC dentro de la noche (media)": 0.868820503547969,
+      "ρ por noche": 0.7338660701983046,
+      "% marcado en controles": 6.11112275561828
+    },
+    "F": {
+      "sensibilidad": 0.7577184720041863,
+      "especificidad": 0.7264038231780168,
+      "exactitud": 0.7399366802351877,
+      "AUC (todos los minutos)": 0.8140859964976709,
+      "AUC dentro de la noche (media)": 0.833552843491719,
+      "ρ por noche": 0.753967632398124,
+      "% marcado en controles": 19.520600048915977
+    },
+    "RR solo": {
+      "sensibilidad": 0.7417582417582418,
+      "especificidad": 0.6983273596176822,
+      "exactitud": 0.7170963364993216,
+      "AUC (todos los minutos)": 0.8067945310648844,
+      "AUC dentro de la noche (media)": 0.868820503547969,
+      "ρ por noche": 0.576607879031198,
+      "% marcado en controles": 34.13545333909182
+    }
+  },
+  "diferencias": [
+    {
+      "C contra": "F",
+      "medida": "sensibilidad",
+      "C − otra": -0.05886970172684458,
+      "IC 95 %": "-0.241 a +0.031",
+      "p": 0.257,
+      "p de Holm": 1.0
+    },
+    {
+      "C contra": "F",
+      "medida": "especificidad",
+      "C − otra": 0.10653126244524092,
+      "IC 95 %": "+0.048 a +0.154",
+      "p": 0.0,
+      "p de Holm": 0.0
+    },
+    {
+      "C contra": "F",
+      "medida": "exactitud",
+      "C − otra": 0.03505201266395297,
+      "IC 95 %": "-0.024 a +0.106",
+      "p": 0.281,
+      "p de Holm": 1.0
+    },
+    {
+      "C contra": "F",
+      "medida": "AUC (todos los minutos)",
+      "C − otra": 0.013288365310894723,
+      "IC 95 %": "-0.076 a +0.068",
+      "p": 0.675,
+      "p de Holm": 1.0
+    },
+    {
+      "C contra": "F",
+      "medida": "AUC dentro de la noche (media)",
+      "C − otra": 0.03526766005625004,
+      "IC 95 %": "-0.000 a +0.082",
+      "p": 0.054,
+      "p de Holm": 0.54
+    },
+    {
+      "C contra": "F",
+      "medida": "ρ por noche",
+      "C − otra": -0.0201015621998194,
+      "IC 95 %": "-0.233 a +0.085",
+      "p": 0.941,
+      "p de Holm": 1.0
+    },
+    {
+      "C contra": "F",
+      "medida": "% marcado en controles",
+      "C − otra": -13.409477293297698,
+      "IC 95 %": "-21.260 a -8.316",
+      "p": 0.0,
+      "p de Holm": 0.0
+    },
+    {
+      "C contra": "RR solo",
+      "medida": "sensibilidad",
+      "C − otra": -0.042909471480900074,
+      "IC 95 %": "-0.182 a +0.022",
+      "p": 0.281,
+      "p de Holm": 1.0
+    },
+    {
+      "C contra": "RR solo",
+      "medida": "especificidad",
+      "C − otra": 0.13460772600557547,
+      "IC 95 %": "-0.033 a +0.295",
+      "p": 0.136,
+      "p de Holm": 1.0
+    },
+    {
+      "C contra": "RR solo",
+      "medida": "exactitud",
+      "C − otra": 0.057892356399819045,
+      "IC 95 %": "-0.037 a +0.193",
+      "p": 0.29,
+      "p de Holm": 1.0
+    },
+    {
+      "C contra": "RR solo",
+      "medida": "AUC (todos los minutos)",
+      "C − otra": 0.020579830743681193,
+      "IC 95 %": "-0.087 a +0.112",
+      "p": 0.717,
+      "p de Holm": 1.0
+    },
+    {
+      "C contra": "RR solo",
+      "medida": "AUC dentro de la noche (media)",
+      "C − otra": 0.0,
+      "IC 95 %": "+0.000 a +0.000",
+      "p": NaN,
+      "p de Holm": NaN
+    },
+    {
+      "C contra": "RR solo",
+      "medida": "ρ por noche",
+      "C − otra": 0.1572581911671066,
+      "IC 95 %": "-0.141 a +0.613",
+      "p": 0.365,
+      "p de Holm": 1.0
+    },
+    {
+      "C contra": "RR solo",
+      "medida": "% marcado en controles",
+      "C − otra": -28.02433058347354,
+      "IC 95 %": "-46.457 a -14.924",
+      "p": 0.0,
+      "p de Holm": 0.0
+    }
+  ],
+  "rho_por_noche": {
+    "valor": 0.7338660701983046,
+    "ic95": "0.021 a 0.899"
+  },
+  "desarrollo_validacion_cruzada": {
+    "sensibilidad": 0.7804718217562254,
+    "especificidad": 0.8632491186839013,
+    "exactitud": 0.8299666256806605,
+    "AUC (todos los minutos)": 0.8875915346458102,
+    "AUC dentro de la noche (media)": 0.9080317832892147,
+    "ρ por noche": 0.7390278283142361,
+    "% marcado en controles": 9.539381293882077
+  },
+  "umbrales_desarrollo": {
+    "C": 0.48134981497878243,
+    "F": -1.8012298511356701,
+    "RR solo": -1.414108011390642
+  }
+}
