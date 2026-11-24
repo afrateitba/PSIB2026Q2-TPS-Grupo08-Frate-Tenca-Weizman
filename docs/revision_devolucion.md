@@ -64,13 +64,13 @@ Cada observación de la devolución (nota 3, recuperatorio), dónde se trabajó 
 
 | Observación | Dónde se trabajó | Estado |
 |---|---|---|
-| No hay un hilo entre los resultados | Los notebooks siguen un solo camino: `01` explora y mide la banda; `02` obtiene la serie RR; `03` la EDR; `04` arma C, la evalúa y fija los parámetros. Cada notebook termina con una tabla de lo que se lleva el siguiente. La hipótesis H tiene predicciones P1–P3 que se verifican en `04` §14 y se prueban en `05`: las tres se cumplen en test | Resuelto en el repositorio. Falta en informe: conclusiones que respondan P1–P3 con los resultados de test (`05` §6) |
+| No hay un hilo entre los resultados | Los notebooks siguen un solo camino: `01` explora y mide la banda; `02` obtiene la serie RR; `03` la EDR; `04` arma C, la evalúa y fija los parámetros. Cada notebook termina con una tabla de lo que se lleva el siguiente. La hipótesis H tiene predicciones P1–P3 que se verifican en `04` §14 y se prueban en test: con la versión evaluada se cumplen las tres (`05`); con el detector final se cumplen P1 y P3, pero no P2 (`11`), y `12` analiza por qué | Resuelto en el repositorio. Falta en informe: conclusiones que respondan P1–P3 con las dos evaluaciones en test (`05` §6, `11` §6 y `12` §10) |
 
 ## 5. Interfaz gráfica
 
 | Observación | Estado |
 |---|---|
-| No hay interfaz | Resuelto: `app/visor.py` (`streamlit run app/visor.py`). Para una noche muestra C con el umbral, la decisión, la confianza y las etiquetas. Para cada minuto muestra el ECG con los picos R, la serie RR y la EDR en su ventana, los espectros con la banda y el cálculo de C. Permite saltar entre los minutos mal clasificados. Solo muestra registros de desarrollo |
+| No hay interfaz | Resuelto: `app/visor.py` (`streamlit run app/visor.py`). Por defecto aplica el detector final, y se puede elegir la versión evaluada en test. Para una noche muestra C con el umbral, la decisión, las etiquetas y, en la versión evaluada, la confianza. Para cada minuto muestra el ECG con los picos R, la serie RR y la EDR en su ventana, los espectros con la banda y el cálculo de C. Permite saltar entre los minutos mal clasificados. Solo muestra registros de desarrollo |
 
 ## Informe y código
 
@@ -95,7 +95,7 @@ Cada observación de la devolución (nota 3, recuperatorio), dónde se trabajó 
 | Construirla en forma escalonada y clara | `01` → `02` → `03` → `04`, cada paso usa lo anterior |
 | Justificar cada decisión con análisis cualitativo y cuantitativo de las señales | Cada decisión tiene figura y número en su notebook; resumen en `decisiones.md` |
 | Fundamentar los umbrales en bibliografía | `decisiones.md` y `auditoria_decisiones.md`: las 88 decisiones con su justificación (86 justificadas con datos, bibliografía o física; 2 limitaciones declaradas). Cada umbral propio tiene su sensibilidad medida, y cada cita tiene DOI o página oficial verificados (`referencias.md`) |
-| Consistencia en las ventanas | Una sola ventana de análisis, 240 s, con robustez verificada (`04` §15). Todas las constantes (ventana, banda, grilla, reglas del RR, mínimo de minutos) están en un solo lugar y `tests/test_consistencia.py` falla si un notebook las vuelve a escribir a mano |
+| Consistencia en las ventanas | Una sola ventana de análisis, 240 s. Con 180, 300 o 360 s la exactitud no cambia de forma demostrable (`04` §15 y `10` §1). Todas las constantes (ventana, banda, grilla, reglas del RR, mínimo de minutos) están en un solo lugar y `tests/test_consistencia.py` falla si un notebook las vuelve a escribir a mano |
 | Explicar las técnicas y métricas fuera de lo visto en clase | EDR (`03` §1–2), espectro cruzado y coherencia (`03` §3, `04` §1), Lomb (`04` §1), métricas (`04`, "Cómo se evalúa") |
 | Visualizar las señales y sus derivados | ECG crudo y filtrado, espectros, espectrograma, serie RR, EDR contra respiración, espectros con y sin apnea, C en una noche |
 | Que todos puedan explicar las técnicas | Pendiente: guía de estudio y ensayo |
