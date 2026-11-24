@@ -111,7 +111,29 @@ Esa regla también sacaba las etapas que protegen contra fallas poco frecuentes 
 
 El **detector final** tiene una exactitud de 0,830 en validación cruzada por personas en desarrollo (sensibilidad 0,780, especificidad 0,863). La versión evaluada en test tiene 0,836, y la diferencia no es demostrable. Sus parámetros están en `docs/parametros_final.json` y sus etapas en `docs/decisiones.md` §6 y §7.
 
-Los resultados de test de la sección anterior son de la versión evaluada, no de la simplificada ni de la final. **Ninguna de las dos tiene todavía una evaluación independiente.** El detector final se evaluará en test una sola vez, con un notebook registrado antes de ejecutarse. Como esas 10 personas ya se usaron, esa segunda evaluación no es ciega (limitación 10).
+Los resultados de test de la sección anterior son de la versión evaluada, no de la simplificada ni de la final. El simplificado no tiene una evaluación independiente. El detector final se evaluó en test una sola vez, en `11` (sección siguiente).
+
+## Segunda evaluación en test: el detector final (`11`)
+
+Se evaluó una sola vez el 2026-11-24, con el plan (`docs/plan_test_final.md`) y el notebook registrados sin ejecutar antes de correrlo. No es ciega: esas 10 personas ya se habían usado en la primera entrega y en `05` (limitación 10). El detector final es la versión evaluada sin el filtro de Wiener en la EDR, y nada más; el RR es idéntico. **Se cumplen P1 y P3, pero no P2, así que con el detector final H no se sostiene.**
+
+| Predicción | Test | IC 95 % (bootstrap por persona) | ¿Se cumple? |
+|---|---|---|---|
+| P1 · AUC dentro de la noche de P_RR (media, 13 noches de 7 personas) | 0,869 | 0,827 a 0,930 | sí (repite `05`, como se esperaba) |
+| P2 · ρ entre el nivel nocturno de la EDR y el % de apnea (20 noches) | 0,531 | −0,152 a 0,732 | **no** |
+| P3 · AUC de C con todos los minutos | 0,827 | 0,627 a 0,937 | sí |
+
+- **Parte (b), entre noches, no se demuestra con el detector final.** El valor es positivo, pero el intervalo incluye el 0. Con 10 personas el intervalo es ancho, así que tampoco demuestra que la relación no exista (limitación 9). Las partes (a) y (c) se sostienen.
+- **C no se reduce al RR solo.** Así lo preveía este documento si fallaba P2, pero C marca el 6,1 % de los minutos en los controles, contra 34,1 % del RR solo, y la diferencia resiste Holm.
+- **Con el umbral fijo:** sensibilidad 0,699, especificidad 0,833 y exactitud 0,775. En desarrollo, con validación cruzada, eran 0,780, 0,863 y 0,830.
+- **Contra la versión evaluada (con Wiener):**
+  - en los mismos minutos no hay diferencia demostrable en sensibilidad, especificidad, exactitud ni AUC;
+  - P2 baja de 0,658 a 0,531. Esa diferencia no estaba en el plan y no se puso a prueba;
+  - según el plan, no se vuelve a la versión con Wiener: elegirla ahora sería elegir con test.
+- **C contra F y el RR solo:** resisten Holm las mismas tres diferencias que en `05`, todas a favor de C en falsas alarmas.
+- **Dónde falla:** en las mismas noches que en `05` (a11, a06, x15, x26 y x13 subestimadas; b05 sobreestimada).
+
+Detalle en `notebooks/11_test_final.ipynb` (sección 6) y en `docs/resultados_test_final.json`.
 
 ## Alcance
 
@@ -138,11 +160,11 @@ Los resultados de test de la sección anterior son de la versión evaluada, no d
 **De la evaluación**
 
 9. **Test chico: 20 registros de 10 personas.** Los intervalos de confianza son anchos: un resultado no significativo no demuestra que no haya efecto. Además, test quedó con algo menos de hombres y con un índice de masa corporal mayor que desarrollo (31 contra 27; no se controló al partir).
-10. **Test ya se usó en la primera entrega.** La evaluación del recuperatorio no es ciega en sentido estricto. Para que no influya, todas las decisiones nuevas se toman solo con desarrollo, se escriben antes de correr test y test se corre una sola vez al final.
+10. **Test ya se usó en la primera entrega.** La evaluación del recuperatorio (`05`) no es ciega en sentido estricto, y la del detector final (`11`) lo es todavía menos: esos registros ya se habían usado dos veces, y `06` analizó sus fallas. Para que no influya, todas las decisiones nuevas se toman solo con desarrollo, se escriben antes de correr test y test se corre una sola vez al final.
 11. **Los minutos de una misma noche no son independientes** (los episodios duran una mediana de 6 minutos). Por eso los intervalos de confianza se calculan remuestreando sujetos, no minutos.
 12. **El nivel de la EDR también acompaña a la edad y al IMC** (en desarrollo, ρ ≈ 0,4–0,5 en los minutos normales), que a su vez van con la cantidad de apnea. No se puede separar si la parte (b) de la hipótesis refleja la apnea o el tipo de persona que la tiene; test tiene un IMC mayor que desarrollo.
 13. **La hipótesis se reformuló después de analizar desarrollo.** C salió de mirar qué mide bien cada señal en esos mismos registros. Lo atenúa que C casi no tiene parámetros (un peso elegido por validación cruzada por personas, que resultó 1, y una mediana sin etiquetas), pero solo test dice si generaliza.
 14. **El método supone ritmo sinusal.** En test, una persona (c04 y x29) tiene un ritmo muy irregular. Los latidos se detectan bien, pero la limpieza del RR corrige el 36–41 % de los intervalos y se excluyen la mayoría de sus minutos (`06`, sección 3). Con una arritmia sostenida, la serie RR no refleja la modulación por la apnea.
 15. **Los errores son por persona o por noche.** Dependen de dónde queda la vara de cada noche: el nivel de la EDR que no corresponde a su cantidad de apnea, o el nivel general del RR de la persona (`04` sección 11, `06` sección 2). En test el error de cada noche sigue a esas dos cantidades (ρ = 0,67 y 0,75).
-16. **El detector simplificado y el final solo se midieron en desarrollo** (`07` y `08`), con validación cruzada por personas. No tienen una evaluación independiente. La del detector final será en test, que ya se usó (limitación 10).
+16. **El detector simplificado solo se midió en desarrollo** (`07`), con validación cruzada por personas. El final se evaluó una vez en test (`11`), en registros que ya se habían usado (limitación 10). Con él H no se sostiene, porque falla P2.
 17. **Las pruebas de estrés simulan las fallas** (`08` §4). Muestran que cada etapa protege contra esa falla simulada, pero no cuánto aparece la falla en los datos reales. Los niveles de perturbación (5 %) son ilustrativos. La comparación entre Hampel y el procedimiento de Varon se agregó al criterio después de ver S2, aunque antes de calcularla. Lo mismo vale para las pruebas Q1 a Q4 del detector de QRS (`09`). Esas pruebas también mostraron costos chicos de algunas etapas: por ejemplo, con el reaprendizaje el detector marca algunos latidos falsos dentro de un tramo de ruido. La vía de las fallas reales se agregó después de una prueba rápida con 16 registros; en la corrida completa no cambió ninguna decisión.
