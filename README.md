@@ -56,6 +56,7 @@ Se conserva el refinamiento del pico R, la interpolación es spline cúbico, y s
 - [`docs/criterio_robustez.md`](docs/criterio_robustez.md): el criterio para las etapas que protegen contra fallas, con las pruebas de estrés, escrito antes de correrlo, y el agregado de Hampel contra Varon.
 - [`docs/revision_04.md`](docs/revision_04.md): el plan para recalcular las comparaciones de `04` §8 y §15 con el bootstrap que repite el ajuste (`10`), escrito antes de correrlo.
 - [`docs/plan_test_final.md`](docs/plan_test_final.md): el plan de la segunda evaluación en test, del detector final (`11`), escrito antes de correrla.
+- [`docs/guia_estudio.md`](docs/guia_estudio.md) (y su [PDF](docs/guia_estudio.pdf)): la guía de estudio para la defensa. Sigue la presentación, explica cada técnica a nivel de una señal y de toda la base, junta los números y las preguntas probables, y marca lo que hay que corregir antes de presentar.
 - [`docs/decisiones.md`](docs/decisiones.md): cada ventana, umbral y parámetro, con su justificación (datos, bibliografía o física) y dónde se muestra.
 - [`docs/auditoria_decisiones.md`](docs/auditoria_decisiones.md): las 88 decisiones del proyecto, con el tipo de justificación (datos, bibliografía, física) y su estado: 86 justificadas y 2 limitaciones.
 - [`docs/referencias.md`](docs/referencias.md): todas las fuentes citadas, con DOI o página oficial verificados en Crossref, doi.org y PubMed (se regenera con `python scripts/verificar_referencias.py`).
