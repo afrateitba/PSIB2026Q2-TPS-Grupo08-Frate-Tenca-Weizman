@@ -676,6 +676,7 @@ Al comparar la presentación con el informe y el repositorio aparecieron estas d
 | 12, 30 | El refinamiento baja el desacuerdo de 10 a 2,5 ms | El informe y la diapositiva 19 dicen 2,3 ms, que es el valor en los 47 registros (`07`). 2,5 ms sale de `02`. Usar 2,3 |
 | 12 | Los minutos con más de 20 % de RR corregidos son el 0,2 % | Con el detector final son el 0,6 % de los minutos de desarrollo (131 de 22 907). 0,2 % salía de una versión anterior en `02` |
 | 10, 12 | "Pan-Tompkins + 5 mejoras" | El informe dice seis reglas adicionales. Es lo mismo si se aclara: el reaprendizaje de los umbrales más cinco mejoras |
+| 16 | El gráfico es la curva ROC de F, el RR (Welch y Lomb) y la EDR (`04_roc.png`), de antes de que existiera C; no tiene la curva de C ni el punto del umbral | Reemplazarlo por `informe/figuras/04_umbral.png`: la ROC de C con el punto de Youden (C > 0,49) y la distribución de C con el umbral, que es lo que explica la tabla |
 | 17 | "C: exactitud 0,836 · sensibilidad 0,81 · especificidad 0,85" | Son de la versión evaluada (con Wiener). El detector final tiene 0,830 · 0,780 · 0,863. Aclararlo oralmente o poner "versión evaluada" |
 | 26 | "Bootstrap, 2000 réplicas" | P1–P3 usan 4000 sorteos y las comparaciones pareadas 2000, como dice el informe |
 | 7 | Cinco objetivos específicos | El informe tiene tres. No es un error, pero conviene que coincidan |
